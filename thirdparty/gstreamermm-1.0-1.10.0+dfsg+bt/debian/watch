@@ -1,5 +1,0 @@
-version=3
-opts=dversionmangle=s/\+dfsg$// \
-https://ftp.gnome.org/pub/gnome/sources/gstreamermm/([\d\.]+)/ \
- gstreamermm-([\d\.]+)\.(?:tar\.gz|tar\.xz) \
- debian debian/get-orig-source.sh
