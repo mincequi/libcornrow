@@ -1,3 +1,0 @@
-[submodule "thirdparty/gstreamermm"]
-	path = thirdparty/gstreamermm
-	url = https://github.com/mincequi/gstreamermm.git
