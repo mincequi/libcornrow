@@ -1,23 +1,21 @@
+cmake_minimum_required(VERSION 3.10)
+
 # Required cmake modules
 include(ExternalProject)
 
-file(DOWNLOAD
-    #https://raw.githubusercontent.com/GNOME/gstreamermm/master/gstreamer/src/basetransform.ccg
-)
-#https://raw.githubusercontent.com/GNOME/gstreamermm/master/gstreamer/src/basetransform.hg
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GLIBMM REQUIRED glibmm-2.4)
+pkg_check_modules(GST REQUIRED gstreamer-1.0)
 
-# Add gstreamermm as dependency
+# Add gstreamermm
+set(GSTMM_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gstreamermm)
 ExternalProject_Add(project_gstreamermm
-    URL     https://ftp.gnome.org/pub/GNOME/sources/gstreamermm/1.10/gstreamermm-1.10.0.tar.xz
-    CONFIGURE_COMMAND "./configure"
-    BUILD_COMMAND make
-    INSTALL_COMMAND make install
+    SOURCE_DIR          ${GSTMM_SOURCE_DIR}
+    CONFIGURE_COMMAND   ./autogen.sh --enable-static --disable-shared --disable-documentation --disable-unittests --disable-deprecated-api --prefix=${CMAKE_CURRENT_BINARY_DIR}
+    BUILD_COMMAND       make
+    BUILD_IN_SOURCE     1
+    INSTALL_COMMAND     make install
 )
-#add_library(luajit STATIC IMPORTED)
-#set_property(TARGET luajit PROPERTY IMPORTED_LOCATION ${install_dir}/lib/libluajit-5.1.a)
-#include_directories(${install_dir}/include/luajit-2.0)
-
-add_dependencies(gstreamermm project_gstreamermm)
 
 # gstreamermm-dsp
 add_library(gstreamermm-dsp STATIC
@@ -30,9 +28,14 @@ PUBLIC
     $<INSTALL_INTERFACE:include>
 PRIVATE
     src
+    ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gstreamermm/gstreamer
+    ${GLIBMM_INCLUDE_DIRS}
+    ${GST_INCLUDE_DIRS}
 )
 
 target_link_libraries(gstreamermm-dsp
     gstreamermm
+    ${GLIBMM_LIBRARIES}
 )
 
+add_dependencies(gstreamermm-dsp project_gstreamermm)
