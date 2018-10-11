@@ -1,0 +1,90 @@
+gstreamermm-1.0 (1.10.0+dfsg-1) unstable; urgency=medium
+
+  * New upstream version
+  * Refresh patches and remove unused ones
+  * Remove Build-Depend on dh-autoreconf
+  * Bump Standards-Version to 4.1.1 (no changes necessary)
+
+ -- Philip Rinn <rinni@inventati.org>  Wed, 25 Oct 2017 14:56:18 +0200
+
+gstreamermm-1.0 (1.8.0+dfsg-3) unstable; urgency=medium
+
+  * Add debian/05-fix-build-with-gcc7.patch (closes: #853435):
+    - fix build with gcc 7
+  * Rework debian/patches/04-fix-build-with-gstreamer1.12.patch:
+    - don't fail with gstreamer < 1.12
+
+ -- Philip Rinn <rinni@inventati.org>  Sun, 02 Jul 2017 21:49:35 +0200
+
+gstreamermm-1.0 (1.8.0+dfsg-2) unstable; urgency=medium
+
+  * Add debian/patches/04-fix-build-with-gstreamer1.12.patch (closes: #866714):
+    - fix build with gstreamer 1.12 (Patch from upstream)
+
+ -- Philip Rinn <rinni@inventati.org>  Sat, 01 Jul 2017 11:47:13 +0200
+
+gstreamermm-1.0 (1.8.0+dfsg-1) unstable; urgency=medium
+
+  * New upstream version:
+    - Bump SONAME
+  * Mark doc package as Multi-Arch: foreign
+  * Refresh patches and remove unused ones
+  * Recommend gstreamer1.0-alsa only on Linux
+  * Remove unused Lintian override
+  * Bump debhelper compat from 9 to 10 (no changes necessary)
+  * Add patch debian/patches/03-fix-build-with-gstreamer1.10.patch:
+    - fix build with gstreamer 1.10 (Patch from upstream)
+  * Remove unneeded Conflicts/Replaces
+
+ -- Philip Rinn <rinni@inventati.org>  Fri, 18 Nov 2016 17:38:21 +0100
+
+gstreamermm-1.0 (1.4.3+dfsg-6) unstable; urgency=medium
+
+  * Use secure URIs for vcs-* in debian/control
+  * Add patch from upstream debian/patches/03-fix-ftbfs.patch (closes: #838353):
+    - Fix FTBFS
+  * Bump Standards-Version to 3.9.8 (no changes necessary).
+
+ -- Philip Rinn <rinni@inventati.org>  Sun, 25 Sep 2016 18:35:43 +0200
+
+gstreamermm-1.0 (1.4.3+dfsg-5) unstable; urgency=medium
+
+  * Add patch debian/patches/02-do-not-compile-examples.patch:
+    - Don't compile the examples
+    - Make build reproducible
+  * Rework dependencies (closes: #799723):
+    - Drop Build-Depends: libgtkmm-3.0-dev, gstreamer1.0-alsa,
+      gstreamer1.0-plugins-base, gstreamer1.0-x
+    - Add Recommends for the library: gstreamer1.0-plugins-base, gstreamer1.0-x,
+      gstreamer1.0-alsa [!hurd-i386]
+    - Add Depends for -dev: libgstreamer1.0-dev,
+      libgstreamer-plugins-base1.0-dev
+
+ -- Philip Rinn <rinni@inventati.org>  Tue, 22 Sep 2015 22:31:25 +0200
+
+gstreamermm-1.0 (1.4.3+dfsg-4) unstable; urgency=medium
+
+  * Rename library for g++-5 transition (closes: #795922):
+    - Add Conflicts/Replaces for the old library
+    - Bump build-dependencies to g++-5-transitioned versions
+
+ -- Philip Rinn <rinni@inventati.org>  Wed, 19 Aug 2015 17:36:11 +0200
+
+gstreamermm-1.0 (1.4.3+dfsg-3) unstable; urgency=medium
+
+  * Use correct abbreviations for month names in d/changelog (closes: #795092)
+
+ -- Philip Rinn <rinni@inventati.org>  Tue, 11 Aug 2015 11:31:31 +0200
+
+gstreamermm-1.0 (1.4.3+dfsg-2) unstable; urgency=medium
+
+  * Don't ship symbols file as the symbols change a lot between different archs
+    so I stick with shlibs for now (closes: #792609)
+
+ -- Philip Rinn <rinni@inventati.org>  Sun, 19 Jul 2015 14:20:43 +0200
+
+gstreamermm-1.0 (1.4.3+dfsg-1) unstable; urgency=low
+
+  * Initial release (closes: #785262)
+
+ -- Philip Rinn <rinni@inventati.org>  Wed, 10 Jun 2015 18:02:12 +0200

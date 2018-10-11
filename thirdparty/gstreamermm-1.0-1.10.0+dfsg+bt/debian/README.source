@@ -1,0 +1,13 @@
+gstreamermm source for Debian
+--------------------------
+	
+The gstreamermm source is repackaged because it ships a version of it's
+documentation that is not reproducible from source.
+When running uscan the script debian/get-orig-source.sh is executed, which
+
+- unpacks the source tarball
+- removes docs/reference/[gstreamermm-1.0.devhelp2, gstreamermm-1.0.tag, html/]
+- builds the .orig.tar.xz Debian source tarball
+
+The script is fully compliant with uscan and its switches like --destdir.
+If the opposite is discovered, this should be reported as a bug. 

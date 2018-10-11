@@ -1,0 +1,4 @@
+usr/include
+usr/lib/*/gstreamermm-1.0
+usr/lib/*/lib*.so
+usr/lib/*/pkgconfig

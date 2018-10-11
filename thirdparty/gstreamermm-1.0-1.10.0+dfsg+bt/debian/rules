@@ -1,0 +1,30 @@
+#!/usr/bin/make -f
+
+#export DH_VERBOSE=1
+export V=1
+
+## Enable compiler hardening flags.
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+
+%:
+	dh $@ --with autoreconf --parallel
+
+override_dh_autoreconf:
+	dh_autoreconf --as-needed
+
+override_dh_compress:
+	# Doxygen cannot handle compressed tag files
+	dh_compress -X.tag
+
+override_dh_clean:
+	dh_clean
+	# Remove Doxygen generated documentation
+	rm -f docs/reference/doxygen_sqlite3.db
+	rm -f docs/reference/gstreamermm-1.0.devhelp2
+	rm -f docs/reference/gstreamermm-1.0.tag
+	rm -rf docs/reference/html
+

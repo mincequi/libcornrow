@@ -1,0 +1,9 @@
+Document: gstreamermm-1.0-reference
+Title: gstreamermm 1.0 Reference Manual
+Author: Doxygen
+Abstract: Reference Manual for gstreamermm 1.0 (C++ bindings for GStreamer)
+Section: Programming/C++
+
+Format: HTML
+Index: /usr/share/doc/libgstreamermm-1.0-doc/reference/html/index.html
+Files: /usr/share/doc/libgstreamermm-1.0-doc/reference/html/*.html
