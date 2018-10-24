@@ -7,8 +7,14 @@ include(ExternalProject)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GLIBMM REQUIRED glibmm-2.4)
-pkg_check_modules(GST REQUIRED gstreamer-1.0)
-pkg_check_modules(GST REQUIRED gstreamer-base-1.0)
+pkg_check_modules(GST REQUIRED
+    gstreamer-1.0
+    gstreamer-base-1.0
+    gstreamer-audio-1.0
+    gstreamer-video-1.0
+    gstreamer-pbutils-1.0
+    gstreamer-net-1.0
+)
 
 # Add gstreamermm
 set(GSTMM_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gstreamermm)
@@ -19,7 +25,6 @@ ExternalProject_Add(project_gstreamermm
     BUILD_IN_SOURCE     1
     INSTALL_COMMAND     make install
 )
-
 
 # gstreamermm-dsp
 add_library(${PROJECT_NAME} STATIC
@@ -43,9 +48,9 @@ PRIVATE
 )
 
 target_link_libraries(${PROJECT_NAME}
-    gstreamermm-1.0
-    ${GLIBMM_LIBRARIES}
+    ${CMAKE_CURRENT_BINARY_DIR}/lib/libgstreamermm-1.0.a    # library order matters
     ${GST_LIBRARIES}
+    ${GLIBMM_LIBRARIES}
 )
 
 add_dependencies(${PROJECT_NAME} project_gstreamermm)
