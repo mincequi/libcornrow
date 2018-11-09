@@ -92,7 +92,7 @@ void Biquad::process(float* const _in, float* const _out, std::uint32_t frameCou
         return;
     }
 
-    for (size_t i = 0; i < m_history.size(); ++i) {
+    for (std::size_t i = 0; i < m_history.size(); ++i) {
         // After first run, we have to process result and not again the input data
         float* in = (i == 0) ? _in : _out; float* out = _out;
 

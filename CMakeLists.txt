@@ -14,6 +14,7 @@ pkg_check_modules(GST REQUIRED
     gstreamer-video-1.0
     gstreamer-pbutils-1.0
     gstreamer-net-1.0
+    gstreamer-plugins-base-1.0
 )
 
 # Add gstreamermm
