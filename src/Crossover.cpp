@@ -110,8 +110,12 @@ Gst::FlowReturn Crossover::transform_vfunc(const Glib::RefPtr<Gst::Buffer>& inbu
 {
     Gst::MapInfo inInfo;
     Gst::MapInfo outInfo;
-    bool success = inbuf->map(inInfo, Gst::MAP_READ);
-    success = outbuf->map(outInfo, Gst::MAP_WRITE);
+    if (!inbuf->map(inInfo, Gst::MAP_READ)) {
+        return Gst::FlowReturn::FLOW_ERROR;
+    }
+    if (!outbuf->map(outInfo, Gst::MAP_WRITE)) {
+        return Gst::FlowReturn::FLOW_ERROR;
+    }
 
     float* const inData = (float*)(inInfo.get_data());
     float* const outData = (float*)(outInfo.get_data());

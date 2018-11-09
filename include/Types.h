@@ -15,13 +15,23 @@ enum class FilterType : uint8_t
     Peak        = 1,
     LowPass,
     HighPass,
-    LowShelf,
-    HighShelf,
-    AllPass
+    //LowShelf,
+    //HighShelf,
+    //AllPass
 };
 
 struct Filter
 {
+    Filter()
+    {}
+
+    Filter(FilterType _t, float _f, float _g, float _q)
+        : type(_t),
+          f(_f),
+          g(_g),
+          q(_q)
+    {}
+
     FilterType  type = FilterType::Invalid;
     float       f    = 0.0;
     float       g    = 0.0;

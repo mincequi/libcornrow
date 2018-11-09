@@ -29,7 +29,7 @@ void Biquad::setFilter(const Filter& filter)
 
 bool Biquad::isValid() const
 {
-    m_rate >= 0 && m_filter.isValid();
+    return (m_rate >= 0 && m_filter.isValid());
 }
 
 bool Biquad::update()
@@ -92,7 +92,7 @@ void Biquad::process(float* const _in, float* const _out, std::uint32_t frameCou
         return;
     }
 
-    for (int i = 0; i < m_history.size(); ++i) {
+    for (size_t i = 0; i < m_history.size(); ++i) {
         // After first run, we have to process result and not again the input data
         float* in = (i == 0) ? _in : _out; float* out = _out;
 

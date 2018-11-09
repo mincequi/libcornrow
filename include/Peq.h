@@ -20,6 +20,10 @@ public:
     static GType get_base_type() G_GNUC_CONST;
     static void class_init(Gst::ElementClass<Peq> *klass);
 
+    void setFilters(const std::vector<Filter> filters);
+    std::vector<Filter> filters();
+
+    // @TODO(mawe): to be removed
     Biquad& biquad(std::uint8_t idx);
 
 private:

@@ -39,6 +39,30 @@ void Peq::class_init(Gst::ElementClass<Peq> *klass)
     klass->add_pad_template(src);
 }
 
+void Peq::setFilters(const std::vector<Filter> filters)
+{
+    m_mutex.lock();
+    // Always 2 channels, 1 cascade
+    m_biquads.resize(filters.size(), Biquad(2, 1, m_audioInfo.get_rate()));
+    for (size_t i = 0; i < filters.size(); ++i) {
+        m_biquads.at(i).setFilter(filters.at(i));
+    }
+    m_mutex.unlock();
+}
+
+std::vector<Filter> Peq::filters()
+{
+    m_mutex.lock();
+    std::vector<Filter> filters;
+    filters.reserve(m_biquads.size());
+    for (const auto& biquad : m_biquads) {
+        filters.push_back(biquad.m_filter);
+    }
+    m_mutex.unlock();
+
+    return filters;
+}
+
 Biquad& Peq::biquad(std::uint8_t idx)
 {
     m_mutex.lock();

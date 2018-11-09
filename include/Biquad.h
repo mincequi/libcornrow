@@ -38,6 +38,8 @@ private:
         float y1 = 0.0, y2 = 0.0;
     };
     std::vector<std::vector<History>> m_history;
+
+    friend class Peq;
 };
 
 } // namespace GstDsp
