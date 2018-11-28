@@ -6,6 +6,7 @@ macro(gstdsp_tests)
 endmacro()
 
 gstdsp_tests(
+    allovertest
     crossovertest
     loudnesstest
     peqtest
