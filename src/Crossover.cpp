@@ -120,44 +120,38 @@ Gst::FlowReturn Crossover::transform_vfunc(const Glib::RefPtr<Gst::Buffer>& inbu
     float* const inData = (float*)(inInfo.get_data());
     float* const outData = (float*)(outInfo.get_data());
 
+    //std::cerr << "inbuf: " << inInfo.get_size() << ", outbuf: " << outInfo.get_size() << std::endl;
+
     uint   frameCount = inInfo.get_size()/m_info.get_bpf();
 
-    uint outChannelCount = 0;
-    bool frequencyValid = (m_frequency >= 90.0 && m_frequency <= 18000.0);
-    if (frequencyValid && !m_lfe) {   // Only crossover: L+R+RL+RR
-        outChannelCount = 4;
-    } else if (!frequencyValid && m_lfe) { // Only LFE: L+R+LFE
-        outChannelCount = 3;
-    } else if (frequencyValid && m_lfe) { // Crossover + LFE: L+R+LFE+RL+RR
-        outChannelCount = 5;
-    } else {
-        return Gst::FlowReturn::FLOW_NOT_SUPPORTED;
-    }
-
-    // LFE
-    if (m_lfe) {
-        // mixdown stereo input to mono
-        std::uint32_t frameCount = inInfo.get_size()/sizeof(float)/2.0;
+    if (!isFrequencyValid() && m_lfe) { // Only LFE: L+R+LFE
+        // Mixdown
+        StereoFrame<float>* inFrames = (StereoFrame<float>*)(inInfo.get_data());
+        StereoLfeFrame<float>* outFrames = (StereoLfeFrame<float>*)(outInfo.get_data());
+        processLfe(inFrames, outFrames, frameCount);
+        // low pass LFE channel
+        m_lfeLp.process(outData+2, outData+2, frameCount, 3, 3);
+        // high pass front channels
+        m_lfeHp.process(inData, outData, frameCount, 2, 3);
+    } else if (isFrequencyValid() && !m_lfe) {   // Only crossover: L+R+RL+RR
+        // Front channels
+        m_lp.process(inData, outData, frameCount, 2, 4);
+        // Rear channels
+        m_hp.process(inData, outData+2, frameCount, 2, 4);
+    } else if (isFrequencyValid() && m_lfe) { // Crossover + LFE: L+R+LFE+RL+RR
         StereoFrame<float>* inFrames = (StereoFrame<float>*)(inInfo.get_data());
         QuadLfeFrame<float>* outFrames = (QuadLfeFrame<float>*)(outInfo.get_data());
         processLfe(inFrames, outFrames, frameCount);
-
         // low pass LFE channel
-        m_lfeLp.process(outData+2, outData+2, frameCount, outChannelCount, outChannelCount);
+        m_lfeLp.process(outData+2, outData+2, frameCount, 5, 5);
         // high pass front channels
-        m_lfeHp.process(inData, outData, frameCount, 2, outChannelCount);
-    }
-
-    if (frequencyValid && m_lfe) {
-        // First process rear channels
-        m_hp.process(outData, outData+outChannelCount-2, frameCount, outChannelCount, outChannelCount);
-        // Front channels
-        m_lp.process(outData, outData, frameCount, outChannelCount, outChannelCount);
-    } else if (frequencyValid) {
-        // Front channels
-        m_lp.process(inData, outData, frameCount, 2, outChannelCount);
-        // Rear channels
-        m_hp.process(outData, outData+outChannelCount-2, frameCount, 2, outChannelCount);
+        m_lfeHp.process(inData, outData, frameCount, 2, 5);
+        // high pass rear channels
+        m_hp.process(outData, outData+3, frameCount, 5, 5);
+        // low pass front channels
+        m_lp.process(outData, outData, frameCount, 5, 5);
+    } else {
+        return Gst::FlowReturn::FLOW_NOT_SUPPORTED;
     }
 
     inbuf->unmap(inInfo);
@@ -237,6 +231,11 @@ bool Crossover::get_unit_size_vfunc(const Glib::RefPtr<Gst::Caps>& caps, gsize& 
     return info.get_bpf() > 0;
 }
 
+bool Crossover::isFrequencyValid() const
+{
+    return (m_frequency >= 90.0 && m_frequency <= 18000.0);
+}
+
 void Crossover::updateCrossover()
 {
     m_lp.setFilter({ FilterType::LowPass, m_frequency, 0.0, M_SQRT1_2 });
@@ -245,8 +244,8 @@ void Crossover::updateCrossover()
 
 void Crossover::updateLfe()
 {
-    m_lfeLp.setFilter({ FilterType::LowPass,  180.0, 0.0, M_SQRT1_2 });
-    m_lfeHp.setFilter({ FilterType::HighPass,  180.0, 0.0, M_SQRT1_2 });
+    m_lfeLp.setFilter({ FilterType::LowPass, 80.0, 0.0, M_SQRT1_2 });
+    m_lfeHp.setFilter({ FilterType::HighPass, 80.0, 0.0, M_SQRT1_2 });
 }
 
 } // namespace GstDsp
