@@ -7,6 +7,7 @@ endmacro()
 
 gstdsp_tests(
     allovertest
+    biquadtest
     crossovertest
     loudnesstest
     peqtest
