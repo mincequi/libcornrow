@@ -12,14 +12,15 @@ namespace GstDsp
 Crossover::Crossover(GstBaseTransform* obj)
     : Glib::ObjectBase(typeid(Crossover)),
       Gst::BaseTransform(obj),
-      m_frequency(*this,    "frequency",    3000.0),
-      m_lfe(*this,          "lfe",          false),
+      m_frequency(3000.0),
+      m_lfe(false),
       m_lp(2, 2),
       m_hp(2, 2),
       m_lfeLp(1, 2),
       m_lfeHp(2, 2)
 {
-    m_frequency.get_proxy().signal_changed().connect(sigc::mem_fun(*this, &Crossover::updateCrossover));
+    updateCrossover();
+    updateLfe();
 }
 
 void Crossover::class_init(Gst::ElementClass<Crossover> *klass)
@@ -106,6 +107,40 @@ void Crossover::class_init(Gst::ElementClass<Crossover> *klass)
     GST_BASE_TRANSFORM_CLASS(klass->gobj())->transform_ip_on_passthrough = false;
 }
 
+void Crossover::setFrequency(float f)
+{
+    m_mutex.lock();
+    m_frequency = f;
+    updateCrossover();
+    m_mutex.unlock();
+}
+
+float Crossover::frequency()
+{
+    m_mutex.lock();
+    float freq = m_frequency;
+    m_mutex.unlock();
+
+    return freq;
+}
+
+void Crossover::setLfe(bool enable)
+{
+    m_mutex.lock();
+    m_lfe = enable;
+    updateLfe();
+    m_mutex.unlock();
+}
+
+bool Crossover::lfe()
+{
+    m_mutex.lock();
+    bool l = m_lfe;
+    m_mutex.unlock();
+
+    return l;
+}
+
 Gst::FlowReturn Crossover::transform_vfunc(const Glib::RefPtr<Gst::Buffer>& inbuf, const Glib::RefPtr<Gst::Buffer>& outbuf)
 {
     Gst::MapInfo inInfo;
@@ -122,6 +157,7 @@ Gst::FlowReturn Crossover::transform_vfunc(const Glib::RefPtr<Gst::Buffer>& inbu
 
     //std::cerr << "inbuf: " << inInfo.get_size() << ", outbuf: " << outInfo.get_size() << std::endl;
 
+    m_mutex.lock();
     uint   frameCount = inInfo.get_size()/m_info.get_bpf();
 
     if (!isFrequencyValid() && m_lfe) { // Only LFE: L+R+LFE
@@ -153,6 +189,7 @@ Gst::FlowReturn Crossover::transform_vfunc(const Glib::RefPtr<Gst::Buffer>& inbu
     } else {
         return Gst::FlowReturn::FLOW_NOT_SUPPORTED;
     }
+    m_mutex.unlock();
 
     inbuf->unmap(inInfo);
     outbuf->unmap(outInfo);
@@ -210,13 +247,16 @@ Glib::RefPtr<Gst::Caps> Crossover::transform_caps_vfunc(Gst::PadDirection direct
 
 bool Crossover::set_caps_vfunc(const Glib::RefPtr<Gst::Caps>& incaps, const Glib::RefPtr<Gst::Caps>& outcaps)
 {
+    m_mutex.lock();
     m_info.from_caps(incaps);
     //std::cerr << "set_caps_vfunc> " << "incaps: " << incaps->to_string() << ", outcaps: " << outcaps->to_string() << std::endl;
     m_lp.setRate(m_info.get_rate());
     m_hp.setRate(m_info.get_rate());
     m_lfeLp.setRate(m_info.get_rate());
     m_lfeHp.setRate(m_info.get_rate());
+    updateCrossover();
     updateLfe();
+    m_mutex.unlock();
 
     return true;
 }

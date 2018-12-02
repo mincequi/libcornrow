@@ -15,8 +15,11 @@ public:
 
     static void class_init(Gst::ElementClass<Crossover> *klass);
 
-    Glib::PropertyProxy<float> frequency();
-    Glib::PropertyProxy<bool>  lfe();
+    void setFrequency(float f);
+    float frequency();
+
+    void setLfe(bool enable);
+    bool lfe();
 
 private:
     /// Processing overrides
@@ -43,14 +46,16 @@ private:
         }
     }
 
-    Glib::Property<float>   m_frequency;
-    Glib::Property<bool>    m_lfe;
-    Gst::AudioInfo          m_info;
+    float  m_frequency;
+    bool   m_lfe;
+    Gst::AudioInfo  m_info;
 
     Biquad  m_lp;
     Biquad  m_hp;
     Biquad  m_lfeLp;
     Biquad  m_lfeHp;
+
+    std::mutex m_mutex;
 };
 
 } // namespace GstDsp

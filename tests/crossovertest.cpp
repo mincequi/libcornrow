@@ -27,8 +27,8 @@ int main(int argc, char** argv)
 
     Glib::RefPtr<GstDsp::Crossover> xo = Glib::RefPtr<GstDsp::Crossover>::cast_dynamic(Gst::ElementFactory::create_element("crossover"));
     assert(xo);
-    xo->set_property("frequency", 2000.0);
-    xo->set_property("lfe", true);
+    xo->setFrequency(2000.0);
+    xo->setLfe(true);
     auto enc = Gst::ElementFactory::create_element("avenc_ac3");
     assert(enc);
     enc->set_property("bitrate", 640000);
