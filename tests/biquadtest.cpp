@@ -1,5 +1,6 @@
-#include <TBiquad.h>
+#include "../include/TBiquad.h"
 
+#include <chrono>
 #include <iostream>
 #include <fstream>
 #include <random>
@@ -8,11 +9,14 @@ using namespace GstDsp;
 
 int main(int argc, char** argv)
 {
+    // Init
+    auto begin = std::chrono::steady_clock::now();
     std::random_device rd;
     std::mt19937 gen;
     std::normal_distribution<> dist;
+    std::uint8_t duration = 10;
 
-    std::vector<double> samples(2*44100*100);
+    std::vector<double> samples(2*44100*duration);
     for (auto & s : samples) {
         s = dist(gen);
     }
@@ -43,15 +47,28 @@ int main(int argc, char** argv)
     biquads[10].setFilter( { GstDsp::FilterType::Peak, 3000.0, +0.5, 2.0 } );
     biquads[11].setFilter( { GstDsp::FilterType::Peak, 5000.0, -6.0, 2.0 } );
     biquads[2].setFilter( { GstDsp::FilterType::Peak,  7500.0, +0.5, 2.0 } );
+    auto end = std::chrono::steady_clock::now();
+    std::chrono::duration<double> diff = end-begin;
+    std::cout << "Init time: " << diff.count() << std::endl;
 
+    // Process
+    begin = std::chrono::steady_clock::now();
     for (auto & b : biquads) {
-        b.process(samples.data(), samples.data(), 44100*100, 2, 2);
+        b.process(samples.data(), samples.data(), 44100*duration, 2, 2);
     }
+    end = std::chrono::steady_clock::now();
+    diff = end-begin;
+    std::cout << "Process time: " << diff.count() << std::endl;
 
+    // Write
+    begin = std::chrono::steady_clock::now();
     std::ofstream myfile;
     myfile.open ("test.raw", std::ios::out | std::ios::binary);
     const void* data = samples.data();
-    myfile.write(static_cast<const char*>(data), 2*44100*100*8);
+    myfile.write(static_cast<const char*>(data), 2*44100*duration*8);
+    end = std::chrono::steady_clock::now();
+    diff = end-begin;
+    std::cout << "Write time: " << diff.count() << std::endl;
 
     return 0;
 }
