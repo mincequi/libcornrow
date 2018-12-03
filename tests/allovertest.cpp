@@ -42,7 +42,8 @@ int main(int argc, char** argv)
     // XO
     Glib::RefPtr<GstDsp::Crossover> xo = Glib::RefPtr<GstDsp::Crossover>::cast_dynamic(Gst::ElementFactory::create_element("crossover"));
     assert(xo);
-    xo->set_property("frequency", 2000.0);
+    xo->setFrequency(2000.0);
+    xo->setLfe(true);
 
     // Link elements
     pipeline->add(src)->add(peq)->add(xo)->add(enc)->add(sink);
