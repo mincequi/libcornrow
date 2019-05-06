@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <list>
+#include <string>
 #include <vector>
 #include <math.h>
 
@@ -74,5 +76,21 @@ struct QuadLfeFrame : public StereoLfeFrame<T>
     T rearLeft;
     T rearRight;
 };
+
+enum class DeviceType : uint8_t
+{
+    Pcm,
+    Spdif,
+    Hdmi,
+};
+
+struct DeviceInfo
+{
+    explicit DeviceInfo(const std::string& _name);
+
+    std::string name;
+    DeviceType type;
+};
+using DeviceInfoList = std::list<DeviceInfo>;
 
 } // namespace GstDsp

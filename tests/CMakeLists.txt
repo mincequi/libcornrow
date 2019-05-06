@@ -7,6 +7,7 @@ endmacro()
 
 gstdsp_tests(
     allovertest
+    AlsaPassthroughSinkTest
 #    biquadtest
     crossovertest
     loudnesstest

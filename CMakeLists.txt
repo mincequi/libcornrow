@@ -6,6 +6,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 
 find_package(PkgConfig REQUIRED)
+find_package(ALSA REQUIRED)
 pkg_check_modules(GSTMM REQUIRED gstreamermm-1.0)
 
 # gstreamermm-dsp
@@ -14,8 +15,15 @@ add_library(${PROJECT_NAME} STATIC
     src/Biquad.cpp
     src/Crossover.cpp
     src/Loudness.cpp
+    #src/PassthroughAlsaSink.cpp
     src/Peq.cpp
+    src/Types.cpp
     src/Util.cpp
+
+    src/AlsaPassthroughSink.cpp
+    src/AEChannelInfo.cpp
+    src/AEDeviceInfo.cpp
+    src/AEUtil.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -27,7 +35,7 @@ PRIVATE
     src
 )
 
-target_link_libraries(${PROJECT_NAME} ${GSTMM_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${GSTMM_LIBRARIES} ${ALSA_LIBRARIES})
 target_compile_options(${PROJECT_NAME} PUBLIC ${GSTMM_CFLAGS_OTHER})
 
 add_subdirectory(tests)
