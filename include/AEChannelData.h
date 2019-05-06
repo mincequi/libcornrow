@@ -1,16 +1,5 @@
-/*
- *  Copyright (C) 2010-2018 Team Kodi
- *  This file is part of Kodi - https://kodi.tv
- *
- *  SPDX-License-Identifier: GPL-2.0-or-later
- *  See LICENSES/README.md for more information.
- */
-
 #pragma once
 
-/**
- * The possible channels
- */
 enum AEChannel
 {
   AE_CH_NULL = -1,
@@ -63,12 +52,7 @@ enum AEStdChLayout
   AE_CH_LAYOUT_MAX
 };
 
-/**
- * The various data formats
- * LE = Little Endian, BE = Big Endian, NE = Native Endian
- * @note This is ordered from the worst to best preferred formats
- */
-enum AEDataFormat
+enum DataFormat
 {
   AE_FMT_INVALID = -1,
 
@@ -82,30 +66,11 @@ enum AEDataFormat
   AE_FMT_S32LE,
   AE_FMT_S32NE,
 
-  AE_FMT_S24BE4,
-  AE_FMT_S24LE4,
-  AE_FMT_S24NE4,    // 24 bits in lower 3 bytes
-  AE_FMT_S24NE4MSB, // S32 with bits_per_sample < 32
-
-  AE_FMT_S24BE3,
-  AE_FMT_S24LE3,
-  AE_FMT_S24NE3, // S24 in 3 bytes
-
   AE_FMT_DOUBLE,
   AE_FMT_FLOAT,
 
   // Bitstream
   AE_FMT_RAW,
-
-  // planar formats
-  AE_FMT_U8P,
-  AE_FMT_S16NEP,
-  AE_FMT_S32NEP,
-  AE_FMT_S24NE4P,
-  AE_FMT_S24NE4MSBP,
-  AE_FMT_S24NE3P,
-  AE_FMT_DOUBLEP,
-  AE_FMT_FLOATP,
 
   AE_FMT_MAX
 };

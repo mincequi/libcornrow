@@ -10,54 +10,50 @@
 #include "AEDeviceInfo.h"
 #include "AEUtil.h"
 
-std::ostream& operator<<(std::ostream& ss, const CAEDeviceInfo& info)
+std::ostream& operator<<(std::ostream& ss, const DeviceDescriptor& info)
 {
-  ss << "m_deviceName      : " << info.m_deviceName << '\n';
-  ss << "m_displayName     : " << info.m_displayName << '\n';
-  ss << "m_displayNameExtra: " << info.m_displayNameExtra << '\n';
-  ss << "m_deviceType      : " << CAEDeviceInfo::DeviceTypeToString(info.m_deviceType) + '\n';
-  ss << "m_channels        : " << (std::string)info.m_channels << '\n';
+    ss << "deviceName      : " << info.deviceName << '\n';
+    ss << "displayName     : " << info.m_displayName << '\n';
+    ss << "displayNameExtra: " << info.m_displayNameExtra << '\n';
+    ss << "deviceType      : " << DeviceDescriptor::DeviceTypeToString(info.deviceType) + '\n';
+    ss << "channels        : " << (std::string)info.m_channels << '\n';
 
-  ss << "m_sampleRates     : ";
-  for (auto itt = info.m_sampleRates.begin(); itt != info.m_sampleRates.end(); ++itt)
-  {
-    if (itt != info.m_sampleRates.begin())
-      ss << ',';
-    ss << *itt;
-  }
-  ss << '\n';
+    ss << "sampleRates     : ";
+    for (auto it = info.m_sampleRates.begin(); it != info.m_sampleRates.end(); ++it)
+    {
+        if (it != info.m_sampleRates.begin())
+            ss << ", ";
+        ss << *it;
+    }
+    ss << '\n';
 
-  ss << "m_dataFormats     : ";
-  for (auto itt = info.m_dataFormats.begin(); itt != info.m_dataFormats.end(); ++itt)
-  {
-    if (itt != info.m_dataFormats.begin())
-      ss << ',';
-    ss << CAEUtil::DataFormatToStr(*itt);
-  }
-  ss << '\n';
+    ss << "dataFormats     : ";
+    for (auto it = info.m_dataFormats.begin(); it != info.m_dataFormats.end(); ++it)
+    {
+        if (it != info.m_dataFormats.begin())
+            ss << ", ";
+        ss << CAEUtil::DataFormatToStr(*it);
+    }
+    ss << '\n';
 
-  ss << "m_streamTypes     : ";
-  for (auto itt = info.m_streamTypes.begin(); itt != info.m_streamTypes.end(); ++itt)
-  {
-    if (itt != info.m_streamTypes.begin())
-      ss << ',';
-    ss << CAEUtil::StreamTypeToStr(*itt);
-  }
-  if (info.m_streamTypes.empty())
-    ss << "No passthrough capabilities";
-  ss << '\n';
+    ss << "streamTypes     : ";
+    for (auto it = info.streamTypes.begin(); it != info.streamTypes.end(); ++it)
+    {
+        if (it != info.streamTypes.begin())
+            ss << ", ";
+        ss << CAEUtil::StreamTypeToStr(*it);
+    }
 
-  return ss;
+    ss << '\n';
+    return ss;
 }
 
-std::string CAEDeviceInfo::DeviceTypeToString(enum AEDeviceType deviceType)
+std::string DeviceDescriptor::DeviceTypeToString(enum DeviceType deviceType)
 {
-  switch (deviceType)
-  {
-    case AE_DEVTYPE_PCM   : return "AE_DEVTYPE_PCM"   ; break;
-    case AE_DEVTYPE_IEC958: return "AE_DEVTYPE_IEC958"; break;
-    case AE_DEVTYPE_HDMI  : return "AE_DEVTYPE_HDMI"  ; break;
-    case AE_DEVTYPE_DP    : return "AE_DEVTYPE_DP"    ; break;
-  }
-  return "INVALID";
+    switch (deviceType) {
+    case DeviceType::Pcm   : return "PCM"  ; break;
+    case DeviceType::Spdif : return "SPDIF"; break;
+    case DeviceType::Hdmi  : return "HDMI" ; break;
+    }
+    return "";
 }

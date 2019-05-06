@@ -11,8 +11,6 @@
 #include "AEChannelInfo.h"
 #include "AEStreamInfo.h"
 
-#define AE_IS_PLANAR(x) ((x) >= AE_FMT_U8P && (x) <= AE_FMT_FLOATP)
-
 /**
  * The audio format structure that fully defines a stream's audio information
  */
@@ -21,7 +19,7 @@ struct AEAudioFormat
   /**
    * The stream's data format (eg, AE_FMT_S16LE)
    */
-  enum AEDataFormat m_dataFormat;
+  enum DataFormat m_dataFormat;
 
   /**
    * The stream's sample rate (eg, 48000)
@@ -46,7 +44,7 @@ struct AEAudioFormat
   /**
    * Stream info of raw passthrough
    */
-  CAEStreamInfo m_streamInfo;
+  StreamInfo m_streamInfo;
 
   AEAudioFormat()
   {

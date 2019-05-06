@@ -42,12 +42,8 @@ static const std::vector<uint32_t> s_sampleRates {
     32000,
     44100,
     48000,
-    64000,
-    88200,
     96000,
-    176400,
-    192000,
-    384000
+    192000
 };
 
 AlsaPassthroughSink::AlsaPassthroughSink() :
@@ -63,10 +59,10 @@ AlsaPassthroughSink::~AlsaPassthroughSink()
     Deinitialize();
 }
 
-AlsaPassthroughSink* AlsaPassthroughSink::Create(std::string &device, AEAudioFormat& desiredFormat)
+AlsaPassthroughSink* AlsaPassthroughSink::create(std::string& device, AEAudioFormat& desiredFormat)
 {
     auto* sink = new AlsaPassthroughSink();
-    if (sink->Initialize(desiredFormat, device))
+    if (sink->init(device, desiredFormat))
         return sink;
 
     delete sink;
@@ -77,19 +73,19 @@ inline CAEChannelInfo AlsaPassthroughSink::GetChannelLayoutRaw(const AEAudioForm
 {
     unsigned int count = 0;
 
-    switch (format.m_streamInfo.m_type)
+    switch (format.m_streamInfo.type)
     {
-    case CAEStreamInfo::STREAM_TYPE_DTSHD_MA:
-    case CAEStreamInfo::STREAM_TYPE_TRUEHD:
+    case StreamInfo::StreamType::STREAM_TYPE_DTSHD_MA:
+    case StreamInfo::StreamType::STREAM_TYPE_TRUEHD:
         count = 8;
         break;
-    case CAEStreamInfo::STREAM_TYPE_DTSHD_CORE:
-    case CAEStreamInfo::STREAM_TYPE_DTS_512:
-    case CAEStreamInfo::STREAM_TYPE_DTS_1024:
-    case CAEStreamInfo::STREAM_TYPE_DTS_2048:
-    case CAEStreamInfo::STREAM_TYPE_AC3:
-    case CAEStreamInfo::STREAM_TYPE_EAC3:
-    case CAEStreamInfo::STREAM_TYPE_DTSHD:
+    case StreamInfo::StreamType::STREAM_TYPE_DTSHD_CORE:
+    case StreamInfo::StreamType::Dts512:
+    case StreamInfo::StreamType::STREAM_TYPE_DTS_1024:
+    case StreamInfo::StreamType::STREAM_TYPE_DTS_2048:
+    case StreamInfo::StreamType::Ac3:
+    case StreamInfo::StreamType::STREAM_TYPE_EAC3:
+    case StreamInfo::StreamType::STREAM_TYPE_DTSHD:
         count = 2;
         break;
     default:
@@ -436,7 +432,7 @@ void AlsaPassthroughSink::GetAESParams(const AEAudioFormat& format, std::string&
     else params += ",AES3=0x01";
 }
 
-bool AlsaPassthroughSink::Initialize(AEAudioFormat &format, std::string &device)
+bool AlsaPassthroughSink::init(std::string& device, AEAudioFormat& format)
 {
     m_initDevice = device;
     m_initFormat = format;
@@ -469,12 +465,12 @@ bool AlsaPassthroughSink::Initialize(AEAudioFormat &format, std::string &device)
         return false;
     }
 
-    AEDeviceType devType = AEDeviceTypeFromName(device);
+    DeviceType devType = AEDeviceTypeFromName(device);
 
     std::string AESParams;
     /* digital interfaces should have AESx set, though in practice most
    * receivers don't care */
-    if (m_passthrough || devType == AE_DEVTYPE_HDMI || devType == AE_DEVTYPE_IEC958)
+    if (m_passthrough || devType == DeviceType::Hdmi || devType == DeviceType::Spdif)
         GetAESParams(format, AESParams);
 
     std::cout << "CAESinkALSA::Initialize - Attempting to open device " << device.c_str();
@@ -491,10 +487,8 @@ bool AlsaPassthroughSink::Initialize(AEAudioFormat &format, std::string &device)
     }
 
     // get the actual device name that was used
-    device = snd_pcm_name(m_pcm);
-    m_device = device;
-
-    std::cout << "CAESinkALSA::Initialize - Opened device " << device.c_str();
+    m_device = snd_pcm_name(m_pcm);
+    std::cout << "CAESinkALSA::Initialize - Opened device " << m_device;
 
     // free the sound config
     snd_config_delete(config);
@@ -550,7 +544,7 @@ bool AlsaPassthroughSink::Initialize(AEAudioFormat &format, std::string &device)
     return true;
 }
 
-snd_pcm_format_t AlsaPassthroughSink::AEFormatToALSAFormat(const enum AEDataFormat format)
+snd_pcm_format_t AlsaPassthroughSink::AEFormatToALSAFormat(const enum DataFormat format)
 {
     if (format == AE_FMT_RAW)
         return SND_PCM_FORMAT_S16;
@@ -561,12 +555,6 @@ snd_pcm_format_t AlsaPassthroughSink::AEFormatToALSAFormat(const enum AEDataForm
     case AE_FMT_S16NE : return SND_PCM_FORMAT_S16;
     case AE_FMT_S16LE : return SND_PCM_FORMAT_S16_LE;
     case AE_FMT_S16BE : return SND_PCM_FORMAT_S16_BE;
-    case AE_FMT_S24NE4: return SND_PCM_FORMAT_S24;
-#ifdef __BIG_ENDIAN__
-    case AE_FMT_S24NE3: return SND_PCM_FORMAT_S24_3BE;
-#else
-    case AE_FMT_S24NE3: return SND_PCM_FORMAT_S24_3LE;
-#endif
     case AE_FMT_S32NE : return SND_PCM_FORMAT_S32;
     case AE_FMT_FLOAT : return SND_PCM_FORMAT_FLOAT;
 
@@ -623,7 +611,7 @@ bool AlsaPassthroughSink::InitializeHW(const ALSAConfig &inconfig, ALSAConfig &o
     {
         // if the chosen format is not supported, try each one in descending order
         std::cout << "CAESinkALSA::InitializeHW - Your hardware does not support: " << CAEUtil::DataFormatToStr(outconfig.format);
-        for (enum AEDataFormat i = AE_FMT_MAX; i > AE_FMT_INVALID; i = (enum AEDataFormat)((int)i - 1))
+        for (enum DataFormat i = AE_FMT_MAX; i > AE_FMT_INVALID; i = (enum DataFormat)((int)i - 1))
         {
             if (i == AE_FMT_RAW || i == AE_FMT_MAX)
                 continue;
@@ -646,15 +634,8 @@ bool AlsaPassthroughSink::InitializeHW(const ALSAConfig &inconfig, ALSAConfig &o
             int bits    = snd_pcm_hw_params_get_sbits(hw_params);
 
             // skip bits check when alsa reports invalid sbits value
-            if (bits > 0 && bits != fmtBits)
-            {
-                // if we opened in 32bit and only have 24bits, signal it accordingly
-                if (fmt == SND_PCM_FORMAT_S32 && bits == 24)
-                    i = AE_FMT_S24NE4MSB;
-                else if (fmt == SND_PCM_FORMAT_S24 && bits == 24)
-                    i = AE_FMT_S24NE4;
-                else
-                    continue;
+            if (bits > 0 && bits != fmtBits) {
+                continue;
             }
 
             // record that the format fell back to X
@@ -1021,17 +1002,13 @@ bool AlsaPassthroughSink::OpenPCMDevice(const std::string &name, const std::stri
     return false;
 }
 
-AEDeviceInfoList AlsaPassthroughSink::enumerateDevices(bool force)
+DeviceDescriptors AlsaPassthroughSink::enumerateDevices()
 {
-    AEDeviceInfoList list;
+    DeviceDescriptors list;
 
     // ensure that ALSA has been initialized
     snd_lib_error_set_handler(sndLibErrorHandler);
-    if(!snd_config || force)
-    {
-        if(force)
-            snd_config_update_free_global();
-
+    if (!snd_config) {
         snd_config_update();
     }
 
@@ -1043,12 +1020,10 @@ AEDeviceInfoList AlsaPassthroughSink::enumerateDevices(bool force)
    * will automatically add "@" instead to enable surroundXX mangling.
    * We don't want to do that if "default" can handle multichannel
    * itself (e.g. in case of a pulseaudio server). */
-    enumerateDevice(list, "default", "", config);
+    //enumerateDevice(list, "default", "", config);
 
     void **hints;
-
-    if (snd_device_name_hint(-1, "pcm", &hints) < 0)
-    {
+    if (snd_device_name_hint(-1, "pcm", &hints) < 0) {
         std::cout << "CAESinkALSA - Unable to get a list of devices";
         return {};
     }
@@ -1119,7 +1094,7 @@ AEDeviceInfoList AlsaPassthroughSink::enumerateDevices(bool force)
     snd_device_name_free_hint(hints);
 
     // set the displayname for default device
-    if (!list.empty() && list[0].m_deviceName == "default")
+    if (!list.empty() && list[0].deviceName == "default")
     {
         // If we have one from a hint (DESC), use it
         if (!defaultDescription.empty())
@@ -1132,10 +1107,10 @@ AEDeviceInfoList AlsaPassthroughSink::enumerateDevices(bool force)
     // cards with surround entries where sysdefault should be removed
     std::set<std::string> cardsWithSurround;
 
-    for (AEDeviceInfoList::iterator it1 = list.begin(); it1 != list.end(); ++it1)
+    for (DeviceDescriptors::iterator it1 = list.begin(); it1 != list.end(); ++it1)
     {
-        std::string baseName = it1->m_deviceName.substr(0, it1->m_deviceName.find(':'));
-        std::string card = GetParamFromName(it1->m_deviceName, "CARD");
+        std::string baseName = it1->deviceName.substr(0, it1->deviceName.find(':'));
+        std::string card = GetParamFromName(it1->deviceName, "CARD");
         if (baseName == "@" && !card.empty())
             cardsWithSurround.insert(card);
     }
@@ -1143,11 +1118,11 @@ AEDeviceInfoList AlsaPassthroughSink::enumerateDevices(bool force)
     if (!cardsWithSurround.empty())
     {
         // remove sysdefault entries where we already have a surround entry
-        AEDeviceInfoList::iterator iter = list.begin();
+        DeviceDescriptors::iterator iter = list.begin();
         while (iter != list.end())
         {
-            std::string baseName = iter->m_deviceName.substr(0, iter->m_deviceName.find(':'));
-            std::string card = GetParamFromName(iter->m_deviceName, "CARD");
+            std::string baseName = iter->deviceName.substr(0, iter->deviceName.find(':'));
+            std::string card = GetParamFromName(iter->deviceName, "CARD");
             if (baseName == "sysdefault" && cardsWithSurround.find(card) != cardsWithSurround.end())
                 iter = list.erase(iter);
             else
@@ -1165,16 +1140,16 @@ AEDeviceInfoList AlsaPassthroughSink::enumerateDevices(bool force)
     // clashing basename + cardname combinations, e.g. ("hdmi","Nvidia")
     std::set<std::pair<std::string, std::string> > devsToAppend;
 
-    for (AEDeviceInfoList::iterator it1 = list.begin(); it1 != list.end(); ++it1)
+    for (DeviceDescriptors::iterator it1 = list.begin(); it1 != list.end(); ++it1)
     {
-        for (AEDeviceInfoList::iterator it2 = it1+1; it2 != list.end(); ++it2)
+        for (DeviceDescriptors::iterator it2 = it1+1; it2 != list.end(); ++it2)
         {
             if (it1->m_displayName == it2->m_displayName
                     && it1->m_displayNameExtra == it2->m_displayNameExtra)
             {
                 // something needs to be done
-                std::string cardString1 = GetParamFromName(it1->m_deviceName, "CARD");
-                std::string cardString2 = GetParamFromName(it2->m_deviceName, "CARD");
+                std::string cardString1 = GetParamFromName(it1->deviceName, "CARD");
+                std::string cardString2 = GetParamFromName(it2->deviceName, "CARD");
 
                 if (cardString1 != cardString2)
                 {
@@ -1184,20 +1159,20 @@ AEDeviceInfoList AlsaPassthroughSink::enumerateDevices(bool force)
                     continue;
                 }
 
-                std::string devString1 = GetParamFromName(it1->m_deviceName, "DEV");
-                std::string devString2 = GetParamFromName(it2->m_deviceName, "DEV");
+                std::string devString1 = GetParamFromName(it1->deviceName, "DEV");
+                std::string devString2 = GetParamFromName(it2->deviceName, "DEV");
 
                 if (devString1 != devString2)
                 {
                     // device number differs, add identifiers to all such devices
-                    devsToAppend.insert(std::make_pair(it1->m_deviceName.substr(0, it1->m_deviceName.find(':')), cardString1));
-                    devsToAppend.insert(std::make_pair(it2->m_deviceName.substr(0, it2->m_deviceName.find(':')), cardString2));
+                    devsToAppend.insert(std::make_pair(it1->deviceName.substr(0, it1->deviceName.find(':')), cardString1));
+                    devsToAppend.insert(std::make_pair(it2->deviceName.substr(0, it2->deviceName.find(':')), cardString2));
                     continue;
                 }
 
                 // if we got here, the configuration is really weird, just append the whole device string
-                it1->m_displayName += " (" + it1->m_deviceName + ")";
-                it2->m_displayName += " (" + it2->m_deviceName + ")";
+                it1->m_displayName += " (" + it1->deviceName + ")";
+                it2->m_displayName += " (" + it2->deviceName + ")";
             }
         }
     }
@@ -1205,9 +1180,9 @@ AEDeviceInfoList AlsaPassthroughSink::enumerateDevices(bool force)
     for (std::set<std::string>::iterator it = cardsToAppend.begin();
          it != cardsToAppend.end(); ++it)
     {
-        for (AEDeviceInfoList::iterator itl = list.begin(); itl != list.end(); ++itl)
+        for (DeviceDescriptors::iterator itl = list.begin(); itl != list.end(); ++itl)
         {
-            std::string cardString = GetParamFromName(itl->m_deviceName, "CARD");
+            std::string cardString = GetParamFromName(itl->deviceName, "CARD");
             if (cardString == *it)
                 // "HDA NVidia (NVidia)", "HDA NVidia (NVidia_2)", ...
                 itl->m_displayName += " (" + cardString + ")";
@@ -1217,13 +1192,13 @@ AEDeviceInfoList AlsaPassthroughSink::enumerateDevices(bool force)
     for (std::set<std::pair<std::string, std::string> >::iterator it = devsToAppend.begin();
          it != devsToAppend.end(); ++it)
     {
-        for (AEDeviceInfoList::iterator itl = list.begin(); itl != list.end(); ++itl)
+        for (DeviceDescriptors::iterator itl = list.begin(); itl != list.end(); ++itl)
         {
-            std::string baseName = itl->m_deviceName.substr(0, itl->m_deviceName.find(':'));
-            std::string cardString = GetParamFromName(itl->m_deviceName, "CARD");
+            std::string baseName = itl->deviceName.substr(0, itl->deviceName.find(':'));
+            std::string cardString = GetParamFromName(itl->deviceName, "CARD");
             if (baseName == it->first && cardString == it->second)
             {
-                std::string devString = GetParamFromName(itl->m_deviceName, "DEV");
+                std::string devString = GetParamFromName(itl->deviceName, "DEV");
                 // "HDMI #0", "HDMI #1" ...
                 itl->m_displayNameExtra += " #" + devString;
             }
@@ -1233,14 +1208,14 @@ AEDeviceInfoList AlsaPassthroughSink::enumerateDevices(bool force)
     return list;
 }
 
-AEDeviceType AlsaPassthroughSink::AEDeviceTypeFromName(const std::string &name)
+DeviceType AlsaPassthroughSink::AEDeviceTypeFromName(const std::string &name)
 {
     if (name.substr(0, 4) == "hdmi")
-        return AE_DEVTYPE_HDMI;
+        return DeviceType::Hdmi;
     else if (name.substr(0, 6) == "iec958" || name.substr(0, 5) == "spdif")
-        return AE_DEVTYPE_IEC958;
+        return DeviceType::Spdif;
 
-    return AE_DEVTYPE_PCM;
+    return DeviceType::Pcm;
 }
 
 std::string AlsaPassthroughSink::GetParamFromName(const std::string &name, const std::string &param)
@@ -1256,7 +1231,7 @@ std::string AlsaPassthroughSink::GetParamFromName(const std::string &name, const
     return "";
 }
 
-void AlsaPassthroughSink::enumerateDevice(AEDeviceInfoList &list, const std::string &device, const std::string &description, snd_config_t *config)
+void AlsaPassthroughSink::enumerateDevice(DeviceDescriptors &list, const std::string &device, const std::string &description, snd_config_t *config)
 {
     snd_pcm_t *pcmhandle = NULL;
     if (!OpenPCMDevice(device, "", ALSA_MAX_CHANNELS, &pcmhandle, config))
@@ -1275,9 +1250,9 @@ void AlsaPassthroughSink::enumerateDevice(AEDeviceInfoList &list, const std::str
 
     int cardNr = snd_pcm_info_get_card(pcminfo);
 
-    CAEDeviceInfo info;
-    info.m_deviceName = device;
-    info.m_deviceType = AEDeviceTypeFromName(device);
+    DeviceDescriptor info;
+    info.deviceName = device;
+    info.deviceType = AEDeviceTypeFromName(device);
 
     if (cardNr >= 0)
     {
@@ -1286,7 +1261,7 @@ void AlsaPassthroughSink::enumerateDevice(AEDeviceInfoList &list, const std::str
         if (snd_card_get_name(cardNr, &cardName) == 0)
             info.m_displayName = cardName;
 
-        if (info.m_deviceType == AE_DEVTYPE_HDMI && info.m_displayName.size() > 5 &&
+        if (info.deviceType == DeviceType::Hdmi && info.m_displayName.size() > 5 &&
                 info.m_displayName.substr(info.m_displayName.size()-5) == " HDMI")
         {
             // We already know this is HDMI, strip it
@@ -1303,22 +1278,22 @@ void AlsaPassthroughSink::enumerateDevice(AEDeviceInfoList &list, const std::str
         if (pcminfoName != "USB Audio")
             info.m_displayNameExtra = pcminfoName;
 
-        if (info.m_deviceType == AE_DEVTYPE_HDMI)
+        if (info.deviceType == DeviceType::Hdmi)
         {
             // @TODO(mawe): to be implemented
         }
-        else if (info.m_deviceType == AE_DEVTYPE_IEC958)
+        else if (info.deviceType == DeviceType::Spdif)
         {
             // append instead of replace, pcminfoName is useful for S/PDIF
             if (!info.m_displayNameExtra.empty())
                 info.m_displayNameExtra += ' ';
             info.m_displayNameExtra += "S/PDIF";
 
-            info.m_streamTypes.push_back(CAEStreamInfo::STREAM_TYPE_AC3);
-            info.m_streamTypes.push_back(CAEStreamInfo::STREAM_TYPE_DTSHD_CORE);
-            info.m_streamTypes.push_back(CAEStreamInfo::STREAM_TYPE_DTS_1024);
-            info.m_streamTypes.push_back(CAEStreamInfo::STREAM_TYPE_DTS_2048);
-            info.m_streamTypes.push_back(CAEStreamInfo::STREAM_TYPE_DTS_512);
+            info.streamTypes.push_back(StreamInfo::StreamType::Ac3);
+            info.streamTypes.push_back(StreamInfo::StreamType::STREAM_TYPE_DTSHD_CORE);
+            info.streamTypes.push_back(StreamInfo::StreamType::STREAM_TYPE_DTS_1024);
+            info.streamTypes.push_back(StreamInfo::StreamType::STREAM_TYPE_DTS_2048);
+            info.streamTypes.push_back(StreamInfo::StreamType::Dts512);
             info.m_dataFormats.push_back(AE_FMT_RAW);
         }
         else if (info.m_displayNameExtra.empty())
@@ -1356,7 +1331,7 @@ void AlsaPassthroughSink::enumerateDevice(AEDeviceInfoList &list, const std::str
     // ensure we can get a playback configuration for the device
     if (snd_pcm_hw_params_any(pcmhandle, hwparams) < 0)
     {
-        std::cout << "CAESinkALSA - No playback configurations available for device: " << device.c_str();
+        std::cout << "CAESinkALSA - No playback configurations available for device: " << device << std::endl;
         snd_pcm_close(pcmhandle);
         return;
     }
@@ -1372,7 +1347,7 @@ void AlsaPassthroughSink::enumerateDevice(AEDeviceInfoList &list, const std::str
     for (int i = ALSA_MAX_CHANNELS; i >= 1; --i)
     {
         // Reopen the device if needed on the special "surroundXX" cases
-        if (info.m_deviceType == AE_DEVTYPE_PCM && (i == 8 || i == 6 || i == 4))
+        if (info.deviceType == DeviceType::Pcm && (i == 8 || i == 6 || i == 4))
             OpenPCMDevice(device, "", i, &pcmhandle, config);
 
         if (snd_pcm_hw_params_test_channels(pcmhandle, hwparams, i) >= 0)
@@ -1421,7 +1396,7 @@ void AlsaPassthroughSink::enumerateDevice(AEDeviceInfoList &list, const std::str
     info.m_channels.ResolveChannels(alsaChannels);
 
     // detect the PCM sample formats that are available
-    for (enum AEDataFormat i = AE_FMT_MAX; i > AE_FMT_INVALID; i = (enum AEDataFormat)((int)i - 1))
+    for (enum DataFormat i = AE_FMT_MAX; i > AE_FMT_INVALID; i = (enum DataFormat)((int)i - 1))
     {
         if (i == AE_FMT_RAW || i == AE_FMT_MAX)
             continue;
@@ -1433,18 +1408,18 @@ void AlsaPassthroughSink::enumerateDevice(AEDeviceInfoList &list, const std::str
             info.m_dataFormats.push_back(i);
     }
 
-    if (info.m_deviceType == AE_DEVTYPE_HDMI)
+    if (info.deviceType == DeviceType::Hdmi)
     {
         // we don't trust ELD information and push back our supported formats explicitly
-        info.m_streamTypes.push_back(CAEStreamInfo::STREAM_TYPE_AC3);
-        info.m_streamTypes.push_back(CAEStreamInfo::STREAM_TYPE_DTSHD);
-        info.m_streamTypes.push_back(CAEStreamInfo::STREAM_TYPE_DTSHD_MA);
-        info.m_streamTypes.push_back(CAEStreamInfo::STREAM_TYPE_DTSHD_CORE);
-        info.m_streamTypes.push_back(CAEStreamInfo::STREAM_TYPE_DTS_1024);
-        info.m_streamTypes.push_back(CAEStreamInfo::STREAM_TYPE_DTS_2048);
-        info.m_streamTypes.push_back(CAEStreamInfo::STREAM_TYPE_DTS_512);
-        info.m_streamTypes.push_back(CAEStreamInfo::STREAM_TYPE_EAC3);
-        info.m_streamTypes.push_back(CAEStreamInfo::STREAM_TYPE_TRUEHD);
+        info.streamTypes.push_back(StreamInfo::StreamType::Ac3);
+        info.streamTypes.push_back(StreamInfo::StreamType::STREAM_TYPE_DTSHD);
+        info.streamTypes.push_back(StreamInfo::StreamType::STREAM_TYPE_DTSHD_MA);
+        info.streamTypes.push_back(StreamInfo::StreamType::STREAM_TYPE_DTSHD_CORE);
+        info.streamTypes.push_back(StreamInfo::StreamType::STREAM_TYPE_DTS_1024);
+        info.streamTypes.push_back(StreamInfo::StreamType::STREAM_TYPE_DTS_2048);
+        info.streamTypes.push_back(StreamInfo::StreamType::Dts512);
+        info.streamTypes.push_back(StreamInfo::StreamType::STREAM_TYPE_EAC3);
+        info.streamTypes.push_back(StreamInfo::StreamType::STREAM_TYPE_TRUEHD);
 
         // indicate that we can do AE_FMT_RAW
         info.m_dataFormats.push_back(AE_FMT_RAW);
@@ -1457,5 +1432,5 @@ void AlsaPassthroughSink::enumerateDevice(AEDeviceInfoList &list, const std::str
 
 void AlsaPassthroughSink::sndLibErrorHandler(const char *file, int line, const char *function, int err, const char *fmt, ...)
 {
-    std::cerr << "ALSA error: " << err;
+    //std::cerr << "ALSA error: " << err;
 }

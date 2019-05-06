@@ -19,84 +19,83 @@ extern "C" {
 #include <libavutil/crc.h>
 }
 
-class CAEStreamInfo
+class StreamInfo
 {
 public:
-  double GetDuration() const;
-  bool operator==(const CAEStreamInfo& info) const;
+    double GetDuration() const;
+    bool operator==(const StreamInfo& info) const;
 
-  enum DataType
-  {
-    STREAM_TYPE_NULL,
-    STREAM_TYPE_AC3,
-    STREAM_TYPE_DTS_512,
-    STREAM_TYPE_DTS_1024,
-    STREAM_TYPE_DTS_2048,
-    STREAM_TYPE_DTSHD,
-    STREAM_TYPE_DTSHD_CORE,
-    STREAM_TYPE_EAC3,
-    STREAM_TYPE_MLP,
-    STREAM_TYPE_TRUEHD,
-    STREAM_TYPE_DTSHD_MA
-  };
-  DataType m_type = STREAM_TYPE_NULL;
-  unsigned int m_sampleRate;
-  unsigned int m_channels;
-  bool m_dataIsLE = true;
-  unsigned int m_dtsPeriod = 0;
-  unsigned int m_repeat = 0;
-  unsigned int m_ac3FrameSize = 0;
+    enum class StreamType
+    {
+        Null,
+        Ac3,
+        Dts512,
+        STREAM_TYPE_DTS_1024,
+        STREAM_TYPE_DTS_2048,
+        STREAM_TYPE_DTSHD,
+        STREAM_TYPE_DTSHD_CORE,
+        STREAM_TYPE_EAC3,
+        STREAM_TYPE_MLP,
+        STREAM_TYPE_TRUEHD,
+        STREAM_TYPE_DTSHD_MA
+    };
+    StreamType type = StreamType::Null;
+    uint32_t m_sampleRate;
+    uint16_t m_channels;
+    bool m_dataIsLE = true;
+    unsigned int m_dtsPeriod = 0;
+    unsigned int m_repeat = 0;
+    unsigned int m_ac3FrameSize = 0;
 };
 
 class CAEStreamParser
 {
 public:
+    CAEStreamParser();
+    ~CAEStreamParser();
 
-  CAEStreamParser();
-  ~CAEStreamParser();
+    int AddData(uint8_t *data, unsigned int size, uint8_t **buffer = NULL, unsigned int *bufferSize = 0);
 
-  int AddData(uint8_t *data, unsigned int size, uint8_t **buffer = NULL, unsigned int *bufferSize = 0);
-
-  void SetCoreOnly(bool value) { m_coreOnly = value; }
-  unsigned int IsValid() const { return m_hasSync; }
-  unsigned int GetSampleRate() const { return m_info.m_sampleRate; }
-  unsigned int GetChannels() const { return m_info.m_channels; }
-  unsigned int GetFrameSize() const { return m_fsize; }
-  // unsigned int GetDTSBlocks() const { return m_dtsBlocks; }
-  unsigned int GetDTSPeriod() const { return m_info.m_dtsPeriod; }
-  unsigned int GetEAC3BlocksDiv() const { return m_info.m_repeat; }
-  enum CAEStreamInfo::DataType const GetDataType() const { return m_info.m_type; }
-  bool IsLittleEndian() const { return m_info.m_dataIsLE; }
-  unsigned int GetBufferSize() const { return m_bufferSize; }
-  CAEStreamInfo& GetStreamInfo() { return m_info; }
-  void Reset();
+    void SetCoreOnly(bool value) { m_coreOnly = value; }
+    unsigned int IsValid() const { return m_hasSync; }
+    unsigned int GetSampleRate() const { return m_info.m_sampleRate; }
+    unsigned int GetChannels() const { return m_info.m_channels; }
+    unsigned int GetFrameSize() const { return m_fsize; }
+    // unsigned int GetDTSBlocks() const { return m_dtsBlocks; }
+    unsigned int GetDTSPeriod() const { return m_info.m_dtsPeriod; }
+    unsigned int GetEAC3BlocksDiv() const { return m_info.m_repeat; }
+    enum StreamInfo::StreamType const GetDataType() const { return m_info.type; }
+    bool IsLittleEndian() const { return m_info.m_dataIsLE; }
+    unsigned int GetBufferSize() const { return m_bufferSize; }
+    StreamInfo& GetStreamInfo() { return m_info; }
+    void Reset();
 
 private:
-  uint8_t m_buffer[MAX_IEC61937_PACKET];
-  unsigned int m_bufferSize = 0;
-  unsigned int m_skipBytes = 0;
+    uint8_t m_buffer[MAX_IEC61937_PACKET];
+    unsigned int m_bufferSize = 0;
+    unsigned int m_skipBytes = 0;
 
-  typedef unsigned int (CAEStreamParser::*ParseFunc)(uint8_t *data, unsigned int size);
+    typedef unsigned int (CAEStreamParser::*ParseFunc)(uint8_t *data, unsigned int size);
 
-  CAEStreamInfo m_info;
-  bool m_coreOnly = false;
-  unsigned int m_needBytes = 0;
-  ParseFunc m_syncFunc;
-  bool m_hasSync = false;
+    StreamInfo m_info;
+    bool m_coreOnly = false;
+    unsigned int m_needBytes = 0;
+    ParseFunc m_syncFunc;
+    bool m_hasSync = false;
 
-  unsigned int m_coreSize = 0;         /* core size for dtsHD */
-  unsigned int m_dtsBlocks = 0;
-  unsigned int m_fsize = 0;
-  int m_substreams = 0;       /* used for TrueHD  */
-  AVCRC m_crcTrueHD[1024];  /* TrueHD crc table */
+    unsigned int m_coreSize = 0;         /* core size for dtsHD */
+    unsigned int m_dtsBlocks = 0;
+    unsigned int m_fsize = 0;
+    int m_substreams = 0;       /* used for TrueHD  */
+    AVCRC m_crcTrueHD[1024];  /* TrueHD crc table */
 
-  void GetPacket(uint8_t **buffer, unsigned int *bufferSize);
-  unsigned int DetectType(uint8_t *data, unsigned int size);
-  bool TrySyncAC3(uint8_t *data, unsigned int size, bool resyncing, bool wantEAC3dependent);
-  unsigned int SyncAC3(uint8_t *data, unsigned int size);
-  unsigned int SyncDTS(uint8_t *data, unsigned int size);
-  unsigned int SyncTrueHD(uint8_t *data, unsigned int size);
+    void GetPacket(uint8_t **buffer, unsigned int *bufferSize);
+    unsigned int DetectType(uint8_t *data, unsigned int size);
+    bool TrySyncAC3(uint8_t *data, unsigned int size, bool resyncing, bool wantEAC3dependent);
+    unsigned int SyncAC3(uint8_t *data, unsigned int size);
+    unsigned int SyncDTS(uint8_t *data, unsigned int size);
+    unsigned int SyncTrueHD(uint8_t *data, unsigned int size);
 
-  static unsigned int GetTrueHDChannels(const uint16_t chanmap);
+    static unsigned int GetTrueHDChannels(const uint16_t chanmap);
 };
 

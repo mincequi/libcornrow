@@ -7,8 +7,10 @@ int main(int argc, char** argv)
     AlsaPassthroughSink sink;
     auto devices = sink.enumerateDevices();
 
-    for (const auto& device : devices) {
-        std::cout << device << std::endl;
+    for (const DeviceDescriptor& device : devices) {
+        if (device.deviceType == DeviceType::Spdif && !device.streamTypes.empty()) {
+            std::cout << device << std::endl;
+        }
     }
 
     return 0;

@@ -116,11 +116,9 @@ private:
 public:
   static CAEChannelInfo          GuessChLayout     (const unsigned int channels);
   static const char*             GetStdChLayoutName(const enum AEStdChLayout layout);
-  static unsigned int      DataFormatToBits  (const enum AEDataFormat dataFormat);
-  static unsigned int      DataFormatToUsedBits (const enum AEDataFormat dataFormat);
-  static unsigned int      DataFormatToDitherBits(const enum AEDataFormat dataFormat);
-  static const char*             DataFormatToStr   (const enum AEDataFormat dataFormat);
-  static const char* StreamTypeToStr(const enum CAEStreamInfo::DataType dataType);
+  static unsigned int      DataFormatToBits  (const enum DataFormat dataFormat);
+  static const char*             DataFormatToStr   (const enum DataFormat dataFormat);
+  static const char* StreamTypeToStr(const enum StreamInfo::StreamType dataType);
 
   /*! \brief convert a volume percentage (as a proportion) to a dB gain
    We assume a dB range of 60dB, i.e. assume that 0% volume corresponds
@@ -181,10 +179,10 @@ public:
   }
   static void ClampArray(float *data, uint32_t count);
 
-  static bool S16NeedsByteSwap(AEDataFormat in, AEDataFormat out);
+  static bool S16NeedsByteSwap(DataFormat in, DataFormat out);
 
   static uint64_t GetAVChannelLayout(const CAEChannelInfo &info);
   static CAEChannelInfo GetAEChannelLayout(uint64_t layout);
-  static AVSampleFormat GetAVSampleFormat(AEDataFormat format);
+  static AVSampleFormat GetAVSampleFormat(DataFormat format);
   static uint64_t GetAVChannel(enum AEChannel aechannel);
 };

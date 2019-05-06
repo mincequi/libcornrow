@@ -14,35 +14,30 @@
 #include "AEStreamInfo.h"
 
 typedef std::vector<unsigned int> AESampleRateList;
-typedef std::vector<enum AEDataFormat> AEDataFormatList;
-typedef std::vector<CAEStreamInfo::DataType> AEDataTypeList;
+typedef std::vector<enum DataFormat> AEDataFormatList;
 
-enum AEDeviceType {
-  AE_DEVTYPE_PCM,
-  AE_DEVTYPE_IEC958,
-  AE_DEVTYPE_HDMI,
-  AE_DEVTYPE_DP
+enum class DeviceType {
+    Pcm,
+    Spdif,
+    Hdmi
 };
 
-/**
- * This classt provides the details of what the audio output hardware is capable of
- */
-class CAEDeviceInfo
+struct DeviceDescriptor
 {
 public:
-  std::string m_deviceName;	// the driver device name
-  std::string m_displayName;	// the friendly display name
-  std::string m_displayNameExtra;	// additional display name info, ie, monitor name from ELD
-  enum AEDeviceType m_deviceType;	// the device type, PCM, IEC958 or HDMI
-  CAEChannelInfo m_channels;		// the channels the device is capable of rendering
-  AESampleRateList m_sampleRates;	// the samplerates the device is capable of rendering
-  AEDataFormatList m_dataFormats;	// the dataformats the device is capable of rendering
-  AEDataTypeList m_streamTypes;
+    std::string deviceName;	// the driver device name
+    std::string m_displayName;	// the friendly display name
+    std::string m_displayNameExtra;	// additional display name info, ie, monitor name from ELD
+    DeviceType deviceType;	// the device type, PCM, IEC958 or HDMI
+    CAEChannelInfo m_channels;		// the channels the device is capable of rendering
+    AESampleRateList m_sampleRates;	// the samplerates the device is capable of rendering
+    AEDataFormatList m_dataFormats;	// the dataformats the device is capable of rendering
+    std::vector<StreamInfo::StreamType> streamTypes;
 
-  bool m_wantsIECPassthrough;           // if sink supports passthrough encapsulation is done when set to true
+    bool m_wantsIECPassthrough;           // if sink supports passthrough encapsulation is done when set to true
 
-  friend std::ostream& operator<<(std::ostream& ss, const CAEDeviceInfo& info);
-  static std::string DeviceTypeToString(enum AEDeviceType deviceType);
+    friend std::ostream& operator<<(std::ostream& ss, const DeviceDescriptor& info);
+    static std::string DeviceTypeToString(enum DeviceType deviceType);
 };
 
-typedef std::vector<CAEDeviceInfo> AEDeviceInfoList;
+typedef std::vector<DeviceDescriptor> DeviceDescriptors;

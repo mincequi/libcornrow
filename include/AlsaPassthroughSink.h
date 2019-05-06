@@ -26,10 +26,10 @@ public:
   AlsaPassthroughSink();
   ~AlsaPassthroughSink();
 
-  static AlsaPassthroughSink* Create(std::string &device, AEAudioFormat &desiredFormat);
-  static AEDeviceInfoList enumerateDevices(bool force = false);
+  static AlsaPassthroughSink* create(std::string& device, AEAudioFormat& desiredFormat);
+  static DeviceDescriptors enumerateDevices();
 
-  bool Initialize(AEAudioFormat &format, std::string &device);
+  bool init(std::string& device, AEAudioFormat& format);
   void Deinitialize();
 
   void Stop();
@@ -73,10 +73,10 @@ private:
     unsigned int periodSize;
     unsigned int frameSize;
     unsigned int channels;
-    AEDataFormat format;
+    DataFormat format;
   };
 
-  static snd_pcm_format_t AEFormatToALSAFormat(const enum AEDataFormat format);
+  static snd_pcm_format_t AEFormatToALSAFormat(const enum DataFormat format);
 
   bool InitializeHW(const ALSAConfig &inconfig, ALSAConfig &outconfig);
   bool InitializeSW(const ALSAConfig &inconfig);
@@ -86,11 +86,11 @@ private:
   static bool TryDeviceWithParams(const std::string &name, const std::string &params, snd_pcm_t **pcmp, snd_config_t *lconf);
   static bool OpenPCMDevice(const std::string &name, const std::string &params, int channels, snd_pcm_t **pcmp, snd_config_t *lconf);
 
-  static AEDeviceType AEDeviceTypeFromName(const std::string &name);
+  static DeviceType AEDeviceTypeFromName(const std::string &name);
   static std::string GetParamFromName(const std::string &name, const std::string &param);
-  static void enumerateDevice(AEDeviceInfoList &list, const std::string &device, const std::string &description, snd_config_t *config);
+  static void enumerateDevice(DeviceDescriptors &list, const std::string &device, const std::string &description, snd_config_t *config);
   static bool SoundDeviceExists(const std::string& device);
-  static bool GetELD(snd_hctl_t *hctl, int device, CAEDeviceInfo& info, bool& badHDMI);
+  static bool GetELD(snd_hctl_t *hctl, int device, DeviceDescriptor& info, bool& badHDMI);
 
   static void sndLibErrorHandler(const char *file, int line, const char *function, int err, const char *fmt, ...);
 };
