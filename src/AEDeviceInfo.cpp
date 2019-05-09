@@ -10,29 +10,29 @@
 #include "AEDeviceInfo.h"
 #include "AEUtil.h"
 
-std::ostream& operator<<(std::ostream& ss, const DeviceDescriptor& info)
+std::ostream& operator<<(std::ostream& ss, const AudioDeviceDescriptor& info)
 {
     ss << "deviceName      : " << info.deviceName << '\n';
     ss << "displayName     : " << info.m_displayName << '\n';
     ss << "displayNameExtra: " << info.m_displayNameExtra << '\n';
-    ss << "deviceType      : " << DeviceDescriptor::DeviceTypeToString(info.deviceType) + '\n';
-    ss << "channels        : " << (std::string)info.m_channels << '\n';
+    ss << "deviceType      : " << AudioDeviceDescriptor::DeviceTypeToString(info.deviceType) + '\n';
+    ss << "channels        : " << (std::string)info.channels << '\n';
 
     ss << "sampleRates     : ";
-    for (auto it = info.m_sampleRates.begin(); it != info.m_sampleRates.end(); ++it)
+    for (auto it = info.sampleRates.begin(); it != info.sampleRates.end(); ++it)
     {
-        if (it != info.m_sampleRates.begin())
+        if (it != info.sampleRates.begin())
             ss << ", ";
         ss << *it;
     }
     ss << '\n';
 
     ss << "dataFormats     : ";
-    for (auto it = info.m_dataFormats.begin(); it != info.m_dataFormats.end(); ++it)
+    for (auto it = info.sampleFormat.begin(); it != info.sampleFormat.end(); ++it)
     {
-        if (it != info.m_dataFormats.begin())
+        if (it != info.sampleFormat.begin())
             ss << ", ";
-        ss << CAEUtil::DataFormatToStr(*it);
+        ss << (*it);
     }
     ss << '\n';
 
@@ -48,7 +48,7 @@ std::ostream& operator<<(std::ostream& ss, const DeviceDescriptor& info)
     return ss;
 }
 
-std::string DeviceDescriptor::DeviceTypeToString(enum DeviceType deviceType)
+std::string AudioDeviceDescriptor::DeviceTypeToString(enum DeviceType deviceType)
 {
     switch (deviceType) {
     case DeviceType::Pcm   : return "PCM"  ; break;

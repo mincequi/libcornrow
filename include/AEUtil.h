@@ -114,10 +114,9 @@ private:
   static float SoftClamp(const float x);
 
 public:
-  static CAEChannelInfo          GuessChLayout     (const unsigned int channels);
+  static AudioChannelLayout          GuessChLayout     (const unsigned int channels);
   static const char*             GetStdChLayoutName(const enum AEStdChLayout layout);
-  static unsigned int      DataFormatToBits  (const enum DataFormat dataFormat);
-  static const char*             DataFormatToStr   (const enum DataFormat dataFormat);
+  static unsigned int      numBits(AudioSampleFormat dataFormat);
   static const char* StreamTypeToStr(const enum StreamInfo::StreamType dataType);
 
   /*! \brief convert a volume percentage (as a proportion) to a dB gain
@@ -179,10 +178,10 @@ public:
   }
   static void ClampArray(float *data, uint32_t count);
 
-  static bool S16NeedsByteSwap(DataFormat in, DataFormat out);
+  static bool S16NeedsByteSwap(AudioSampleFormat in, AudioSampleFormat out);
 
-  static uint64_t GetAVChannelLayout(const CAEChannelInfo &info);
-  static CAEChannelInfo GetAEChannelLayout(uint64_t layout);
-  static AVSampleFormat GetAVSampleFormat(DataFormat format);
-  static uint64_t GetAVChannel(enum AEChannel aechannel);
+  static uint64_t GetAVChannelLayout(const AudioChannelLayout &info);
+  static AudioChannelLayout GetAEChannelLayout(uint64_t layout);
+  static AVSampleFormat GetAVSampleFormat(AudioSampleFormat format);
+  static uint64_t GetAVChannel(enum AudioChannel aechannel);
 };

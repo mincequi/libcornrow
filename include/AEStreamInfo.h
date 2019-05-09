@@ -32,12 +32,12 @@ public:
         Dts512,
         STREAM_TYPE_DTS_1024,
         STREAM_TYPE_DTS_2048,
-        STREAM_TYPE_DTSHD,
+        DtsHd,
         STREAM_TYPE_DTSHD_CORE,
-        STREAM_TYPE_EAC3,
+        Eac3,
         STREAM_TYPE_MLP,
-        STREAM_TYPE_TRUEHD,
-        STREAM_TYPE_DTSHD_MA
+        TrueHd,
+        DtsHdMaster
     };
     StreamType type = StreamType::Null;
     uint32_t m_sampleRate;

@@ -32,30 +32,21 @@ const char* CAEUtil::GetStdChLayoutName(const enum AEStdChLayout layout)
     return layouts[layout];
 }
 
-unsigned int CAEUtil::DataFormatToBits(const enum DataFormat dataFormat)
+unsigned int CAEUtil::numBits(AudioSampleFormat dataFormat)
 {
-    if (dataFormat < 0 || dataFormat >= AE_FMT_MAX)
-        return 0;
-
-    static const unsigned int formats[AE_FMT_MAX] =
-    {
-        8,                   /* U8     */
-
-        16,                  /* S16BE  */
-        16,                  /* S16LE  */
-        16,                  /* S16NE  */
-
-        32,                  /* S32BE  */
-        32,                  /* S32LE  */
-        32,                  /* S32NE  */
-
-        sizeof(double) << 3, /* DOUBLE */
-        sizeof(float ) << 3, /* FLOAT  */
-
-        8,                  /* RAW    */
-    };
-
-    return formats[dataFormat];
+    switch (dataFormat) {
+    case AudioSampleFormat::Invalid:    return 0;
+    case AudioSampleFormat::S16BE:      return 16;
+    case AudioSampleFormat::S16LE:      return 16;
+    case AudioSampleFormat::S16NE:      return 16;
+    case AudioSampleFormat::S32BE:      return 32;
+    case AudioSampleFormat::S32LE:      return 32;
+    case AudioSampleFormat::S32NE:      return 32;
+    case AudioSampleFormat::Double:     return sizeof(double) << 3;
+    case AudioSampleFormat::Float:      return sizeof(float ) << 3;
+    case AudioSampleFormat::Bitstream:  return 8;
+    case AudioSampleFormat::Max:        return 0;
+    }
 }
 
 const char* CAEUtil::StreamTypeToStr(const enum StreamInfo::StreamType dataType)
@@ -65,9 +56,9 @@ const char* CAEUtil::StreamTypeToStr(const enum StreamInfo::StreamType dataType)
         return "NULL";
     case StreamInfo::StreamType::Ac3:
         return "AC3";
-    case StreamInfo::StreamType::STREAM_TYPE_DTSHD:
+    case StreamInfo::StreamType::DtsHd:
         return "DTSHD";
-    case StreamInfo::StreamType::STREAM_TYPE_DTSHD_MA:
+    case StreamInfo::StreamType::DtsHdMaster:
         return "DTSHD_MA";
     case StreamInfo::StreamType::STREAM_TYPE_DTSHD_CORE:
         return "DTSHD_CORE";
@@ -77,34 +68,13 @@ const char* CAEUtil::StreamTypeToStr(const enum StreamInfo::StreamType dataType)
         return "DTS_2048";
     case StreamInfo::StreamType::Dts512:
         return "DTS_512";
-    case StreamInfo::StreamType::STREAM_TYPE_EAC3:
+    case StreamInfo::StreamType::Eac3:
         return "EAC3";
     case StreamInfo::StreamType::STREAM_TYPE_MLP:
         return "MLP";
-    case StreamInfo::StreamType::STREAM_TYPE_TRUEHD:
+    case StreamInfo::StreamType::TrueHd:
         return "TRUEHD";
     }
-}
-
-const char* CAEUtil::DataFormatToStr(const enum DataFormat dataFormat)
-{
-    if (dataFormat < 0 || dataFormat >= AE_FMT_MAX)
-        return "UNKNOWN";
-
-    static const char *formats[AE_FMT_MAX] = {
-        "U8",
-        "S16BE",
-        "S16LE",
-        "S16NE",
-        "S32BE",
-        "S32LE",
-        "S32NE",
-        "DOUBLE",
-        "FLOAT",
-        "RAW",
-    };
-
-    return formats[dataFormat];
 }
 
 inline float CAEUtil::SoftClamp(const float x)
@@ -148,24 +118,24 @@ void CAEUtil::ClampArray(float *data, uint32_t count)
         data[i] = SoftClamp(data[i]);
 }
 
-bool CAEUtil::S16NeedsByteSwap(DataFormat in, DataFormat out)
+bool CAEUtil::S16NeedsByteSwap(AudioSampleFormat in, AudioSampleFormat out)
 {
-    const DataFormat nativeFormat =
+    const AudioSampleFormat nativeFormat =
         #ifdef WORDS_BIGENDIAN
-            AE_FMT_S16BE;
+            AudioSampleFormat::AE_FMT_S16BE;
 #else
-            AE_FMT_S16LE;
+            AudioSampleFormat::S16LE;
 #endif
 
-    if (in == AE_FMT_S16NE || (in == AE_FMT_RAW))
+    if (in == AudioSampleFormat::S16NE || (in == AudioSampleFormat::Bitstream))
         in = nativeFormat;
-    if (out == AE_FMT_S16NE || (out == AE_FMT_RAW))
+    if (out == AudioSampleFormat::S16NE || (out == AudioSampleFormat::Bitstream))
         out = nativeFormat;
 
     return in != out;
 }
 
-uint64_t CAEUtil::GetAVChannelLayout(const CAEChannelInfo &info)
+uint64_t CAEUtil::GetAVChannelLayout(const AudioChannelLayout &info)
 {
     uint64_t channelLayout = 0;
     if (info.HasChannel(AE_CH_FL))   channelLayout |= AV_CH_FRONT_LEFT;
@@ -190,10 +160,10 @@ uint64_t CAEUtil::GetAVChannelLayout(const CAEChannelInfo &info)
     return channelLayout;
 }
 
-CAEChannelInfo CAEUtil::GetAEChannelLayout(uint64_t layout)
+AudioChannelLayout CAEUtil::GetAEChannelLayout(uint64_t layout)
 {
-    CAEChannelInfo channelLayout;
-    channelLayout.Reset();
+    AudioChannelLayout channelLayout;
+    channelLayout.clear();
 
     if (layout & AV_CH_FRONT_LEFT)       channelLayout += AE_CH_FL;
     if (layout & AV_CH_FRONT_RIGHT)      channelLayout += AE_CH_FR;
@@ -217,30 +187,25 @@ CAEChannelInfo CAEUtil::GetAEChannelLayout(uint64_t layout)
     return channelLayout;
 }
 
-AVSampleFormat CAEUtil::GetAVSampleFormat(DataFormat format)
+AVSampleFormat CAEUtil::GetAVSampleFormat(AudioSampleFormat format)
 {
-    switch (format)
-    {
-    case DataFormat::AE_FMT_U8:
-        return AV_SAMPLE_FMT_U8;
-    case DataFormat::AE_FMT_S16NE:
+    switch (format) {
+    case AudioSampleFormat::S16NE:
         return AV_SAMPLE_FMT_S16;
-    case DataFormat::AE_FMT_S32NE:
+    case AudioSampleFormat::S32NE:
         return AV_SAMPLE_FMT_S32;
-    case DataFormat::AE_FMT_FLOAT:
+    case AudioSampleFormat::Float:
         return AV_SAMPLE_FMT_FLT;
-    case DataFormat::AE_FMT_DOUBLE:
+    case AudioSampleFormat::Double:
         return AV_SAMPLE_FMT_DBL;
-    case DataFormat::AE_FMT_RAW:
+    case AudioSampleFormat::Bitstream:
         return AV_SAMPLE_FMT_U8;
     default:
-    {
         return AV_SAMPLE_FMT_FLT;
-    }
     }
 }
 
-uint64_t CAEUtil::GetAVChannel(enum AEChannel aechannel)
+uint64_t CAEUtil::GetAVChannel(enum AudioChannel aechannel)
 {
     switch (aechannel)
     {

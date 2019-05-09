@@ -13,31 +13,28 @@
 #include "AEChannelInfo.h"
 #include "AEStreamInfo.h"
 
-typedef std::vector<unsigned int> AESampleRateList;
-typedef std::vector<enum DataFormat> AEDataFormatList;
-
 enum class DeviceType {
     Pcm,
     Spdif,
     Hdmi
 };
 
-struct DeviceDescriptor
+struct AudioDeviceDescriptor
 {
 public:
     std::string deviceName;	// the driver device name
     std::string m_displayName;	// the friendly display name
     std::string m_displayNameExtra;	// additional display name info, ie, monitor name from ELD
-    DeviceType deviceType;	// the device type, PCM, IEC958 or HDMI
-    CAEChannelInfo m_channels;		// the channels the device is capable of rendering
-    AESampleRateList m_sampleRates;	// the samplerates the device is capable of rendering
-    AEDataFormatList m_dataFormats;	// the dataformats the device is capable of rendering
+    DeviceType deviceType;	// the device type, PCM, SPDIF or HDMI
+    AudioChannelLayout channels;		// the channels the device is capable of rendering
+    std::vector<std::uint32_t> sampleRates;	// the samplerates the device is capable of rendering
+    std::vector<AudioSampleFormat> sampleFormat;	// the dataformats the device is capable of rendering
     std::vector<StreamInfo::StreamType> streamTypes;
 
     bool m_wantsIECPassthrough;           // if sink supports passthrough encapsulation is done when set to true
 
-    friend std::ostream& operator<<(std::ostream& ss, const DeviceDescriptor& info);
+    friend std::ostream& operator<<(std::ostream& ss, const AudioDeviceDescriptor& info);
     static std::string DeviceTypeToString(enum DeviceType deviceType);
 };
 
-typedef std::vector<DeviceDescriptor> DeviceDescriptors;
+using DeviceDescriptors = std::vector<AudioDeviceDescriptor>;

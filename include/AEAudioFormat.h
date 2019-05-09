@@ -11,69 +11,46 @@
 #include "AEChannelInfo.h"
 #include "AEStreamInfo.h"
 
-/**
- * The audio format structure that fully defines a stream's audio information
- */
-struct AEAudioFormat
+struct AudioFormat
 {
-  /**
-   * The stream's data format (eg, AE_FMT_S16LE)
-   */
-  enum DataFormat m_dataFormat;
+    AudioSampleFormat   sampleFormat    = AudioSampleFormat::Invalid;
+    std::uint32_t       sampleRate      = 0;
+    AudioChannelLayout  channelLayout;
 
-  /**
-   * The stream's sample rate (eg, 48000)
-   */
-  unsigned int m_sampleRate;
-
-  /**
-   * The stream's channel layout
-   */
-  CAEChannelInfo m_channelLayout;
-
-  /**
+    /**
    * The number of frames per period
    */
-  unsigned int m_frames;
+    unsigned int m_frames = 0;
 
-  /**
+    /**
    * The size of one frame in bytes
    */
-  unsigned int m_frameSize;
+    unsigned int m_frameSize = 0;
 
-  /**
+    /**
    * Stream info of raw passthrough
    */
-  StreamInfo m_streamInfo;
+    StreamInfo streamInfo;
 
-  AEAudioFormat()
-  {
-    m_dataFormat = AE_FMT_INVALID;
-    m_sampleRate = 0;
-    m_frames = 0;
-    m_frameSize = 0;
-  }
+    bool operator==(const AudioFormat& fmt) const
+    {
+        return  sampleFormat    ==  fmt.sampleFormat    &&
+                sampleRate      ==  fmt.sampleRate      &&
+                channelLayout   ==  fmt.channelLayout &&
+                m_frames        ==  fmt.m_frames        &&
+                m_frameSize     ==  fmt.m_frameSize     &&
+                streamInfo    ==  fmt.streamInfo;
+    }
 
-  bool operator==(const AEAudioFormat& fmt) const
-  {
-    return  m_dataFormat    ==  fmt.m_dataFormat    &&
-            m_sampleRate    ==  fmt.m_sampleRate    &&
-            m_channelLayout ==  fmt.m_channelLayout &&
-            m_frames        ==  fmt.m_frames        &&
-            m_frameSize     ==  fmt.m_frameSize     &&
-            m_streamInfo    ==  fmt.m_streamInfo;
-  }
+    AudioFormat& operator=(const AudioFormat& fmt)
+    {
+        sampleFormat = fmt.sampleFormat;
+        sampleRate = fmt.sampleRate;
+        channelLayout = fmt.channelLayout;
+        m_frames = fmt.m_frames;
+        m_frameSize = fmt.m_frameSize;
+        streamInfo = fmt.streamInfo;
 
-  AEAudioFormat& operator=(const AEAudioFormat& fmt)
-  {
-    m_dataFormat = fmt.m_dataFormat;
-    m_sampleRate = fmt.m_sampleRate;
-    m_channelLayout = fmt.m_channelLayout;
-    m_frames = fmt.m_frames;
-    m_frameSize = fmt.m_frameSize;
-    m_streamInfo = fmt.m_streamInfo;
-
-    return *this;
-  }
+        return *this;
+    }
 };
-

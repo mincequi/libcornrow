@@ -17,23 +17,15 @@
 #include <sstream>
 #include <string>
 
-#define ALSA_OPTIONS (SND_PCM_NO_AUTO_FORMAT | SND_PCM_NO_AUTO_CHANNELS | SND_PCM_NO_AUTO_RESAMPLE)
-
 #define ALSA_MAX_CHANNELS 16
-static enum AEChannel LegacyALSAChannelMap[ALSA_MAX_CHANNELS + 1] = {
+static enum AudioChannel LegacyALSAChannelMap[ALSA_MAX_CHANNELS + 1] = {
     AE_CH_FL      , AE_CH_FR      , AE_CH_BL      , AE_CH_BR      , AE_CH_FC      , AE_CH_LFE     , AE_CH_SL      , AE_CH_SR      ,
     AE_CH_UNKNOWN1, AE_CH_UNKNOWN2, AE_CH_UNKNOWN3, AE_CH_UNKNOWN4, AE_CH_UNKNOWN5, AE_CH_UNKNOWN6, AE_CH_UNKNOWN7, AE_CH_UNKNOWN8, // for p16v devices
     AE_CH_NULL
 };
 
-static enum AEChannel LegacyALSAChannelMap51Wide[ALSA_MAX_CHANNELS + 1] = {
+static enum AudioChannel LegacyALSAChannelMap51Wide[ALSA_MAX_CHANNELS + 1] = {
     AE_CH_FL      , AE_CH_FR      , AE_CH_SL      , AE_CH_SR      , AE_CH_FC      , AE_CH_LFE     , AE_CH_BL      , AE_CH_BR      ,
-    AE_CH_UNKNOWN1, AE_CH_UNKNOWN2, AE_CH_UNKNOWN3, AE_CH_UNKNOWN4, AE_CH_UNKNOWN5, AE_CH_UNKNOWN6, AE_CH_UNKNOWN7, AE_CH_UNKNOWN8, // for p16v devices
-    AE_CH_NULL
-};
-
-static enum AEChannel ALSAChannelMapPassthrough[ALSA_MAX_CHANNELS + 1] = {
-    AE_CH_RAW     , AE_CH_RAW     , AE_CH_RAW     , AE_CH_RAW     , AE_CH_RAW     , AE_CH_RAW     , AE_CH_RAW      , AE_CH_RAW      ,
     AE_CH_UNKNOWN1, AE_CH_UNKNOWN2, AE_CH_UNKNOWN3, AE_CH_UNKNOWN4, AE_CH_UNKNOWN5, AE_CH_UNKNOWN6, AE_CH_UNKNOWN7, AE_CH_UNKNOWN8, // for p16v devices
     AE_CH_NULL
 };
@@ -50,16 +42,17 @@ AlsaPassthroughSink::AlsaPassthroughSink() :
     m_pcm(NULL)
 {
     // ensure that ALSA has been initialized
-    if (!snd_config)
+    if (!snd_config) {
         snd_config_update();
+    }
 }
 
 AlsaPassthroughSink::~AlsaPassthroughSink()
 {
-    Deinitialize();
+    deinit();
 }
 
-AlsaPassthroughSink* AlsaPassthroughSink::create(std::string& device, AEAudioFormat& desiredFormat)
+AlsaPassthroughSink* AlsaPassthroughSink::create(std::string& device, AudioFormat& desiredFormat)
 {
     auto* sink = new AlsaPassthroughSink();
     if (sink->init(device, desiredFormat))
@@ -69,14 +62,20 @@ AlsaPassthroughSink* AlsaPassthroughSink::create(std::string& device, AEAudioFor
     return nullptr;
 }
 
-inline CAEChannelInfo AlsaPassthroughSink::GetChannelLayoutRaw(const AEAudioFormat& format)
+AlsaPassthroughSink* AlsaPassthroughSink::createPassthrough(std::string& device, AudioFormat& desiredFormat)
+{
+    auto* sink = new AlsaPassthroughSink();
+
+}
+
+inline AudioChannelLayout AlsaPassthroughSink::channelLayoutPassthrough(const AudioFormat& format)
 {
     unsigned int count = 0;
 
-    switch (format.m_streamInfo.type)
+    switch (format.streamInfo.type)
     {
-    case StreamInfo::StreamType::STREAM_TYPE_DTSHD_MA:
-    case StreamInfo::StreamType::STREAM_TYPE_TRUEHD:
+    case StreamInfo::StreamType::DtsHdMaster:
+    case StreamInfo::StreamType::TrueHd:
         count = 8;
         break;
     case StreamInfo::StreamType::STREAM_TYPE_DTSHD_CORE:
@@ -84,8 +83,8 @@ inline CAEChannelInfo AlsaPassthroughSink::GetChannelLayoutRaw(const AEAudioForm
     case StreamInfo::StreamType::STREAM_TYPE_DTS_1024:
     case StreamInfo::StreamType::STREAM_TYPE_DTS_2048:
     case StreamInfo::StreamType::Ac3:
-    case StreamInfo::StreamType::STREAM_TYPE_EAC3:
-    case StreamInfo::StreamType::STREAM_TYPE_DTSHD:
+    case StreamInfo::StreamType::Eac3:
+    case StreamInfo::StreamType::DtsHd:
         count = 2;
         break;
     default:
@@ -93,33 +92,35 @@ inline CAEChannelInfo AlsaPassthroughSink::GetChannelLayoutRaw(const AEAudioForm
         break;
     }
 
-    CAEChannelInfo info;
-    for (unsigned int i = 0; i < count; ++i)
-        info += ALSAChannelMapPassthrough[i];
+    AudioChannelLayout info;
+    for (unsigned int i = 0; i < count; ++i) {
+        info += AE_CH_RAW;
+    }
 
     return info;
 }
 
-inline CAEChannelInfo AlsaPassthroughSink::GetChannelLayoutLegacy(const AEAudioFormat& format, unsigned int minChannels, unsigned int maxChannels)
+inline AudioChannelLayout AlsaPassthroughSink::GetChannelLayoutLegacy(const AudioFormat& format, unsigned int minChannels, unsigned int maxChannels)
 {
-    enum AEChannel* channelMap = LegacyALSAChannelMap;
+    enum AudioChannel* channelMap = LegacyALSAChannelMap;
     unsigned int count = 0;
 
-    if (format.m_dataFormat == AE_FMT_RAW)
-        return GetChannelLayoutRaw(format);
+    if (format.sampleFormat == AudioSampleFormat::Bitstream) {
+        return channelLayoutPassthrough(format);
+    }
 
     // According to CEA-861-D only RL and RR are known. In case of a format having SL and SR channels
     // but no BR BL channels, we use the wide map in order to open only the num of channels really
     // needed.
-    if (format.m_channelLayout.HasChannel(AE_CH_SL) && !format.m_channelLayout.HasChannel(AE_CH_BL))
+    if (format.channelLayout.HasChannel(AE_CH_SL) && !format.channelLayout.HasChannel(AE_CH_BL))
     {
         channelMap = LegacyALSAChannelMap51Wide;
     }
     for (unsigned int c = 0; c < 8; ++c)
     {
-        for (unsigned int i = 0; i < format.m_channelLayout.Count(); ++i)
+        for (unsigned int i = 0; i < format.channelLayout.count(); ++i)
         {
-            if (format.m_channelLayout[i] == channelMap[c])
+            if (format.channelLayout[i] == channelMap[c])
             {
                 count = c + 1;
                 break;
@@ -129,21 +130,21 @@ inline CAEChannelInfo AlsaPassthroughSink::GetChannelLayoutLegacy(const AEAudioF
     count = std::max(count, minChannels);
     count = std::min(count, maxChannels);
 
-    CAEChannelInfo info;
+    AudioChannelLayout info;
     for (unsigned int i = 0; i < count; ++i)
         info += channelMap[i];
 
     return info;
 }
 
-inline CAEChannelInfo AlsaPassthroughSink::GetChannelLayout(const AEAudioFormat& format, unsigned int channels)
+inline AudioChannelLayout AlsaPassthroughSink::GetChannelLayout(const AudioFormat& format, unsigned int channels)
 {
-    CAEChannelInfo info;
+    AudioChannelLayout info;
     std::string alsaMapStr("none");
 
-    if (format.m_dataFormat == AE_FMT_RAW)
+    if (format.sampleFormat == AudioSampleFormat::Bitstream)
     {
-        info = GetChannelLayoutRaw(format);
+        info = channelLayoutPassthrough(format);
     }
     else
     {
@@ -156,21 +157,21 @@ inline CAEChannelInfo AlsaPassthroughSink::GetChannelLayout(const AEAudioFormat&
             info = ALSAchmapToAEChannelMap(actualMap);
 
             // "fake" a compatible map if it is more suitable for AE
-            if (!info.ContainsChannels(format.m_channelLayout))
+            if (!info.ContainsChannels(format.channelLayout))
             {
-                CAEChannelInfo infoAlternate = GetAlternateLayoutForm(info);
-                if (infoAlternate.Count())
+                AudioChannelLayout infoAlternate = GetAlternateLayoutForm(info);
+                if (infoAlternate.count())
                 {
-                    std::vector<CAEChannelInfo> alts;
+                    std::vector<AudioChannelLayout> alts;
                     alts.push_back(info);
                     alts.push_back(infoAlternate);
-                    if (format.m_channelLayout.BestMatch(alts) == 1)
+                    if (format.channelLayout.BestMatch(alts) == 1)
                         info = infoAlternate;
                 }
             }
 
             // add empty channels as needed (with e.g. FL,FR,LFE in 4ch)
-            while (info.Count() < channels)
+            while (info.count() < channels)
                 info += AE_CH_UNKNOWN1;
 
             free(actualMap);
@@ -184,9 +185,9 @@ inline CAEChannelInfo AlsaPassthroughSink::GetChannelLayout(const AEAudioFormat&
     return info;
 }
 
-AEChannel AlsaPassthroughSink::ALSAChannelToAEChannel(unsigned int alsaChannel)
+AudioChannel AlsaPassthroughSink::ALSAChannelToAEChannel(unsigned int alsaChannel)
 {
-    AEChannel aeChannel;
+    AudioChannel aeChannel;
     switch (alsaChannel)
     {
     case SND_CHMAP_FL:   aeChannel = AE_CH_FL; break;
@@ -214,7 +215,7 @@ AEChannel AlsaPassthroughSink::ALSAChannelToAEChannel(unsigned int alsaChannel)
     return aeChannel;
 }
 
-unsigned int AlsaPassthroughSink::AEChannelToALSAChannel(AEChannel aeChannel)
+unsigned int AlsaPassthroughSink::AEChannelToALSAChannel(AudioChannel aeChannel)
 {
     unsigned int alsaChannel;
     switch (aeChannel)
@@ -244,9 +245,9 @@ unsigned int AlsaPassthroughSink::AEChannelToALSAChannel(AEChannel aeChannel)
     return alsaChannel;
 }
 
-CAEChannelInfo AlsaPassthroughSink::ALSAchmapToAEChannelMap(snd_pcm_chmap_t* alsaMap)
+AudioChannelLayout AlsaPassthroughSink::ALSAchmapToAEChannelMap(snd_pcm_chmap_t* alsaMap)
 {
-    CAEChannelInfo info;
+    AudioChannelLayout info;
 
     for (unsigned int i = 0; i < alsaMap->channels; i++)
         info += ALSAChannelToAEChannel(alsaMap->pos[i]);
@@ -254,9 +255,9 @@ CAEChannelInfo AlsaPassthroughSink::ALSAchmapToAEChannelMap(snd_pcm_chmap_t* als
     return info;
 }
 
-snd_pcm_chmap_t* AlsaPassthroughSink::AEChannelMapToALSAchmap(const CAEChannelInfo& info)
+snd_pcm_chmap_t* AlsaPassthroughSink::AEChannelMapToALSAchmap(const AudioChannelLayout& info)
 {
-    int AECount = info.Count();
+    int AECount = info.count();
     snd_pcm_chmap_t* alsaMap = (snd_pcm_chmap_t*)malloc(sizeof(snd_pcm_chmap_t) + AECount * sizeof(int));
 
     alsaMap->channels = AECount;
@@ -288,9 +289,9 @@ std::string AlsaPassthroughSink::ALSAchmapToString(snd_pcm_chmap_t* alsaMap)
     return std::string(buf);
 }
 
-CAEChannelInfo AlsaPassthroughSink::GetAlternateLayoutForm(const CAEChannelInfo& info)
+AudioChannelLayout AlsaPassthroughSink::GetAlternateLayoutForm(const AudioChannelLayout& info)
 {
-    CAEChannelInfo altLayout;
+    AudioChannelLayout altLayout;
 
     // only handle symmetrical layouts
     if (info.HasChannel(AE_CH_BL) == info.HasChannel(AE_CH_BR) &&
@@ -335,7 +336,7 @@ CAEChannelInfo AlsaPassthroughSink::GetAlternateLayoutForm(const CAEChannelInfo&
     return altLayout;
 }
 
-snd_pcm_chmap_t* AlsaPassthroughSink::SelectALSAChannelMap(const CAEChannelInfo& info)
+snd_pcm_chmap_t* AlsaPassthroughSink::SelectALSAChannelMap(const AudioChannelLayout& info)
 {
     snd_pcm_chmap_t* chmap = NULL;
     snd_pcm_chmap_query_t** supportedMaps;
@@ -345,7 +346,7 @@ snd_pcm_chmap_t* AlsaPassthroughSink::SelectALSAChannelMap(const CAEChannelInfo&
     if (!supportedMaps)
         return NULL;
 
-    CAEChannelInfo infoAlternate = GetAlternateLayoutForm(info);
+    AudioChannelLayout infoAlternate = GetAlternateLayoutForm(info);
 
     /* for efficiency, first try to find an exact match, and only then fallback
    * to searching for less perfect matches */
@@ -353,10 +354,10 @@ snd_pcm_chmap_t* AlsaPassthroughSink::SelectALSAChannelMap(const CAEChannelInfo&
     for (snd_pcm_chmap_query_t* supportedMap = supportedMaps[i++];
          supportedMap; supportedMap = supportedMaps[i++])
     {
-        if (supportedMap->map.channels == info.Count())
+        if (supportedMap->map.channels == info.count())
         {
-            CAEChannelInfo candidate = ALSAchmapToAEChannelMap(&supportedMap->map);
-            const CAEChannelInfo* selectedInfo = &info;
+            AudioChannelLayout candidate = ALSAchmapToAEChannelMap(&supportedMap->map);
+            const AudioChannelLayout* selectedInfo = &info;
 
             if (!candidate.ContainsChannels(info) || !info.ContainsChannels(candidate))
             {
@@ -383,8 +384,8 @@ snd_pcm_chmap_t* AlsaPassthroughSink::SelectALSAChannelMap(const CAEChannelInfo&
     // if no exact chmap was found, fallback to best-effort
     if (!chmap)
     {
-        CAEChannelInfo allChannels;
-        std::vector<CAEChannelInfo> supportedMapsAE;
+        AudioChannelLayout allChannels;
+        std::vector<AudioChannelLayout> supportedMapsAE;
 
         // Convert the ALSA maps to AE maps.
         int i = 0;
@@ -396,7 +397,7 @@ snd_pcm_chmap_t* AlsaPassthroughSink::SelectALSAChannelMap(const CAEChannelInfo&
         int best = info.BestMatch(supportedMapsAE, &score);
 
         // see if we find a better result with the alternate form
-        if (infoAlternate.Count() && score < 0)
+        if (infoAlternate.count() && score < 0)
         {
             int scoreAlt = 0;
             int bestAlt = infoAlternate.BestMatch(supportedMapsAE, &scoreAlt);
@@ -412,8 +413,10 @@ snd_pcm_chmap_t* AlsaPassthroughSink::SelectALSAChannelMap(const CAEChannelInfo&
     return chmap;
 }
 
-void AlsaPassthroughSink::GetAESParams(const AEAudioFormat& format, std::string& params)
+std::string AlsaPassthroughSink::aesParameters(const AudioFormat& format)
 {
+    std::string params;
+
     if (m_passthrough)
         params = "AES0=0x06";
     else
@@ -421,24 +424,26 @@ void AlsaPassthroughSink::GetAESParams(const AEAudioFormat& format, std::string&
 
     params += ",AES1=0x82,AES2=0x00";
 
-    if (m_passthrough && format.m_channelLayout.Count() == 8) params += ",AES3=0x09";
-    else if (format.m_sampleRate == 192000) params += ",AES3=0x0e";
-    else if (format.m_sampleRate == 176400) params += ",AES3=0x0c";
-    else if (format.m_sampleRate ==  96000) params += ",AES3=0x0a";
-    else if (format.m_sampleRate ==  88200) params += ",AES3=0x08";
-    else if (format.m_sampleRate ==  48000) params += ",AES3=0x02";
-    else if (format.m_sampleRate ==  44100) params += ",AES3=0x00";
-    else if (format.m_sampleRate ==  32000) params += ",AES3=0x03";
+    if (m_passthrough && format.channelLayout.count() == 8) params += ",AES3=0x09";
+    else if (format.sampleRate == 192000) params += ",AES3=0x0e";
+    else if (format.sampleRate == 176400) params += ",AES3=0x0c";
+    else if (format.sampleRate ==  96000) params += ",AES3=0x0a";
+    else if (format.sampleRate ==  88200) params += ",AES3=0x08";
+    else if (format.sampleRate ==  48000) params += ",AES3=0x02";
+    else if (format.sampleRate ==  44100) params += ",AES3=0x00";
+    else if (format.sampleRate ==  32000) params += ",AES3=0x03";
     else params += ",AES3=0x01";
+
+    return params;
 }
 
-bool AlsaPassthroughSink::init(std::string& device, AEAudioFormat& format)
+bool AlsaPassthroughSink::init(std::string& device, AudioFormat& format)
 {
     m_initDevice = device;
     m_initFormat = format;
     ALSAConfig inconfig, outconfig;
-    inconfig.format = format.m_dataFormat;
-    inconfig.sampleRate = format.m_sampleRate;
+    inconfig.format = format.sampleFormat;
+    inconfig.sampleRate = format.sampleRate;
 
     /*
    * We can't use the better GetChannelLayout() at this point as the device
@@ -446,12 +451,12 @@ bool AlsaPassthroughSink::init(std::string& device, AEAudioFormat& format)
    * device... Legacy layouts should be accurate enough for device selection
    * in all cases, though.
    */
-    inconfig.channels = GetChannelLayoutLegacy(format, 2, 8).Count();
+    inconfig.channels = GetChannelLayoutLegacy(format, 2, 8).count();
 
     // if we are raw, correct the data format
-    if (format.m_dataFormat == AE_FMT_RAW)
+    if (format.sampleFormat == AudioSampleFormat::Bitstream)
     {
-        inconfig.format   = AE_FMT_S16NE;
+        inconfig.format   = AudioSampleFormat::S16NE;
         m_passthrough     = true;
     }
     else
@@ -471,7 +476,7 @@ bool AlsaPassthroughSink::init(std::string& device, AEAudioFormat& format)
     /* digital interfaces should have AESx set, though in practice most
    * receivers don't care */
     if (m_passthrough || devType == DeviceType::Hdmi || devType == DeviceType::Spdif)
-        GetAESParams(format, AESParams);
+        AESParams = aesParameters(format);
 
     std::cout << "CAESinkALSA::Initialize - Attempting to open device " << device.c_str();
 
@@ -479,7 +484,7 @@ bool AlsaPassthroughSink::init(std::string& device, AEAudioFormat& format)
     snd_config_t *config;
     snd_config_copy(&config, snd_config);
 
-    if (!OpenPCMDevice(device, AESParams, inconfig.channels, &m_pcm, config))
+    if (!openAudioDevice(device, AESParams, inconfig.channels, &m_pcm, config))
     {
         std::cerr << "CAESinkALSA::Initialize - failed to initialize device " << device.c_str();
         snd_config_delete(config);
@@ -496,7 +501,7 @@ bool AlsaPassthroughSink::init(std::string& device, AEAudioFormat& format)
     snd_pcm_chmap_t* selectedChmap = NULL;
     if (!m_passthrough)
     {
-        selectedChmap = SelectALSAChannelMap(format.m_channelLayout);
+        selectedChmap = SelectALSAChannelMap(format.channelLayout);
         if (selectedChmap)
         {
             // update wanted channel count according to the selected map
@@ -527,37 +532,99 @@ bool AlsaPassthroughSink::init(std::string& device, AEAudioFormat& format)
         return false;
     }
     // adjust format to the configuration we got
-    format.m_channelLayout = GetChannelLayout(format, outconfig.channels);
+    format.channelLayout = GetChannelLayout(format, outconfig.channels);
     // we might end up with an unusable channel layout that contains only UNKNOWN
     // channels, let's do a sanity check.
-    if (!format.m_channelLayout.IsLayoutValid())
+    if (!format.channelLayout.IsLayoutValid())
         return false;
 
-    format.m_sampleRate = outconfig.sampleRate;
+    format.sampleRate = outconfig.sampleRate;
     format.m_frames = outconfig.periodSize;
     format.m_frameSize = outconfig.frameSize;
-    format.m_dataFormat = outconfig.format;
+    format.sampleFormat = outconfig.format;
 
     m_format              = format;
-    m_formatSampleRateMul = 1.0 / (double)m_format.m_sampleRate;
+    m_formatSampleRateMul = 1.0 / (double)m_format.sampleRate;
 
     return true;
 }
 
-snd_pcm_format_t AlsaPassthroughSink::AEFormatToALSAFormat(const enum DataFormat format)
+
+bool AlsaPassthroughSink::initPassthrough(AudioDeviceDescriptor& device, AudioFormat& format)
 {
-    if (format == AE_FMT_RAW)
-        return SND_PCM_FORMAT_S16;
+    m_initDevice = device.deviceName;
+    m_initFormat = format;
+    ALSAConfig inconfig, outconfig;
+    inconfig.format = format.sampleFormat;
+    inconfig.sampleRate = format.sampleRate;
+    inconfig.channels = channelLayoutPassthrough(format).count();
+    inconfig.format   = AudioSampleFormat::S16NE;
+    m_passthrough     = true;
 
-    switch (format)
+    if (inconfig.channels == 0) {
+        std::cerr << "CAESinkALSA::Initialize - Unable to open the requested channel layout";
+        return false;
+    }
+    std::cout << "CAESinkALSA::Initialize - Attempting to open device " << device.deviceName << std::endl;
+
+    // get the sound config
+    snd_config_t *config;
+    snd_config_copy(&config, snd_config);
+
+    if (!openAudioDevice(device.deviceName, aesParameters(format), inconfig.channels, &m_pcm, config))
     {
-    case AE_FMT_U8    : return SND_PCM_FORMAT_U8;
-    case AE_FMT_S16NE : return SND_PCM_FORMAT_S16;
-    case AE_FMT_S16LE : return SND_PCM_FORMAT_S16_LE;
-    case AE_FMT_S16BE : return SND_PCM_FORMAT_S16_BE;
-    case AE_FMT_S32NE : return SND_PCM_FORMAT_S32;
-    case AE_FMT_FLOAT : return SND_PCM_FORMAT_FLOAT;
+        std::cerr << "CAESinkALSA::Initialize - failed to initialize device " << device << std::endl;
+        snd_config_delete(config);
+        return false;
+    }
 
+    // get the actual device name that was used
+    m_device = snd_pcm_name(m_pcm);
+    std::cout << "CAESinkALSA::Initialize - Opened device " << m_device;
+
+    // free the sound config
+    snd_config_delete(config);
+
+    if (!InitializeHW(inconfig, outconfig) || !InitializeSW(outconfig)) {
+        return false;
+    }
+
+    // we want it blocking
+    snd_pcm_nonblock(m_pcm, 0);
+    snd_pcm_prepare (m_pcm);
+
+    if (inconfig.channels != outconfig.channels) {
+        std::cout << "CAESinkALSA::Initialize - could not open required number of channels";
+        return false;
+    }
+
+    // adjust format to the configuration we got
+    format.channelLayout = channelLayoutPassthrough(format);
+    // we might end up with an unusable channel layout that contains only UNKNOWN
+    // channels, let's do a sanity check.
+    if (!format.channelLayout.IsLayoutValid())
+        return false;
+
+    format.sampleRate = outconfig.sampleRate;
+    format.m_frames = outconfig.periodSize;
+    format.m_frameSize = outconfig.frameSize;
+    format.sampleFormat = outconfig.format;
+
+    m_format              = format;
+    m_formatSampleRateMul = 1.0 / (double)m_format.sampleRate;
+
+    return true;
+}
+
+snd_pcm_format_t AlsaPassthroughSink::toAlsa(AudioSampleFormat format)
+{
+    switch (format) {
+    case AudioSampleFormat::S16NE:  return SND_PCM_FORMAT_S16;
+    case AudioSampleFormat::S16LE:  return SND_PCM_FORMAT_S16_LE;
+    case AudioSampleFormat::S16BE:  return SND_PCM_FORMAT_S16_BE;
+    case AudioSampleFormat::S32NE:  return SND_PCM_FORMAT_S32;
+    case AudioSampleFormat::Float:  return SND_PCM_FORMAT_FLOAT;
+    case AudioSampleFormat::Bitstream:    return SND_PCM_FORMAT_S16;
     default:
         return SND_PCM_FORMAT_UNKNOWN;
     }
@@ -566,7 +633,6 @@ snd_pcm_format_t AlsaPassthroughSink::AEFormatToALSAFormat(const enum DataFormat
 bool AlsaPassthroughSink::InitializeHW(const ALSAConfig &inconfig, ALSAConfig &outconfig)
 {
     snd_pcm_hw_params_t *hw_params;
-
     snd_pcm_hw_params_alloca(&hw_params);
     memset(hw_params, 0, snd_pcm_hw_params_sizeof());
 
@@ -592,14 +658,14 @@ bool AlsaPassthroughSink::InitializeHW(const ALSAConfig &inconfig, ALSAConfig &o
     // update outconfig
     outconfig.channels = channelCount;
 
-    snd_pcm_format_t fmt = AEFormatToALSAFormat(inconfig.format);
+    snd_pcm_format_t fmt = toAlsa(inconfig.format);
     outconfig.format = inconfig.format;
 
     if (fmt == SND_PCM_FORMAT_UNKNOWN)
     {
         // if we dont support the requested format, fallback to float
         fmt = SND_PCM_FORMAT_FLOAT;
-        outconfig.format = AE_FMT_FLOAT;
+        outconfig.format = AudioSampleFormat::Float;
     }
 
     snd_pcm_hw_params_t *hw_params_copy;
@@ -610,16 +676,16 @@ bool AlsaPassthroughSink::InitializeHW(const ALSAConfig &inconfig, ALSAConfig &o
     if (snd_pcm_hw_params_set_format(m_pcm, hw_params, fmt) < 0)
     {
         // if the chosen format is not supported, try each one in descending order
-        std::cout << "CAESinkALSA::InitializeHW - Your hardware does not support: " << CAEUtil::DataFormatToStr(outconfig.format);
-        for (enum DataFormat i = AE_FMT_MAX; i > AE_FMT_INVALID; i = (enum DataFormat)((int)i - 1))
+        std::cout << "CAESinkALSA::InitializeHW - Your hardware does not support: " << outconfig.format;
+        for (enum AudioSampleFormat i = AudioSampleFormat::Max; i > AudioSampleFormat::Invalid; i = (enum AudioSampleFormat)((int)i - 1))
         {
-            if (i == AE_FMT_RAW || i == AE_FMT_MAX)
+            if (i == AudioSampleFormat::Bitstream || i == AudioSampleFormat::Max)
                 continue;
 
-            if (m_passthrough && i != AE_FMT_S16BE && i != AE_FMT_S16LE)
+            if (m_passthrough && i != AudioSampleFormat::S16BE && i != AudioSampleFormat::S16LE)
                 continue;
 
-            fmt = AEFormatToALSAFormat(i);
+            fmt = toAlsa(i);
             if (fmt == SND_PCM_FORMAT_UNKNOWN)
                 continue;
 
@@ -630,7 +696,7 @@ bool AlsaPassthroughSink::InitializeHW(const ALSAConfig &inconfig, ALSAConfig &o
                 continue;
             }
 
-            int fmtBits = CAEUtil::DataFormatToBits(i);
+            int fmtBits = CAEUtil::numBits(i);
             int bits    = snd_pcm_hw_params_get_sbits(hw_params);
 
             // skip bits check when alsa reports invalid sbits value
@@ -640,7 +706,7 @@ bool AlsaPassthroughSink::InitializeHW(const ALSAConfig &inconfig, ALSAConfig &o
 
             // record that the format fell back to X
             outconfig.format = i;
-            std::cout << "CAESinkALSA::InitializeHW - Using data format " << CAEUtil::DataFormatToStr(outconfig.format);
+            std::cout << "CAESinkALSA::InitializeHW - Using data format " << outconfig.format;
             break;
         }
 
@@ -781,7 +847,7 @@ bool AlsaPassthroughSink::InitializeSW(const ALSAConfig &inconfig)
     return true;
 }
 
-void AlsaPassthroughSink::Deinitialize()
+void AlsaPassthroughSink::deinit()
 {
     if (m_pcm)
     {
@@ -914,7 +980,7 @@ bool AlsaPassthroughSink::TryDevice(const std::string &name, snd_pcm_t **pcmp, s
         *pcmp = NULL;
     }
 
-    int err = snd_pcm_open_lconf(pcmp, name.c_str(), SND_PCM_STREAM_PLAYBACK, ALSA_OPTIONS, lconf);
+    int err = snd_pcm_open_lconf(pcmp, name.c_str(), SND_PCM_STREAM_PLAYBACK, (SND_PCM_NO_AUTO_FORMAT | SND_PCM_NO_AUTO_CHANNELS | SND_PCM_NO_AUTO_RESAMPLE), lconf);
     if (err < 0)
     {
         std::cout << "CAESinkALSA - Unable to open device: " << name;
@@ -939,7 +1005,7 @@ bool AlsaPassthroughSink::TryDeviceWithParams(const std::string &name, const std
     return TryDevice(name, pcmp, lconf);
 }
 
-bool AlsaPassthroughSink::OpenPCMDevice(const std::string &name, const std::string &params, int channels, snd_pcm_t **pcmp, snd_config_t *lconf)
+bool AlsaPassthroughSink::openAudioDevice(const std::string &name, const std::string &params, int channels, snd_pcm_t **pcmp, snd_config_t *lconf)
 {
     /* Special name denoting surroundXX mangling. This is needed for some
    * devices for multichannel to work. */
@@ -1234,7 +1300,7 @@ std::string AlsaPassthroughSink::GetParamFromName(const std::string &name, const
 void AlsaPassthroughSink::enumerateDevice(DeviceDescriptors &list, const std::string &device, const std::string &description, snd_config_t *config)
 {
     snd_pcm_t *pcmhandle = NULL;
-    if (!OpenPCMDevice(device, "", ALSA_MAX_CHANNELS, &pcmhandle, config))
+    if (!openAudioDevice(device, "", ALSA_MAX_CHANNELS, &pcmhandle, config))
         return;
 
     snd_pcm_info_t *pcminfo;
@@ -1250,7 +1316,7 @@ void AlsaPassthroughSink::enumerateDevice(DeviceDescriptors &list, const std::st
 
     int cardNr = snd_pcm_info_get_card(pcminfo);
 
-    DeviceDescriptor info;
+    AudioDeviceDescriptor info;
     info.deviceName = device;
     info.deviceType = AEDeviceTypeFromName(device);
 
@@ -1294,7 +1360,7 @@ void AlsaPassthroughSink::enumerateDevice(DeviceDescriptors &list, const std::st
             info.streamTypes.push_back(StreamInfo::StreamType::STREAM_TYPE_DTS_1024);
             info.streamTypes.push_back(StreamInfo::StreamType::STREAM_TYPE_DTS_2048);
             info.streamTypes.push_back(StreamInfo::StreamType::Dts512);
-            info.m_dataFormats.push_back(AE_FMT_RAW);
+            info.sampleFormat.push_back(AudioSampleFormat::Bitstream);
         }
         else if (info.m_displayNameExtra.empty())
         {
@@ -1339,7 +1405,7 @@ void AlsaPassthroughSink::enumerateDevice(DeviceDescriptors &list, const std::st
     // detect the available sample rates
     for (const auto rate : s_sampleRates) {
         if (snd_pcm_hw_params_test_rate(pcmhandle, hwparams, rate, 0) >= 0)
-            info.m_sampleRates.push_back(rate);
+            info.sampleRates.push_back(rate);
     }
 
     // detect the channels available
@@ -1348,7 +1414,7 @@ void AlsaPassthroughSink::enumerateDevice(DeviceDescriptors &list, const std::st
     {
         // Reopen the device if needed on the special "surroundXX" cases
         if (info.deviceType == DeviceType::Pcm && (i == 8 || i == 6 || i == 4))
-            OpenPCMDevice(device, "", i, &pcmhandle, config);
+            openAudioDevice(device, "", i, &pcmhandle, config);
 
         if (snd_pcm_hw_params_test_channels(pcmhandle, hwparams, i) >= 0)
         {
@@ -1366,19 +1432,19 @@ void AlsaPassthroughSink::enumerateDevice(DeviceDescriptors &list, const std::st
         return;
     }
 
-    CAEChannelInfo alsaChannels;
+    AudioChannelLayout alsaChannels;
     snd_pcm_chmap_query_t** alsaMaps = snd_pcm_query_chmaps(pcmhandle);
-    bool useEldChannels = (info.m_channels.Count() > 0);
+    bool useEldChannels = (info.channels.count() > 0);
     if (alsaMaps)
     {
         int i = 0;
         for (snd_pcm_chmap_query_t* alsaMap = alsaMaps[i++];
              alsaMap; alsaMap = alsaMaps[i++])
         {
-            CAEChannelInfo AEmap = ALSAchmapToAEChannelMap(&alsaMap->map);
+            AudioChannelLayout AEmap = ALSAchmapToAEChannelMap(&alsaMap->map);
             alsaChannels.AddMissingChannels(AEmap);
             if (!useEldChannels)
-                info.m_channels.AddMissingChannels(AEmap);
+                info.channels.AddMissingChannels(AEmap);
         }
         snd_pcm_free_chmaps(alsaMaps);
     }
@@ -1386,43 +1452,43 @@ void AlsaPassthroughSink::enumerateDevice(DeviceDescriptors &list, const std::st
     {
         for (int i = 0; i < channels; ++i)
         {
-            if (!info.m_channels.HasChannel(LegacyALSAChannelMap[i]))
-                info.m_channels += LegacyALSAChannelMap[i];
+            if (!info.channels.HasChannel(LegacyALSAChannelMap[i]))
+                info.channels += LegacyALSAChannelMap[i];
             alsaChannels += LegacyALSAChannelMap[i];
         }
     }
 
     // remove the channels from m_channels that we cant use
-    info.m_channels.ResolveChannels(alsaChannels);
+    info.channels.ResolveChannels(alsaChannels);
 
     // detect the PCM sample formats that are available
-    for (enum DataFormat i = AE_FMT_MAX; i > AE_FMT_INVALID; i = (enum DataFormat)((int)i - 1))
+    for (enum AudioSampleFormat i = AudioSampleFormat::Max; i > AudioSampleFormat::Invalid; i = (enum AudioSampleFormat)((int)i - 1))
     {
-        if (i == AE_FMT_RAW || i == AE_FMT_MAX)
+        if (i == AudioSampleFormat::Bitstream || i == AudioSampleFormat::Max)
             continue;
-        snd_pcm_format_t fmt = AEFormatToALSAFormat(i);
+        snd_pcm_format_t fmt = toAlsa(i);
         if (fmt == SND_PCM_FORMAT_UNKNOWN)
             continue;
 
         if (snd_pcm_hw_params_test_format(pcmhandle, hwparams, fmt) >= 0)
-            info.m_dataFormats.push_back(i);
+            info.sampleFormat.push_back(i);
     }
 
     if (info.deviceType == DeviceType::Hdmi)
     {
         // we don't trust ELD information and push back our supported formats explicitly
         info.streamTypes.push_back(StreamInfo::StreamType::Ac3);
-        info.streamTypes.push_back(StreamInfo::StreamType::STREAM_TYPE_DTSHD);
-        info.streamTypes.push_back(StreamInfo::StreamType::STREAM_TYPE_DTSHD_MA);
+        info.streamTypes.push_back(StreamInfo::StreamType::DtsHd);
+        info.streamTypes.push_back(StreamInfo::StreamType::DtsHdMaster);
         info.streamTypes.push_back(StreamInfo::StreamType::STREAM_TYPE_DTSHD_CORE);
         info.streamTypes.push_back(StreamInfo::StreamType::STREAM_TYPE_DTS_1024);
         info.streamTypes.push_back(StreamInfo::StreamType::STREAM_TYPE_DTS_2048);
         info.streamTypes.push_back(StreamInfo::StreamType::Dts512);
-        info.streamTypes.push_back(StreamInfo::StreamType::STREAM_TYPE_EAC3);
-        info.streamTypes.push_back(StreamInfo::StreamType::STREAM_TYPE_TRUEHD);
+        info.streamTypes.push_back(StreamInfo::StreamType::Eac3);
+        info.streamTypes.push_back(StreamInfo::StreamType::TrueHd);
 
-        // indicate that we can do AE_FMT_RAW
-        info.m_dataFormats.push_back(AE_FMT_RAW);
+        // indicate that we can do AudioSampleFormat::AE_FMT_RAW
+        info.sampleFormat.push_back(AudioSampleFormat::Bitstream);
     }
 
     snd_pcm_close(pcmhandle);

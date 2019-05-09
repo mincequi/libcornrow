@@ -15,15 +15,11 @@ add_library(${PROJECT_NAME} STATIC
     src/Biquad.cpp
     src/Crossover.cpp
     src/Loudness.cpp
-    #src/PassthroughAlsaSink.cpp
     src/Peq.cpp
     src/Types.cpp
     src/Util.cpp
 
-    src/AlsaPassthroughSink.cpp
-    src/AEChannelInfo.cpp
-    src/AEDeviceInfo.cpp
-    src/AEUtil.cpp
+    src/gstalsapassthroughsink.c
 )
 
 target_include_directories(${PROJECT_NAME}

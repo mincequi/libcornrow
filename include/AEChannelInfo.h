@@ -16,39 +16,39 @@
 
 class CHelper_libKODI_audioengine;
 
-class CAEChannelInfo {
-  friend class CHelper_libKODI_audioengine;
+class AudioChannelLayout {
+    friend class CHelper_libKODI_audioengine;
 
 public:
-  CAEChannelInfo();
-  explicit CAEChannelInfo(const enum AEChannel* rhs);
-  CAEChannelInfo(const enum AEStdChLayout rhs);
-  ~CAEChannelInfo();
-  CAEChannelInfo& operator=(const CAEChannelInfo& rhs);
-  CAEChannelInfo& operator=(const enum AEChannel* rhs);
-  CAEChannelInfo& operator=(const enum AEStdChLayout rhs);
-  bool operator==(const CAEChannelInfo& rhs) const;
-  bool operator!=(const CAEChannelInfo& rhs) const;
-  CAEChannelInfo& operator+=(const enum AEChannel& rhs);
-  CAEChannelInfo& operator-=(const enum AEChannel& rhs);
-  enum AEChannel operator[](unsigned int i) const;
-  operator std::string() const;
+    AudioChannelLayout();
+    explicit AudioChannelLayout(const enum AudioChannel* rhs);
+    AudioChannelLayout(const enum AEStdChLayout rhs);
+    ~AudioChannelLayout() = default;
+    AudioChannelLayout& operator=(const AudioChannelLayout& rhs);
+    AudioChannelLayout& operator=(const enum AudioChannel* rhs);
+    AudioChannelLayout& operator=(const enum AEStdChLayout rhs);
+    bool operator==(const AudioChannelLayout& rhs) const;
+    bool operator!=(const AudioChannelLayout& rhs) const;
+    AudioChannelLayout& operator+=(AudioChannel rhs);
+    AudioChannelLayout& operator-=(AudioChannel rhs);
+    AudioChannel operator[](unsigned int i) const;
+    operator std::string() const;
 
-  // remove any channels that dont exist in the provided info
-  void ResolveChannels(const CAEChannelInfo& rhs);
-  void Reset();
-  inline unsigned int Count() const { return m_channelCount; }
-  static const char* GetChName(const enum AEChannel ch);
-  bool HasChannel(const enum AEChannel ch) const;
-  bool IsChannelValid(const unsigned int pos);
-  bool IsLayoutValid();
-  bool ContainsChannels(const CAEChannelInfo& rhs) const;
-  void ReplaceChannel(const enum AEChannel from, const enum AEChannel to);
-  int BestMatch(const std::vector<CAEChannelInfo>& dsts, int* score = NULL) const;
-  void AddMissingChannels(const CAEChannelInfo& rhs);
+    // remove any channels that dont exist in the provided info
+    void ResolveChannels(const AudioChannelLayout& rhs);
+    void clear();
+    inline unsigned int count() const { return m_channelCount; }
+    static const char* GetChName(const enum AudioChannel ch);
+    bool HasChannel(const enum AudioChannel ch) const;
+    bool IsChannelValid(const unsigned int pos);
+    bool IsLayoutValid();
+    bool ContainsChannels(const AudioChannelLayout& rhs) const;
+    void ReplaceChannel(const enum AudioChannel from, const enum AudioChannel to);
+    int BestMatch(const std::vector<AudioChannelLayout>& dsts, int* score = NULL) const;
+    void AddMissingChannels(const AudioChannelLayout& rhs);
 
 private:
-  unsigned int   m_channelCount;
-  enum AEChannel m_channels[AE_CH_MAX];
+    std::uint8_t    m_channelCount;
+    AudioChannel    m_channels[AE_CH_MAX];
 };
 
