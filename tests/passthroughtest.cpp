@@ -28,8 +28,8 @@ int main(int argc, char** argv)
     Glib::ustring srcString = Glib::ustring::compose(
                 "audio/x-raw, "
                 "rate=(int)44100, "
-                "channels=(int)5, "
-                "channel-mask=(bitmask)0x3b, "
+                "channels=(int)4, "
+                "channel-mask=(bitmask)0x33, "
                 "layout=(string)interleaved, "
                 "format=(string)%1", GST_AUDIO_NE(F32));
     auto srcCaps = Gst::Caps::create_from_string(srcString);

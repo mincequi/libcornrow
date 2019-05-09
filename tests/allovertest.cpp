@@ -18,13 +18,14 @@ int main(int argc, char** argv)
     auto pipeline = Gst::Pipeline::create();
     assert(pipeline);
 
-    // Create elements
+    // Create source
     auto src = Gst::AudioTestSrc::create();
     assert(src);
     src->property_wave().set_value(Gst::AudioTestSrcWave::AUDIO_TEST_SRC_WAVE_WHITE_NOISE);
-    src->property_num_buffers().set_value(100);
+    src->property_num_buffers().set_value(10);
     src->property_samplesperbuffer().set_value(44100);
 
+    // Create peq
     Glib::RefPtr<GstDsp::Peq> peq = Glib::RefPtr<GstDsp::Peq>::cast_dynamic(Gst::ElementFactory::create_element("peq"));
     assert(peq);
     peq->biquad(0).setFilter( { GstDsp::FilterType::Peak, 1000.0, -12.0, 0.707 } );
@@ -32,18 +33,23 @@ int main(int argc, char** argv)
     peq->biquad(2).setFilter( { GstDsp::FilterType::HighPass, 40.0, 0.0, 0.707 } );
     peq->biquad(3).setFilter( { GstDsp::FilterType::Peak, 3000.0, -6.0, 10.0 } );
     peq->biquad(4).setFilter( { GstDsp::FilterType::Peak, 300.0, -2.0, 1.707 } );
+
+    // Create crossover
+    Glib::RefPtr<GstDsp::Crossover> xo = Glib::RefPtr<GstDsp::Crossover>::cast_dynamic(Gst::ElementFactory::create_element("crossover"));
+    assert(xo);
+    xo->setFrequency(80.0);
+    xo->setLfe(false);
+
+    // Create encoder
     auto enc = Gst::ElementFactory::create_element("avenc_ac3");
     assert(enc);
     enc->set_property("bitrate", 640000);
-    auto sink = Gst::FileSink::create();
-    assert(sink);
-    sink->property_location().set_value("test.ac3");
 
-    // XO
-    Glib::RefPtr<GstDsp::Crossover> xo = Glib::RefPtr<GstDsp::Crossover>::cast_dynamic(Gst::ElementFactory::create_element("crossover"));
-    assert(xo);
-    xo->setFrequency(2000.0);
-    xo->setLfe(true);
+    // Create sink
+    //auto sink = Gst::FileSink::create();
+    //sink->property_location().set_value("test.ac3");
+    auto sink = Gst::ElementFactory::create_element("alsapassthroughsink");
+    sink->set_property("device", Glib::ustring("iec958:CARD=MID,DEV=0"));
 
     // Link elements
     pipeline->add(src)->add(peq)->add(xo)->add(enc)->add(sink);

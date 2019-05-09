@@ -15,7 +15,7 @@
 #include "AEAudioFormat.h"
 #include "AEChannelData.h"
 #include "AEChannelInfo.h"
-#include "AEDeviceInfo.h"
+#include "DeviceInfo.h"
 #include "AEUtil.h"
 
 #define AE_MIN_PERIODSIZE 256
@@ -28,10 +28,10 @@ public:
 
     static AlsaPassthroughSink* create(std::string& device, AudioFormat& desiredFormat);
     static AlsaPassthroughSink* createPassthrough(std::string& device, AudioFormat& desiredFormat);
-    static DeviceDescriptors enumerateDevices();
+    static AudioDeviceInfos enumerateDevices();
 
     bool init(std::string& device, AudioFormat& format);
-    bool initPassthrough(AudioDeviceDescriptor& device, AudioFormat& format);
+    bool initPassthrough(AudioDeviceInfo& device, AudioFormat& format);
     void deinit();
 
     void Stop();
@@ -88,11 +88,11 @@ private:
     static bool TryDeviceWithParams(const std::string &name, const std::string &params, snd_pcm_t **pcmp, snd_config_t *lconf);
     static bool openAudioDevice(const std::string &name, const std::string &params, int channels, snd_pcm_t **pcmp, snd_config_t *lconf);
 
-    static DeviceType AEDeviceTypeFromName(const std::string &name);
+    static AudioDeviceType AEDeviceTypeFromName(const std::string &name);
     static std::string GetParamFromName(const std::string &name, const std::string &param);
-    static void enumerateDevice(DeviceDescriptors &list, const std::string &device, const std::string &description, snd_config_t *config);
+    static void enumerateDevice(AudioDeviceInfos &list, const std::string &device, const std::string &description, snd_config_t *config);
     static bool SoundDeviceExists(const std::string& device);
-    static bool GetELD(snd_hctl_t *hctl, int device, AudioDeviceDescriptor& info, bool& badHDMI);
+    static bool GetELD(snd_hctl_t *hctl, int device, AudioDeviceInfo& info, bool& badHDMI);
 
     static void sndLibErrorHandler(const char *file, int line, const char *function, int err, const char *fmt, ...);
 };

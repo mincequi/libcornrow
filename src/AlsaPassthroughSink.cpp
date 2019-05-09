@@ -470,12 +470,12 @@ bool AlsaPassthroughSink::init(std::string& device, AudioFormat& format)
         return false;
     }
 
-    DeviceType devType = AEDeviceTypeFromName(device);
+    AudioDeviceType devType = AEDeviceTypeFromName(device);
 
     std::string AESParams;
     /* digital interfaces should have AESx set, though in practice most
    * receivers don't care */
-    if (m_passthrough || devType == DeviceType::Hdmi || devType == DeviceType::Spdif)
+    if (m_passthrough || devType == AudioDeviceType::Hdmi || devType == AudioDeviceType::Spdif)
         AESParams = aesParameters(format);
 
     std::cout << "CAESinkALSA::Initialize - Attempting to open device " << device.c_str();
@@ -550,7 +550,7 @@ bool AlsaPassthroughSink::init(std::string& device, AudioFormat& format)
 }
 
 
-bool AlsaPassthroughSink::initPassthrough(AudioDeviceDescriptor& device, AudioFormat& format)
+bool AlsaPassthroughSink::initPassthrough(AudioDeviceInfo& device, AudioFormat& format)
 {
     m_initDevice = device.deviceName;
     m_initFormat = format;
@@ -1068,9 +1068,9 @@ bool AlsaPassthroughSink::openAudioDevice(const std::string &name, const std::st
     return false;
 }
 
-DeviceDescriptors AlsaPassthroughSink::enumerateDevices()
+AudioDeviceInfos AlsaPassthroughSink::enumerateDevices()
 {
-    DeviceDescriptors list;
+    AudioDeviceInfos list;
 
     // ensure that ALSA has been initialized
     snd_lib_error_set_handler(sndLibErrorHandler);
@@ -1173,7 +1173,7 @@ DeviceDescriptors AlsaPassthroughSink::enumerateDevices()
     // cards with surround entries where sysdefault should be removed
     std::set<std::string> cardsWithSurround;
 
-    for (DeviceDescriptors::iterator it1 = list.begin(); it1 != list.end(); ++it1)
+    for (AudioDeviceInfos::iterator it1 = list.begin(); it1 != list.end(); ++it1)
     {
         std::string baseName = it1->deviceName.substr(0, it1->deviceName.find(':'));
         std::string card = GetParamFromName(it1->deviceName, "CARD");
@@ -1184,7 +1184,7 @@ DeviceDescriptors AlsaPassthroughSink::enumerateDevices()
     if (!cardsWithSurround.empty())
     {
         // remove sysdefault entries where we already have a surround entry
-        DeviceDescriptors::iterator iter = list.begin();
+        AudioDeviceInfos::iterator iter = list.begin();
         while (iter != list.end())
         {
             std::string baseName = iter->deviceName.substr(0, iter->deviceName.find(':'));
@@ -1206,9 +1206,9 @@ DeviceDescriptors AlsaPassthroughSink::enumerateDevices()
     // clashing basename + cardname combinations, e.g. ("hdmi","Nvidia")
     std::set<std::pair<std::string, std::string> > devsToAppend;
 
-    for (DeviceDescriptors::iterator it1 = list.begin(); it1 != list.end(); ++it1)
+    for (AudioDeviceInfos::iterator it1 = list.begin(); it1 != list.end(); ++it1)
     {
-        for (DeviceDescriptors::iterator it2 = it1+1; it2 != list.end(); ++it2)
+        for (AudioDeviceInfos::iterator it2 = it1+1; it2 != list.end(); ++it2)
         {
             if (it1->m_displayName == it2->m_displayName
                     && it1->m_displayNameExtra == it2->m_displayNameExtra)
@@ -1246,7 +1246,7 @@ DeviceDescriptors AlsaPassthroughSink::enumerateDevices()
     for (std::set<std::string>::iterator it = cardsToAppend.begin();
          it != cardsToAppend.end(); ++it)
     {
-        for (DeviceDescriptors::iterator itl = list.begin(); itl != list.end(); ++itl)
+        for (AudioDeviceInfos::iterator itl = list.begin(); itl != list.end(); ++itl)
         {
             std::string cardString = GetParamFromName(itl->deviceName, "CARD");
             if (cardString == *it)
@@ -1258,7 +1258,7 @@ DeviceDescriptors AlsaPassthroughSink::enumerateDevices()
     for (std::set<std::pair<std::string, std::string> >::iterator it = devsToAppend.begin();
          it != devsToAppend.end(); ++it)
     {
-        for (DeviceDescriptors::iterator itl = list.begin(); itl != list.end(); ++itl)
+        for (AudioDeviceInfos::iterator itl = list.begin(); itl != list.end(); ++itl)
         {
             std::string baseName = itl->deviceName.substr(0, itl->deviceName.find(':'));
             std::string cardString = GetParamFromName(itl->deviceName, "CARD");
@@ -1274,14 +1274,14 @@ DeviceDescriptors AlsaPassthroughSink::enumerateDevices()
     return list;
 }
 
-DeviceType AlsaPassthroughSink::AEDeviceTypeFromName(const std::string &name)
+AudioDeviceType AlsaPassthroughSink::AEDeviceTypeFromName(const std::string &name)
 {
     if (name.substr(0, 4) == "hdmi")
-        return DeviceType::Hdmi;
+        return AudioDeviceType::Hdmi;
     else if (name.substr(0, 6) == "iec958" || name.substr(0, 5) == "spdif")
-        return DeviceType::Spdif;
+        return AudioDeviceType::Spdif;
 
-    return DeviceType::Pcm;
+    return AudioDeviceType::Pcm;
 }
 
 std::string AlsaPassthroughSink::GetParamFromName(const std::string &name, const std::string &param)
@@ -1297,7 +1297,7 @@ std::string AlsaPassthroughSink::GetParamFromName(const std::string &name, const
     return "";
 }
 
-void AlsaPassthroughSink::enumerateDevice(DeviceDescriptors &list, const std::string &device, const std::string &description, snd_config_t *config)
+void AlsaPassthroughSink::enumerateDevice(AudioDeviceInfos &list, const std::string &device, const std::string &description, snd_config_t *config)
 {
     snd_pcm_t *pcmhandle = NULL;
     if (!openAudioDevice(device, "", ALSA_MAX_CHANNELS, &pcmhandle, config))
@@ -1316,7 +1316,7 @@ void AlsaPassthroughSink::enumerateDevice(DeviceDescriptors &list, const std::st
 
     int cardNr = snd_pcm_info_get_card(pcminfo);
 
-    AudioDeviceDescriptor info;
+    AudioDeviceInfo info;
     info.deviceName = device;
     info.deviceType = AEDeviceTypeFromName(device);
 
@@ -1327,7 +1327,7 @@ void AlsaPassthroughSink::enumerateDevice(DeviceDescriptors &list, const std::st
         if (snd_card_get_name(cardNr, &cardName) == 0)
             info.m_displayName = cardName;
 
-        if (info.deviceType == DeviceType::Hdmi && info.m_displayName.size() > 5 &&
+        if (info.deviceType == AudioDeviceType::Hdmi && info.m_displayName.size() > 5 &&
                 info.m_displayName.substr(info.m_displayName.size()-5) == " HDMI")
         {
             // We already know this is HDMI, strip it
@@ -1344,11 +1344,11 @@ void AlsaPassthroughSink::enumerateDevice(DeviceDescriptors &list, const std::st
         if (pcminfoName != "USB Audio")
             info.m_displayNameExtra = pcminfoName;
 
-        if (info.deviceType == DeviceType::Hdmi)
+        if (info.deviceType == AudioDeviceType::Hdmi)
         {
             // @TODO(mawe): to be implemented
         }
-        else if (info.deviceType == DeviceType::Spdif)
+        else if (info.deviceType == AudioDeviceType::Spdif)
         {
             // append instead of replace, pcminfoName is useful for S/PDIF
             if (!info.m_displayNameExtra.empty())
@@ -1413,7 +1413,7 @@ void AlsaPassthroughSink::enumerateDevice(DeviceDescriptors &list, const std::st
     for (int i = ALSA_MAX_CHANNELS; i >= 1; --i)
     {
         // Reopen the device if needed on the special "surroundXX" cases
-        if (info.deviceType == DeviceType::Pcm && (i == 8 || i == 6 || i == 4))
+        if (info.deviceType == AudioDeviceType::Pcm && (i == 8 || i == 6 || i == 4))
             openAudioDevice(device, "", i, &pcmhandle, config);
 
         if (snd_pcm_hw_params_test_channels(pcmhandle, hwparams, i) >= 0)
@@ -1474,7 +1474,7 @@ void AlsaPassthroughSink::enumerateDevice(DeviceDescriptors &list, const std::st
             info.sampleFormat.push_back(i);
     }
 
-    if (info.deviceType == DeviceType::Hdmi)
+    if (info.deviceType == AudioDeviceType::Hdmi)
     {
         // we don't trust ELD information and push back our supported formats explicitly
         info.streamTypes.push_back(StreamInfo::StreamType::Ac3);

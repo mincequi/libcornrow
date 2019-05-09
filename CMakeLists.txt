@@ -12,6 +12,7 @@ pkg_check_modules(GSTMM REQUIRED gstreamermm-1.0)
 # gstreamermm-dsp
 add_library(${PROJECT_NAME} STATIC
     src/gstreamermm-dsp.cpp
+    src/AlsaUtil.cpp
     src/Biquad.cpp
     src/Crossover.cpp
     src/Loudness.cpp
