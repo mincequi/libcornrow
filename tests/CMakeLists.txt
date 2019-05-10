@@ -12,6 +12,7 @@ gstdsp_tests(
     loudnesstest
     passthroughtest
     peqtest
+    sbcparsetest
 )
 
 add_executable(biquadtest

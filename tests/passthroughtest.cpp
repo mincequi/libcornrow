@@ -5,8 +5,6 @@
 #include <gstreamermm-dsp.h>
 #include <glibmm/main.h>
 
-extern "C" gboolean plugin_init(GstPlugin* plugin);
-
 int main(int argc, char** argv)
 {
     assert(GstDsp::init());
