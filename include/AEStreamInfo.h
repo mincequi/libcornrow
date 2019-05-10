@@ -15,10 +15,6 @@
 /* ffmpeg re-defines this, so undef it to squash the warning */
 #undef restrict
 
-extern "C" {
-#include <libavutil/crc.h>
-}
-
 class StreamInfo
 {
 public:
@@ -86,8 +82,6 @@ private:
     unsigned int m_coreSize = 0;         /* core size for dtsHD */
     unsigned int m_dtsBlocks = 0;
     unsigned int m_fsize = 0;
-    int m_substreams = 0;       /* used for TrueHD  */
-    AVCRC m_crcTrueHD[1024];  /* TrueHD crc table */
 
     void GetPacket(uint8_t **buffer, unsigned int *bufferSize);
     unsigned int DetectType(uint8_t *data, unsigned int size);
