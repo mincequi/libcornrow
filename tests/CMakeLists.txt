@@ -8,6 +8,7 @@ endmacro()
 gstdsp_tests(
     allovertest
 #    biquadtest
+    changepipelinetest
     crossovertest
     loudnesstest
     passthroughtest
