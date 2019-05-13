@@ -27,10 +27,11 @@ void Peq::class_init(Gst::ElementClass<Peq> *klass)
 
     Glib::ustring capsString = Glib::ustring::compose(
                 "audio/x-raw, "
-                "format=(string)%1, "
+                "layout=(string)interleaved, "
                 "rate=(int){44100,48000}, "
                 "channels=(int)2, "
-                "layout=(string)interleaved", GST_AUDIO_NE(F32));
+                "format=(string)%1", GST_AUDIO_NE(F32));
+
     auto caps = Gst::Caps::create_from_string(capsString);
 
     auto sink = Gst::PadTemplate::create("sink", Gst::PAD_SINK, Gst::PAD_ALWAYS, caps);
