@@ -83,9 +83,9 @@ int main(int argc, char** argv)
     // Create sink
     sinkConverter = Gst::AudioConvert::create();
     alsaSink = Gst::AlsaSink::create();
-    alsaSink->set_property("device", Glib::ustring("iec958:CARD=MID,DEV=0"));
+    alsaSink->set_property("device", Glib::ustring("iec958:CARD=sndrpihifiberry,DEV=0"));
     passthruSink = Gst::ElementFactory::create_element("alsapassthroughsink");
-    passthruSink->set_property("device", Glib::ustring("iec958:CARD=MID,DEV=0"));
+    passthruSink->set_property("device", Glib::ustring("iec958:CARD=sndrpihifiberry,DEV=0"));
 
     // Add elements
     pipeline->add(src)->add(peq);
