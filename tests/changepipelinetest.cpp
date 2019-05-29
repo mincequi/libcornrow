@@ -53,7 +53,7 @@ public:
         Glib::signal_timeout().connect(sigc::mem_fun(this, &Pipeline::changePipeline), 5000);
 
         // Start
-        changePipeline();
+        constructPipeline(Type::Normal, true);
         m_pipeline->set_state(Gst::STATE_PLAYING);
     }
 
@@ -65,14 +65,21 @@ private:
         Crossover
     };
 
-    /*
+
     bool constructPipeline(Type type, bool force = false)
     {
-    }
-    */
+        if (m_currentType == type && !force) {
+            return true;
+        }
 
-    bool changePipeline()
-    {
+        // Get current state
+        Gst::State state, pending;
+        auto ret = m_pipeline->get_state(state, pending, Gst::CLOCK_TIME_NONE);
+        if (ret != Gst::STATE_CHANGE_SUCCESS) {
+            return false;
+        }
+
+        // Stop pipeline
         m_pipeline->set_state(Gst::STATE_NULL);
 
         static bool useRegularSink = true;
@@ -80,7 +87,21 @@ private:
                          construct({m_sinkConverter, m_alsaSink}, {m_crossover, m_enc, m_alsaPassthroughSink});
         useRegularSink = !useRegularSink;
 
-        m_pipeline->set_state(Gst::STATE_PLAYING);
+        // Set previous state
+        m_pipeline->set_state(state);
+
+        m_currentType = type;
+
+        return true;
+    }
+
+    bool changePipeline()
+    {
+        if (m_currentType == Type::Normal) {
+            constructPipeline(Type::Crossover);
+        } else {
+            constructPipeline(Type::Normal);
+        }
 
         return true;
     }
