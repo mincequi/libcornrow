@@ -32,11 +32,11 @@ public:
         m_crossover->setLfe(false);
 
         // Create encoder
-        m_enc = Gst::ElementFactory::create_element("avenc_ac3");
-        m_enc->set_property("bitrate", 640000);
+        m_ac3Encoder = Gst::ElementFactory::create_element("avenc_ac3");
+        m_ac3Encoder->set_property("bitrate", 640000);
 
         // Create sink
-        m_sinkConverter = Gst::AudioConvert::create();
+        m_alsaConverter = Gst::AudioConvert::create();
         m_alsaSink = Gst::AlsaSink::create();
         m_alsaSink->set_property("device", Glib::ustring("iec958:CARD=sndrpihifiberry,DEV=0"));
         m_alsaPassthroughSink = Gst::ElementFactory::create_element("alsapassthroughsink");
@@ -45,6 +45,9 @@ public:
         // Add elements
         m_pipeline->add(m_src)->add(m_peq);
         m_src->link(m_peq);
+
+        m_elements[Type::Normal]    = { m_alsaConverter, m_alsaSink };
+        m_elements[Type::Crossover] = { m_crossover, m_ac3Encoder, m_alsaPassthroughSink };
     }
 
     void start()
@@ -82,10 +85,11 @@ private:
         // Stop pipeline
         m_pipeline->set_state(Gst::STATE_NULL);
 
-        static bool useRegularSink = true;
-        useRegularSink ? construct({m_crossover, m_enc, m_alsaPassthroughSink}, {m_sinkConverter, m_alsaSink}) :
-                         construct({m_sinkConverter, m_alsaSink}, {m_crossover, m_enc, m_alsaPassthroughSink});
-        useRegularSink = !useRegularSink;
+        if (type == Type::Normal) {
+            construct({m_crossover, m_ac3Encoder, m_alsaPassthroughSink}, {m_alsaConverter, m_alsaSink});
+        } else {
+            construct({m_alsaConverter, m_alsaSink}, {m_crossover, m_ac3Encoder, m_alsaPassthroughSink});
+        }
 
         // Set previous state
         m_pipeline->set_state(state);
@@ -126,12 +130,12 @@ private:
 
     Type m_currentType = Type::Normal;
 
-    Glib::RefPtr<Gst::AudioConvert> m_sinkConverter;
+    Glib::RefPtr<Gst::AudioConvert> m_alsaConverter;
     Glib::RefPtr<Gst::AlsaSink>     m_alsaSink;
     Glib::RefPtr<Gst::AudioTestSrc> m_src;
     Glib::RefPtr<GstDsp::Crossover> m_crossover;
     Glib::RefPtr<GstDsp::Peq>       m_peq;
-    Glib::RefPtr<Gst::Element>      m_enc;
+    Glib::RefPtr<Gst::Element>      m_ac3Encoder;
     Glib::RefPtr<Gst::Element>      m_alsaPassthroughSink;
 
     /*
