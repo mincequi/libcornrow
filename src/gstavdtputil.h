@@ -36,41 +36,40 @@ G_BEGIN_DECLS
 
 struct bluetooth_data
 {
-  guint link_mtu;
+    guint link_mtu;
 
-  BluezMediaTransport1 *conn;
-  guint8 codec;                 /* Bluetooth transport configuration */
-  gchar *uuid;
-  guint8 *config;
-  gint config_size;
-  gboolean is_acquired;
+    BluezMediaTransport1 *conn;
+    //guint8 codec;                 /* Bluetooth transport configuration */
+    //gchar *uuid;
+    //guint8 *config;
+    //gint config_size;
+    //gboolean is_acquired;
 
-  gchar buffer[DEFAULT_CODEC_BUFFER_SIZE];      /* Codec transfer buffer */
+    gchar buffer[DEFAULT_CODEC_BUFFER_SIZE];      /* Codec transfer buffer */
 };
 
 typedef struct _GstAvdtpConnection GstAvdtpConnection;
 
 struct _GstAvdtpConnection
 {
-  gchar *device;
-  gchar *transport;
-  GIOChannel *stream;
+    gchar *device;
+    gchar *transport;
+    GIOChannel *stream;
 
-  struct bluetooth_data data;
+    struct bluetooth_data data;
 };
 
-gboolean gst_avdtp_connection_acquire (GstAvdtpConnection * conn,
-    gboolean use_try);
-void gst_avdtp_connection_release (GstAvdtpConnection * conn);
+gboolean gst_avdtp_connection_acquire (GstAvdtpConnection * conn, int fd, uint16_t imtu, uint16_t omtu);
+//void gst_avdtp_connection_release (GstAvdtpConnection * conn);
 void gst_avdtp_connection_reset (GstAvdtpConnection * conn);
-gboolean gst_avdtp_connection_get_properties (GstAvdtpConnection * conn);
-GstCaps *gst_avdtp_connection_get_caps (GstAvdtpConnection * conn);
+//gboolean gst_avdtp_connection_get_properties (GstAvdtpConnection * conn);
+GstCaps *gst_avdtp_connection_get_caps (GstAvdtpConnection * conn, int rate);
 void gst_avdtp_connection_set_device (GstAvdtpConnection * conn,
-    const char *device);
+                                      const char *device);
 void gst_avdtp_connection_set_transport (GstAvdtpConnection * conn,
-    const char *transport);
+                                         const char *transport);
 void gst_avdtp_connection_notify_volume (GstAvdtpConnection * conn,
-    GObject * target, const gchar * property);
+                                         GObject * target, const gchar * property);
 gboolean gst_avdtp_connection_conf_recv_stream_fd (GstAvdtpConnection * conn);
 
 G_END_DECLS

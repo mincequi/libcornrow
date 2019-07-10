@@ -31,39 +31,43 @@
 
 G_BEGIN_DECLS
 #define GST_TYPE_AVDTP_SRC2 \
-	(gst_avdtp_src_get_type())
+    (gst_avdtp_src_get_type())
 #define GST_AVDTP_SRC(obj) \
-        (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AVDTP_SRC2, GstAvdtpSrc2))
+    (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AVDTP_SRC2, GstAvdtpSrc2))
 #define GST_AVDTP_SRC_CLASS(klass) \
-        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AVDTP_SRC2, GstAvdtpSrc2))
+    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AVDTP_SRC2, GstAvdtpSrc2))
 #define GST_IS_AVDTP_SRC(obj) \
-        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AVDTP_SRC2))
+    (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AVDTP_SRC2))
 #define GST_IS_AVDTP_SRC_CLASS(obj) \
-        (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AVDTP_SRC2))
+    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AVDTP_SRC2))
 typedef struct _GstAvdtpSrc GstAvdtpSrc2;
 typedef struct _GstAvdtpSrcClass GstAvdtpSrc2Class;
 
 struct _GstAvdtpSrcClass
 {
-  GstBaseSrcClass parentclass;
+    GstBaseSrcClass parentclass;
 };
 
 struct _GstAvdtpSrc
 {
-  GstBaseSrc basesrc;
+    GstBaseSrc basesrc;
 
-  GstAvdtpConnection conn;
-  GstCaps *dev_caps;
+    GstAvdtpConnection conn;
+    GstCaps *dev_caps;
 
-  GstAvrcpConnection *avrcp;
+    GstAvrcpConnection *avrcp;
 
-  GstPoll *poll;
-  GstPollFD pfd;
-  volatile gint unlocked;
+    GstPoll *poll;
+    GstPollFD pfd;
+    volatile gint unlocked;
 
-  GstClockTime duration;
+    GstClockTime duration;
 
-  guint transport_volume;
+    guint transport_volume;
+    gint fd;
+    guint imtu;
+    guint omtu;
+    gint rate;
 };
 
 GType gst_avdtp_src_get_type (void);

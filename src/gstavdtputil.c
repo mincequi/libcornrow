@@ -49,6 +49,7 @@ GST_DEBUG_CATEGORY (avdtp_debug);
 
 static void gst_avdtp_connection_transport_release (GstAvdtpConnection * conn);
 
+/*
 static gboolean
 on_state_change (BluezMediaTransport1 * proxy, GParamSpec * pspec,
     GstAvdtpConnection * conn)
@@ -64,9 +65,6 @@ on_state_change (BluezMediaTransport1 * proxy, GParamSpec * pspec,
     gst_avdtp_connection_acquire (conn, TRUE);
 
   } else if (is_idle) {
-    /* We don't know if we need to release the transport -- that may have been
-     * done for us by bluez already! Or not ... so release it just in case, but
-     * mark its stale beforehand to suppress any errors. */
     GST_DEBUG ("Marking connection stale");
     conn->data.is_acquired = FALSE;
     gst_avdtp_connection_transport_release (conn);
@@ -77,10 +75,12 @@ on_state_change (BluezMediaTransport1 * proxy, GParamSpec * pspec,
 
   return TRUE;
 }
+*/
 
 gboolean
-gst_avdtp_connection_acquire (GstAvdtpConnection * conn, gboolean use_try)
+gst_avdtp_connection_acquire (GstAvdtpConnection * conn, int fd, uint16_t imtu, uint16_t omtu)
 {
+  /*
   GVariant *handle = NULL;
   GUnixFDList *fd_list = NULL;
   GError *err = NULL;
@@ -104,8 +104,7 @@ gst_avdtp_connection_acquire (GstAvdtpConnection * conn, gboolean use_try)
       return FALSE;
     }
 
-    g_signal_connect (conn->data.conn, "notify::state",
-        G_CALLBACK (on_state_change), conn);
+    g_signal_connect (conn->data.conn, "notify::state", G_CALLBACK (on_state_change), conn);
   }
 
   if (conn->data.is_acquired) {
@@ -129,14 +128,17 @@ gst_avdtp_connection_acquire (GstAvdtpConnection * conn, gboolean use_try)
 
   g_variant_unref (handle);
   g_object_unref (fd_list);
+  */
+
   conn->stream = g_io_channel_unix_new (fd);
   g_io_channel_set_encoding (conn->stream, NULL, NULL);
   g_io_channel_set_close_on_unref (conn->stream, TRUE);
-  conn->data.link_mtu = omtu;
-  conn->data.is_acquired = TRUE;
+  conn->data.link_mtu = omtu; //@TODO(mawe): use omtu or imtu? original avdtpsrc impl uses omtu.
+  //conn->data.is_acquired = TRUE;
 
   return TRUE;
 
+/*
 fail:
   GST_ERROR ("Failed to %s transport stream: %s", use_try ? "try_acquire" :
       "acquire", err && err->message ? err->message : "unknown error");
@@ -147,15 +149,16 @@ fail:
 
   conn->data.is_acquired = FALSE;
   return FALSE;
+  */
 }
 
+/*
 static void
 gst_avdtp_connection_transport_release (GstAvdtpConnection * conn)
 {
   GError *err = NULL;
 
   if (!bluez_media_transport1_call_release_sync (conn->data.conn, NULL, &err)) {
-    /* We don't care about errors if the transport was already marked stale */
     if (!conn->data.is_acquired) {
       g_clear_error (&err);
       return;
@@ -167,6 +170,7 @@ gst_avdtp_connection_transport_release (GstAvdtpConnection * conn)
   }
   conn->data.is_acquired = FALSE;
 }
+*/
 
 void
 gst_avdtp_connection_release (GstAvdtpConnection * conn)
@@ -177,6 +181,7 @@ gst_avdtp_connection_release (GstAvdtpConnection * conn)
     conn->stream = NULL;
   }
 
+  /*
   if (conn->data.uuid) {
     g_free (conn->data.uuid);
     conn->data.uuid = NULL;
@@ -186,10 +191,13 @@ gst_avdtp_connection_release (GstAvdtpConnection * conn)
     g_free (conn->data.config);
     conn->data.config = NULL;
   }
+  */
 
   if (conn->data.conn) {
+    /*
     if (conn->transport)
       gst_avdtp_connection_transport_release (conn);
+      */
 
     g_clear_object (&conn->data.conn);
   }
@@ -228,6 +236,7 @@ gst_avdtp_connection_set_transport (GstAvdtpConnection * conn,
   conn->transport = g_strdup (transport);
 }
 
+/*
 gboolean
 gst_avdtp_connection_get_properties (GstAvdtpConnection * conn)
 {
@@ -244,6 +253,46 @@ gst_avdtp_connection_get_properties (GstAvdtpConnection * conn)
   g_variant_unref (var);
 
   return TRUE;
+}
+*/
+
+static GstStructure * gst_avdtp_util_get_sbc (int rate)
+{
+  //a2dp_sbc_t *sbc = (a2dp_sbc_t *) config;
+  GstStructure *structure;
+  GValue *value;
+  GValue *list;
+  //gboolean mono, stereo;
+
+  structure = gst_structure_new_empty ("audio/x-sbc");
+  value = g_value_init (g_new0 (GValue, 1), G_TYPE_STRING);
+  list = g_value_init (g_new0 (GValue, 1), GST_TYPE_LIST);
+
+  g_value_set_static_string (value, "stereo");
+  gst_value_list_prepend_value (list, value);
+  gst_structure_set_value (structure, "channel-mode", value);
+
+  g_value_unset (value);
+  g_value_reset (list);
+
+    /*
+    g_value_set_int (value, rate);
+    gst_value_list_prepend_value (list, value);
+    gst_structure_set_value (structure, "rate", value);
+
+  g_value_unset (value);
+  g_value_reset (list);
+
+  g_value_set_int (value, 2);
+  gst_structure_set_value (structure, "channels", value);
+  */
+
+  g_value_unset (value);
+  g_free (value);
+  g_value_unset (list);
+  g_free (list);
+
+  return structure;
 }
 
 static GstStructure *
@@ -692,11 +741,12 @@ gst_avdtp_util_parse_aac_raw (void *config)
 }
 
 GstCaps *
-gst_avdtp_connection_get_caps (GstAvdtpConnection * conn)
+gst_avdtp_connection_get_caps (GstAvdtpConnection * conn, int rate)
 {
   GstCaps *caps;
-  GstStructure *structure;
+  GstStructure *structure = gst_avdtp_util_get_sbc(rate);
 
+  /*
   if (conn->data.config_size == 0 || conn->data.config == NULL)
     return NULL;
 
@@ -717,6 +767,7 @@ gst_avdtp_connection_get_caps (GstAvdtpConnection * conn)
 
   if (structure == NULL)
     return FALSE;
+    */
 
   caps = gst_caps_new_full (structure, NULL);
 

@@ -36,7 +36,7 @@ struct _GstAvrcpConnection
   GMainLoop *mainloop;
   GThread *thread;
 
-  gchar *dev_path;
+  //gchar *dev_path;
   GDBusObjectManager *manager;
   BluezMediaPlayer1 *player;
 
@@ -243,6 +243,7 @@ manager_object_removed_cb (GDBusObjectManager * manager,
     gst_avrcp_connection_set_player (avrcp, NULL);
 }
 
+/*
 static void
 manager_ready_cb (GObject * object, GAsyncResult * res, gpointer user_data)
 {
@@ -277,6 +278,7 @@ manager_ready_cb (GObject * object, GAsyncResult * res, gpointer user_data)
 
   g_list_free_full (objects, g_object_unref);
 }
+*/
 
 GstAvrcpConnection *
 gst_avrcp_connection_new (const gchar * dev_path, GstAvrcpMetadataCb cb,
@@ -293,13 +295,15 @@ gst_avrcp_connection_new (const gchar * dev_path, GstAvrcpMetadataCb cb,
   avrcp->context = g_main_context_new ();
   avrcp->mainloop = g_main_loop_new (avrcp->context, FALSE);
 
-  avrcp->dev_path = g_strdup (dev_path);
+  //avrcp->dev_path = g_strdup (dev_path);
 
   g_main_context_push_thread_default (avrcp->context);
 
+  /*
   g_dbus_object_manager_client_new_for_bus (G_BUS_TYPE_SYSTEM,
       G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_NONE, BLUEZ_NAME, BLUEZ_PATH,
       manager_proxy_type_func, NULL, NULL, NULL, manager_ready_cb, avrcp);
+      */
 
   g_main_context_pop_thread_default (avrcp->context);
 
@@ -328,6 +332,6 @@ gst_avrcp_connection_free (GstAvrcpConnection * avrcp)
   if (avrcp->user_data_free_cb)
     avrcp->user_data_free_cb (avrcp->user_data);
 
-  g_free (avrcp->dev_path);
+  //g_free (avrcp->dev_path);
   g_free (avrcp);
 }

@@ -36,13 +36,14 @@
 GST_DEBUG_CATEGORY_STATIC (avdtpsrc_debug);
 #define GST_CAT_DEFAULT (avdtpsrc_debug)
 
-#define DEFAULT_VOLUME 127
-
 enum
 {
-  PROP_0,
-  PROP_TRANSPORT,
-  PROP_TRANSPORT_VOLUME,
+    PROP_0,
+    PROP_TRANSPORT,
+    PROP_FD,
+    PROP_IMTU,
+    PROP_OMTU,
+    PROP_RATE
 };
 
 #define parent_class gst_avdtp_src_parent_class
@@ -54,15 +55,8 @@ static GstStaticPadTemplate gst_avdtp_src_template =
         "media = (string) \"audio\","
         "payload = (int) "
         GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "clock-rate = (int) { 16000, 32000, "
-        "44100, 48000 }, " "encoding-name = (string) \"SBC\"; "
-        "application/x-rtp, "
-        "media = (string) \"audio\","
-        "payload = (int) "
-        GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "clock-rate = (int) { 8000, 11025, 12000, 16000, "
-        "22050, 2400, 32000, 44100, 48000, 64000, 88200, 96000 }, "
-        "encoding-name = (string) \"MP4A-LATM\"; "));
+        "clock-rate = (int) { 44100, 48000 }, "
+        "encoding-name = (string) \"SBC\"; "));
 
 static void gst_avdtp_src_finalize (GObject * object);
 static void gst_avdtp_src_get_property (GObject * object, guint prop_id,
@@ -102,13 +96,33 @@ gst_avdtp_src_class_init (GstAvdtpSrc2Class * klass)
 
   g_object_class_install_property (gobject_class, PROP_TRANSPORT,
       g_param_spec_string ("transport",
-          "Transport", "Use configured transport", NULL, G_PARAM_READWRITE));
+                           "Transport",
+                           "Use configured transport",
+                           NULL, G_PARAM_READWRITE));
 
-  g_object_class_install_property (gobject_class, PROP_TRANSPORT_VOLUME,
-      g_param_spec_uint ("transport-volume",
-          "Transport volume",
-          "Volume of the transport (only valid if transport is acquired)",
-          0, 127, DEFAULT_VOLUME, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_FD,
+                                   g_param_spec_int ("fd",
+                                                     "File descriptor",
+                                                     "Acquired file descriptor",
+                                                     -1, 4096, -1, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_IMTU,
+                                   g_param_spec_uint ("imtu",
+                                                     "imtu",
+                                                     "imtu",
+                                                     0, 4096, 0, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_OMTU,
+                                   g_param_spec_uint ("omtu",
+                                                     "omtu",
+                                                     "omtu",
+                                                     0, 4096, 0, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_RATE,
+                                   g_param_spec_int ("rate",
+                                                     "Sample rate",
+                                                     "Sampe rate",
+                                                     0, 192000, 44100, G_PARAM_READWRITE));
 
   gst_element_class_set_static_metadata (element_class,
       "Bluetooth AVDTP Source",
@@ -129,7 +143,8 @@ gst_avdtp_src_init (GstAvdtpSrc2 * avdtpsrc)
   avdtpsrc->poll = gst_poll_new (TRUE);
 
   avdtpsrc->duration = GST_CLOCK_TIME_NONE;
-  avdtpsrc->transport_volume = DEFAULT_VOLUME;
+  avdtpsrc->fd = -1;
+  avdtpsrc->rate = 44100;
 
   gst_base_src_set_format (GST_BASE_SRC (avdtpsrc), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (avdtpsrc), TRUE);
@@ -152,43 +167,56 @@ static void
 gst_avdtp_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstAvdtpSrc2 *avdtpsrc = GST_AVDTP_SRC (object);
+    GstAvdtpSrc2 *avdtpsrc = GST_AVDTP_SRC (object);
 
-  switch (prop_id) {
+    switch (prop_id) {
     case PROP_TRANSPORT:
-      g_value_set_string (value, avdtpsrc->conn.transport);
-      break;
-
-    case PROP_TRANSPORT_VOLUME:
-      g_value_set_uint (value, avdtpsrc->transport_volume);
-      break;
-
+        g_value_set_string (value, avdtpsrc->conn.transport);
+        break;
+    case PROP_FD:
+        g_value_set_int (value, avdtpsrc->fd);
+        break;
+    case PROP_IMTU:
+        g_value_set_uint (value, avdtpsrc->imtu);
+        break;
+    case PROP_OMTU:
+        g_value_set_uint (value, avdtpsrc->omtu);
+        break;
+    case PROP_RATE:
+        g_value_set_int (value, avdtpsrc->rate);
+        break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
 }
 
 static void
 gst_avdtp_src_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
+                            const GValue * value, GParamSpec * pspec)
 {
-  GstAvdtpSrc2 *avdtpsrc = GST_AVDTP_SRC (object);
+    GstAvdtpSrc2 *avdtpsrc = GST_AVDTP_SRC (object);
 
-  switch (prop_id) {
+    switch (prop_id) {
     case PROP_TRANSPORT:
-      gst_avdtp_connection_set_transport (&avdtpsrc->conn,
-          g_value_get_string (value));
-      break;
-
-    case PROP_TRANSPORT_VOLUME:
-      avdtpsrc->transport_volume = g_value_get_uint (value);
-      break;
-
+        gst_avdtp_connection_set_transport (&avdtpsrc->conn, g_value_get_string (value));
+        break;
+    case PROP_FD:
+        avdtpsrc->fd = g_value_get_int (value);
+        break;
+    case PROP_IMTU:
+        avdtpsrc->imtu = g_value_get_uint(value);
+        break;
+    case PROP_OMTU:
+        avdtpsrc->omtu = g_value_get_uint(value);
+        break;
+    case PROP_RATE:
+        avdtpsrc->rate = g_value_get_int (value);
+        break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
 }
 
 static gboolean
@@ -241,7 +269,7 @@ gst_avdtp_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
           "media", G_TYPE_STRING, "audio",
           "payload", GST_TYPE_INT_RANGE, 96, 127,
           "encoding-name", G_TYPE_STRING, "SBC", NULL);
-    } else if (g_str_equal (format, "audio/mpeg")) {
+    } /*else if (g_str_equal (format, "audio/mpeg")) {
       caps = gst_caps_new_simple ("application/x-rtp",
           "media", G_TYPE_STRING, "audio",
           "payload", GST_TYPE_INT_RANGE, 96, 127,
@@ -274,11 +302,12 @@ gst_avdtp_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
       gst_caps_set_simple (caps, "base-profile", G_TYPE_STRING,
           g_value_get_string (value), NULL);
 
-    } else {
+    }*/ else {
       GST_ERROR_OBJECT (avdtpsrc,
-          "Only SBC and MPEG-2/4 are supported at the moment");
+          "Only SBC supported at the moment");
     }
 
+    /*
     value = gst_structure_get_value (structure, "rate");
     if (!value || !G_VALUE_HOLDS_INT (value)) {
       GST_ERROR_OBJECT (avdtpsrc, "Failed to get sample rate");
@@ -286,8 +315,9 @@ gst_avdtp_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
       return NULL;
     }
     rate = g_value_get_int (value);
+    */
 
-    gst_caps_set_simple (caps, "clock-rate", G_TYPE_INT, rate, NULL);
+    gst_caps_set_simple (caps, "clock-rate", G_TYPE_INT, avdtpsrc->rate, NULL);
 
     if (filter) {
       ret = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
@@ -324,10 +354,11 @@ avrcp_metadata_cb (GstAvrcpConnection * avrcp, GstTagList * taglist,
 static void
 gst_avdtp_src_start_avrcp (GstAvdtpSrc2 * src)
 {
+    /*
   gchar *path, **strv;
   int i;
 
-  /* Strip out the /fdX in /org/bluez/dev_.../fdX */
+  // Strip out the /fdX in /org/bluez/dev_.../fdX
   strv = g_strsplit (src->conn.transport, "/", -1);
 
   for (i = 0; strv[i]; i++);
@@ -338,10 +369,11 @@ gst_avdtp_src_start_avrcp (GstAvdtpSrc2 * src)
 
   path = g_strjoinv ("/", strv);
   g_strfreev (strv);
+  */
 
-  src->avrcp = gst_avrcp_connection_new (path, avrcp_metadata_cb, src, NULL);
+  src->avrcp = gst_avrcp_connection_new (NULL, avrcp_metadata_cb, src, NULL);
 
-  g_free (path);
+  //g_free (path);
 }
 
 static void
@@ -359,15 +391,17 @@ gst_avdtp_src_start (GstBaseSrc * bsrc)
    * connection to figure out what format the device is going to send us.
    */
 
-  if (!gst_avdtp_connection_acquire (&avdtpsrc->conn, FALSE)) {
+  if (!gst_avdtp_connection_acquire (&avdtpsrc->conn, avdtpsrc->fd, avdtpsrc->imtu, avdtpsrc->omtu)) {
     GST_ERROR_OBJECT (avdtpsrc, "Failed to acquire connection");
     return FALSE;
   }
 
+  /*
   if (!gst_avdtp_connection_get_properties (&avdtpsrc->conn)) {
     GST_ERROR_OBJECT (avdtpsrc, "Failed to get transport properties");
     goto fail;
   }
+  */
 
   if (!gst_avdtp_connection_conf_recv_stream_fd (&avdtpsrc->conn)) {
     GST_ERROR_OBJECT (avdtpsrc, "Failed to configure stream fd");
@@ -379,7 +413,7 @@ gst_avdtp_src_start (GstBaseSrc * bsrc)
   gst_base_src_set_blocksize (GST_BASE_SRC (avdtpsrc),
       avdtpsrc->conn.data.link_mtu);
 
-  avdtpsrc->dev_caps = gst_avdtp_connection_get_caps (&avdtpsrc->conn);
+  avdtpsrc->dev_caps = gst_avdtp_connection_get_caps (&avdtpsrc->conn, avdtpsrc->rate);
   if (!avdtpsrc->dev_caps) {
     GST_ERROR_OBJECT (avdtpsrc, "Failed to get device caps");
     goto fail;
