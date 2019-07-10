@@ -21,6 +21,9 @@ add_library(${PROJECT_NAME} STATIC
     src/Util.cpp
 
     src/gstalsapassthroughsink.c
+    src/gstavdtpsrc.c
+    src/gstavdtputil.c
+    src/gstavrcputil.c
     src/gstsbcparse.c
 )
 
