@@ -4,19 +4,14 @@
 #include <vector>
 #include "AEChannelInfo.h"
 #include "AEStreamInfo.h"
-
-enum class AudioDeviceType {
-    Pcm,
-    Spdif,
-    Hdmi
-};
+#include "Types.h"
 
 struct AudioDeviceInfo
 {
     std::string deviceName;	// the driver device name
     std::string m_displayName;	// the friendly display name
     std::string m_displayNameExtra;	// additional display name info, ie, monitor name from ELD
-    AudioDeviceType deviceType;	// the device type, PCM, SPDIF or HDMI
+    GstDsp::AudioDeviceType deviceType;	// the device type, PCM, SPDIF or HDMI
     AudioChannelLayout channels;		// the channels the device is capable of rendering
     std::vector<std::uint32_t> sampleRates;	// the samplerates the device is capable of rendering
     std::vector<AudioSampleFormat> sampleFormat;	// the dataformats the device is capable of rendering

@@ -77,20 +77,20 @@ struct QuadLfeFrame : public StereoLfeFrame<T>
     T rearRight;
 };
 
-enum class DeviceType : uint8_t
+enum class AudioDeviceType : uint8_t
 {
     Pcm,
     Spdif,
     Hdmi,
 };
 
-struct DeviceInfo
+struct AudioDeviceInfo
 {
-    explicit DeviceInfo(const std::string& _name);
+    explicit AudioDeviceInfo(const std::string& _name);
 
     std::string name;
-    DeviceType type;
+    AudioDeviceType type;
 };
-using DeviceInfoList = std::list<DeviceInfo>;
+using AudioDeviceInfoList = std::list<AudioDeviceInfo>;
 
 } // namespace GstDsp

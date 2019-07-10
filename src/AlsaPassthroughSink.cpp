@@ -1,11 +1,3 @@
-/*
- *  Copyright (C) 2010-2018 Team Kodi
- *  This file is part of Kodi - https://kodi.tv
- *
- *  SPDX-License-Identifier: GPL-2.0-or-later
- *  See LICENSES/README.md for more information.
- */
-
 #include "AlsaPassthroughSink.h"
 
 #include <stdint.h>
@@ -1158,17 +1150,6 @@ AudioDeviceInfos AlsaPassthroughSink::enumerateDevices()
         free(desc);
     }
     snd_device_name_free_hint(hints);
-
-    // set the displayname for default device
-    if (!list.empty() && list[0].deviceName == "default")
-    {
-        // If we have one from a hint (DESC), use it
-        if (!defaultDescription.empty())
-            list[0].m_displayName = defaultDescription;
-        // Otherwise use the discovered name or (unlikely) "Default"
-        else if (list[0].m_displayName.empty())
-            list[0].m_displayName = "Default";
-    }
 
     // cards with surround entries where sysdefault should be removed
     std::set<std::string> cardsWithSurround;

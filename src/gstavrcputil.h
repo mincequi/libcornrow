@@ -27,9 +27,9 @@ typedef struct _GstAvrcpConnection GstAvrcpConnection;
 typedef void (*GstAvrcpMetadataCb) (GstAvrcpConnection *, GstTagList *,
     gpointer);
 
-GstAvrcpConnection * gst_avrcp_connection_new (GstAvrcpMetadataCb cb,
-                                               gpointer user_data,
-                                               GDestroyNotify user_data_free_cb);
+GstAvrcpConnection *
+gst_avrcp_connection_new (const gchar * dev_path, GstAvrcpMetadataCb cb,
+    gpointer user_data, GDestroyNotify user_data_free_cb);
 
 void gst_avrcp_connection_free (GstAvrcpConnection * avrcp);
 

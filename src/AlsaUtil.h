@@ -1,6 +1,6 @@
 #pragma once
 
-#include <DeviceInfo.h>
+#include "Types.h"
 
 namespace GstDsp
 {
@@ -10,10 +10,10 @@ class AlsaUtil
 public:
     AlsaUtil();
 
-    void enumerateDevices();
+    std::list<AudioDeviceInfo> enumerateDevices();
 
 private:
-    AudioDeviceInfos m_devices;
+    std::list<AudioDeviceInfo> m_devices;
 };
 
 } // namespace GstDsp
