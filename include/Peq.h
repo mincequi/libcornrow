@@ -20,6 +20,8 @@ public:
     static GType get_base_type() G_GNUC_CONST;
     static void class_init(Gst::ElementClass<Peq> *klass);
 
+    void setVolume(float volume);
+
     void setFilters(const std::vector<Filter> filters);
     std::vector<Filter> filters();
 
@@ -31,8 +33,9 @@ private:
     static GstFlowReturn transform_ip(GstBaseTransform* self, GstBuffer* buf);
     void process(GstBuffer* buf);
 
-    Gst::AudioInfo           m_audioInfo;
-    std::deque<Biquad>       m_biquads;
+    Gst::AudioInfo      m_audioInfo;
+    float               m_volume = 1.0;
+    std::deque<Biquad>  m_biquads;
 
     std::mutex m_mutex;
 };

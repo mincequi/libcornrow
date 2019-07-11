@@ -26,8 +26,6 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasesrc.h>
-#include "gstavdtputil.h"
-#include "gstavrcputil.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_AVDTP_SRC2 \
@@ -52,19 +50,13 @@ struct _GstAvdtpSrc
 {
     GstBaseSrc basesrc;
 
-    GstAvdtpConnection conn;
-    GstCaps *dev_caps;
-
-    GstAvrcpConnection *avrcp;
-
     GstPoll *poll;
     GstPollFD pfd;
     volatile gint unlocked;
 
     GstClockTime duration;
 
-    guint transport_volume;
-    gint fd;
+    int fd;
     guint imtu;
     guint omtu;
     gint rate;

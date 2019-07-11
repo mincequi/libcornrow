@@ -173,6 +173,10 @@ gst_fd_src_init (GstFd2Src * fdsrc)
   fdsrc->timeout = DEFAULT_TIMEOUT;
   fdsrc->uri = g_strdup_printf ("fd://0");
   fdsrc->curoffset = 0;
+
+  gst_base_src_set_format (GST_BASE_SRC (fdsrc), GST_FORMAT_TIME);
+  gst_base_src_set_live (GST_BASE_SRC (fdsrc), TRUE);
+  gst_base_src_set_do_timestamp (GST_BASE_SRC (fdsrc), TRUE);
 }
 
 static void

@@ -21,17 +21,14 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "gstavdtpsrc.h"
 
-#include <unistd.h>
+#include <poll.h>
 #include <stdint.h>
 #include <string.h>
-#include <poll.h>
+#include <unistd.h>
 
 #include <gst/rtp/gstrtppayloads.h>
-#include "gstavdtpsrc.h"
 
 GST_DEBUG_CATEGORY_STATIC (avdtpsrc_debug);
 #define GST_CAT_DEFAULT (avdtpsrc_debug)
@@ -39,7 +36,6 @@ GST_DEBUG_CATEGORY_STATIC (avdtpsrc_debug);
 enum
 {
     PROP_0,
-    PROP_TRANSPORT,
     PROP_FD,
     PROP_IMTU,
     PROP_OMTU,
@@ -94,17 +90,11 @@ gst_avdtp_src_class_init (GstAvdtpSrc2Class * klass)
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_avdtp_src_getcaps);
   basesrc_class->query = GST_DEBUG_FUNCPTR (gst_avdtp_src_query);
 
-  g_object_class_install_property (gobject_class, PROP_TRANSPORT,
-      g_param_spec_string ("transport",
-                           "Transport",
-                           "Use configured transport",
-                           NULL, G_PARAM_READWRITE));
-
   g_object_class_install_property (gobject_class, PROP_FD,
                                    g_param_spec_int ("fd",
                                                      "File descriptor",
                                                      "Acquired file descriptor",
-                                                     -1, 4096, -1, G_PARAM_READWRITE));
+                                                     -1, 1023, -1, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_IMTU,
                                    g_param_spec_uint ("imtu",
@@ -143,7 +133,6 @@ gst_avdtp_src_init (GstAvdtpSrc2 * avdtpsrc)
   avdtpsrc->poll = gst_poll_new (TRUE);
 
   avdtpsrc->duration = GST_CLOCK_TIME_NONE;
-  avdtpsrc->fd = -1;
   avdtpsrc->rate = 44100;
 
   gst_base_src_set_format (GST_BASE_SRC (avdtpsrc), GST_FORMAT_TIME);
@@ -157,8 +146,7 @@ gst_avdtp_src_finalize (GObject * object)
   GstAvdtpSrc2 *avdtpsrc = GST_AVDTP_SRC (object);
 
   gst_poll_free (avdtpsrc->poll);
-
-  gst_avdtp_connection_reset (&avdtpsrc->conn);
+  close(avdtpsrc->pfd.fd);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -170,9 +158,6 @@ gst_avdtp_src_get_property (GObject * object, guint prop_id,
     GstAvdtpSrc2 *avdtpsrc = GST_AVDTP_SRC (object);
 
     switch (prop_id) {
-    case PROP_TRANSPORT:
-        g_value_set_string (value, avdtpsrc->conn.transport);
-        break;
     case PROP_FD:
         g_value_set_int (value, avdtpsrc->fd);
         break;
@@ -198,9 +183,6 @@ gst_avdtp_src_set_property (GObject * object, guint prop_id,
     GstAvdtpSrc2 *avdtpsrc = GST_AVDTP_SRC (object);
 
     switch (prop_id) {
-    case PROP_TRANSPORT:
-        gst_avdtp_connection_set_transport (&avdtpsrc->conn, g_value_get_string (value));
-        break;
     case PROP_FD:
         avdtpsrc->fd = g_value_get_int (value);
         break;
@@ -251,135 +233,24 @@ gst_avdtp_src_query (GstBaseSrc * bsrc, GstQuery * query)
 static GstCaps *
 gst_avdtp_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
 {
-  GstAvdtpSrc2 *avdtpsrc = GST_AVDTP_SRC (bsrc);
-  GstCaps *caps = NULL, *ret = NULL;
+    GstAvdtpSrc2 *avdtpsrc = GST_AVDTP_SRC (bsrc);
+    GstCaps *caps = NULL, *ret = NULL;
 
-  if (avdtpsrc->dev_caps) {
-    const GValue *value;
-    const char *format;
-    int rate;
-    GstStructure *structure = gst_caps_get_structure (avdtpsrc->dev_caps, 0);
-
-    format = gst_structure_get_name (structure);
-
-    if (g_str_equal (format, "audio/x-sbc")) {
-      /* FIXME: we can return a fixed payload type once we
-       * are in PLAYING */
-      caps = gst_caps_new_simple ("application/x-rtp",
-          "media", G_TYPE_STRING, "audio",
-          "payload", GST_TYPE_INT_RANGE, 96, 127,
-          "encoding-name", G_TYPE_STRING, "SBC", NULL);
-    } /*else if (g_str_equal (format, "audio/mpeg")) {
-      caps = gst_caps_new_simple ("application/x-rtp",
-          "media", G_TYPE_STRING, "audio",
-          "payload", GST_TYPE_INT_RANGE, 96, 127,
-          "encoding-name", G_TYPE_STRING, "MP4A-LATM", NULL);
-
-      value = gst_structure_get_value (structure, "mpegversion");
-      if (!value || !G_VALUE_HOLDS_INT (value)) {
-        GST_ERROR_OBJECT (avdtpsrc, "Failed to get mpegversion");
-        gst_caps_unref (caps);
-        return NULL;
-      }
-      gst_caps_set_simple (caps, "mpegversion", G_TYPE_INT,
-          g_value_get_int (value), NULL);
-
-      value = gst_structure_get_value (structure, "channels");
-      if (!value || !G_VALUE_HOLDS_INT (value)) {
-        GST_ERROR_OBJECT (avdtpsrc, "Failed to get channels");
-        gst_caps_unref (caps);
-        return NULL;
-      }
-      gst_caps_set_simple (caps, "channels", G_TYPE_INT,
-          g_value_get_int (value), NULL);
-
-      value = gst_structure_get_value (structure, "base-profile");
-      if (!value || !G_VALUE_HOLDS_STRING (value)) {
-        GST_ERROR_OBJECT (avdtpsrc, "Failed to get base-profile");
-        gst_caps_unref (caps);
-        return NULL;
-      }
-      gst_caps_set_simple (caps, "base-profile", G_TYPE_STRING,
-          g_value_get_string (value), NULL);
-
-    }*/ else {
-      GST_ERROR_OBJECT (avdtpsrc,
-          "Only SBC supported at the moment");
-    }
-
-    /*
-    value = gst_structure_get_value (structure, "rate");
-    if (!value || !G_VALUE_HOLDS_INT (value)) {
-      GST_ERROR_OBJECT (avdtpsrc, "Failed to get sample rate");
-      gst_caps_unref (caps);
-      return NULL;
-    }
-    rate = g_value_get_int (value);
-    */
+    caps = gst_caps_new_simple ("application/x-rtp",
+                                "media", G_TYPE_STRING, "audio",
+                                "payload", GST_TYPE_INT_RANGE, 96, 127,
+                                "encoding-name", G_TYPE_STRING, "SBC", NULL);
 
     gst_caps_set_simple (caps, "clock-rate", G_TYPE_INT, avdtpsrc->rate, NULL);
 
     if (filter) {
-      ret = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
-      gst_caps_unref (caps);
-    } else
-      ret = caps;
-  } else {
-    GST_DEBUG_OBJECT (avdtpsrc, "device not open, using template caps");
-    ret = GST_BASE_SRC_CLASS (parent_class)->get_caps (bsrc, filter);
-  }
+        ret = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+        gst_caps_unref (caps);
+    } else {
+        ret = caps;
+    }
 
-  return ret;
-}
-
-static void
-avrcp_metadata_cb (GstAvrcpConnection * avrcp, GstTagList * taglist,
-    gpointer user_data)
-{
-  GstAvdtpSrc2 *src = GST_AVDTP_SRC (user_data);
-  guint64 duration;
-
-  if (gst_tag_list_get_uint64 (taglist, GST_TAG_DURATION, &duration)) {
-    src->duration = duration;
-    gst_element_post_message (GST_ELEMENT (src),
-        gst_message_new_duration_changed (GST_OBJECT (src)));
-  }
-
-  gst_pad_push_event (GST_BASE_SRC_PAD (src),
-      gst_event_new_tag (gst_tag_list_copy (taglist)));
-  gst_element_post_message (GST_ELEMENT (src),
-      gst_message_new_tag (GST_OBJECT (src), taglist));
-}
-
-static void
-gst_avdtp_src_start_avrcp (GstAvdtpSrc2 * src)
-{
-    /*
-  gchar *path, **strv;
-  int i;
-
-  // Strip out the /fdX in /org/bluez/dev_.../fdX
-  strv = g_strsplit (src->conn.transport, "/", -1);
-
-  for (i = 0; strv[i]; i++);
-  g_return_if_fail (i > 0);
-
-  g_free (strv[i - 1]);
-  strv[i - 1] = NULL;
-
-  path = g_strjoinv ("/", strv);
-  g_strfreev (strv);
-  */
-
-  src->avrcp = gst_avrcp_connection_new (NULL, avrcp_metadata_cb, src, NULL);
-
-  //g_free (path);
-}
-
-static void
-gst_avdtp_src_stop_avrcp (GstAvdtpSrc2 * src)
-{
-  gst_avrcp_connection_free (src->avrcp);
+    return ret;
 }
 
 static gboolean
@@ -387,40 +258,12 @@ gst_avdtp_src_start (GstBaseSrc * bsrc)
 {
   GstAvdtpSrc2 *avdtpsrc = GST_AVDTP_SRC (bsrc);
 
-  /* None of this can go into prepare() since we need to set up the
-   * connection to figure out what format the device is going to send us.
-   */
-
-  if (!gst_avdtp_connection_acquire (&avdtpsrc->conn, avdtpsrc->fd, avdtpsrc->imtu, avdtpsrc->omtu)) {
-    GST_ERROR_OBJECT (avdtpsrc, "Failed to acquire connection");
-    return FALSE;
-  }
-
-  /*
-  if (!gst_avdtp_connection_get_properties (&avdtpsrc->conn)) {
-    GST_ERROR_OBJECT (avdtpsrc, "Failed to get transport properties");
-    goto fail;
-  }
-  */
-
-  if (!gst_avdtp_connection_conf_recv_stream_fd (&avdtpsrc->conn)) {
-    GST_ERROR_OBJECT (avdtpsrc, "Failed to configure stream fd");
-    goto fail;
-  }
-
-  GST_DEBUG_OBJECT (avdtpsrc, "Setting block size to link MTU (%d)",
-      avdtpsrc->conn.data.link_mtu);
-  gst_base_src_set_blocksize (GST_BASE_SRC (avdtpsrc),
-      avdtpsrc->conn.data.link_mtu);
-
-  avdtpsrc->dev_caps = gst_avdtp_connection_get_caps (&avdtpsrc->conn, avdtpsrc->rate);
-  if (!avdtpsrc->dev_caps) {
-    GST_ERROR_OBJECT (avdtpsrc, "Failed to get device caps");
-    goto fail;
-  }
+   //@TODO(mawe): use omtu or imtu? original avdtpsrc impl uses omtu.
+  GST_DEBUG_OBJECT (avdtpsrc, "Setting block size to link MTU (%d)", avdtpsrc->omtu);
+  gst_base_src_set_blocksize (GST_BASE_SRC (avdtpsrc), avdtpsrc->omtu);
 
   gst_poll_fd_init (&avdtpsrc->pfd);
-  avdtpsrc->pfd.fd = g_io_channel_unix_get_fd (avdtpsrc->conn.stream);
+  avdtpsrc->pfd.fd = avdtpsrc->fd;
 
   gst_poll_add_fd (avdtpsrc->poll, &avdtpsrc->pfd);
   gst_poll_fd_ctl_read (avdtpsrc->poll, &avdtpsrc->pfd, TRUE);
@@ -428,18 +271,7 @@ gst_avdtp_src_start (GstBaseSrc * bsrc)
 
   g_atomic_int_set (&avdtpsrc->unlocked, FALSE);
 
-  /* The life time of the connection is shorter than the src object, so we
-   * don't need to worry about memory management */
-  gst_avdtp_connection_notify_volume (&avdtpsrc->conn, G_OBJECT (avdtpsrc),
-      "transport-volume");
-
-  gst_avdtp_src_start_avrcp (avdtpsrc);
-
   return TRUE;
-
-fail:
-  gst_avdtp_connection_release (&avdtpsrc->conn);
-  return FALSE;
 }
 
 static gboolean
@@ -450,13 +282,7 @@ gst_avdtp_src_stop (GstBaseSrc * bsrc)
   gst_poll_remove_fd (avdtpsrc->poll, &avdtpsrc->pfd);
   gst_poll_set_flushing (avdtpsrc->poll, TRUE);
 
-  gst_avdtp_src_stop_avrcp (avdtpsrc);
-  gst_avdtp_connection_release (&avdtpsrc->conn);
-
-  if (avdtpsrc->dev_caps) {
-    gst_caps_unref (avdtpsrc->dev_caps);
-    avdtpsrc->dev_caps = NULL;
-  }
+  close(avdtpsrc->pfd.fd);
 
   return TRUE;
 }
@@ -553,9 +379,6 @@ gst_avdtp_src_unlock_stop (GstBaseSrc * bsrc)
   g_atomic_int_set (&avdtpsrc->unlocked, FALSE);
 
   gst_poll_set_flushing (avdtpsrc->poll, FALSE);
-
-  /* Flush out any stale data that might be buffered */
-  gst_avdtp_connection_conf_recv_stream_fd (&avdtpsrc->conn);
 
   return TRUE;
 }

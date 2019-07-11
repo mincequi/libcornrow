@@ -20,11 +20,8 @@ add_library(${PROJECT_NAME} STATIC
     src/Types.cpp
     src/Util.cpp
 
-    src/bluez.c
     src/gstalsapassthroughsink.c
     src/gstavdtpsrc.c
-    src/gstavdtputil.c
-    src/gstavrcputil.c
     src/gstfdsrc.c
     src/gstsbcparse.c
 )

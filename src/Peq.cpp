@@ -40,6 +40,11 @@ void Peq::class_init(Gst::ElementClass<Peq> *klass)
     klass->add_pad_template(src);
 }
 
+void Peq::setVolume(float volume)
+{
+    m_volume = volume;
+}
+
 void Peq::setFilters(const std::vector<Filter> filters)
 {
     m_mutex.lock();
@@ -112,6 +117,13 @@ void Peq::process(GstBuffer* buf)
 
     float* data = (float*)(map.data);
     uint   frameCount = map.size/m_audioInfo.get_bpf();
+
+    // Apply volume
+    if (m_volume != 1.0f) {
+        for (uint i = 0; i < frameCount*m_audioInfo.get_channels(); ++i) {
+            data[i] *= m_volume;
+        }
+    }
 
     m_mutex.lock();
     for (auto& biquad : m_biquads) {
