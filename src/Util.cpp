@@ -52,6 +52,36 @@ bool computeBiQuad(int r, const Filter& f, T* biquad)
         biquad->a2 = ( 1.0 - alpha  ) / a0;
         break;
     }
+    case FilterType::LowShelf: {
+        double A = pow(10, f.g/40.0);
+        double w0 = 2*M_PI*f.f/r;
+        double cosW0 = cos(w0);
+        double alpha = sin(w0)*0.5/f.q;
+        double sqrtAalpha2 = 2.0*sqrt(A)*alpha;
+        double a0 = (A+1) + (A-1)*cosW0 + sqrtAalpha2;
+
+        biquad->b0 =    A*( (A+1) - (A-1)*cosW0 + sqrtAalpha2) / a0;
+        biquad->b1 =  2*A*( (A-1) - (A+1)*cosW0              ) / a0;
+        biquad->b2 =    A*( (A+1) - (A-1)*cosW0 - sqrtAalpha2) / a0;
+        biquad->a1 =   -2*( (A-1) + (A+1)*cosW0              ) / a0;
+        biquad->a2 =      ( (A+1) + (A-1)*cosW0 - sqrtAalpha2) / a0;
+        break;
+    }
+    case FilterType::HighShelf: {
+        double A = pow(10, f.g/40.0);
+        double w0 = 2*M_PI*f.f/r;
+        double cosW0 = cos(w0);
+        double alpha = sin(w0)*0.5/f.q;
+        double sqrtAalpha2 = 2.0*sqrt(A)*alpha;
+        double a0 = (A+1) - (A-1)*cosW0 + sqrtAalpha2;
+
+        biquad->b0 =    A*( (A+1) + (A-1)*cosW0 + sqrtAalpha2) / a0;
+        biquad->b1 = -2*A*( (A-1) + (A+1)*cosW0              ) / a0;
+        biquad->b2 =    A*( (A+1) + (A-1)*cosW0 - sqrtAalpha2) / a0;
+        biquad->a1 =    2*( (A-1) - (A+1)*cosW0              ) / a0;
+        biquad->a2 =      ( (A+1) - (A-1)*cosW0 - sqrtAalpha2) / a0;
+        break;
+    }
     case FilterType::Invalid:
         return false;
     }

@@ -17,8 +17,8 @@ enum class FilterType : uint8_t
     Peak        = 1,
     LowPass,
     HighPass,
-    //LowShelf,
-    //HighShelf,
+    LowShelf,
+    HighShelf,
     //AllPass
 };
 
