@@ -14,8 +14,10 @@ std::list<AudioDeviceInfo> AlsaUtil::enumerateDevices()
     void **hints, **n;
     char *name, *descr, *descr1, *io;
 
-    if (snd_device_name_hint(-1, "pcm", &hints) < 0)
+    if (snd_device_name_hint(-1, "pcm", &hints) < 0) {
         return {};
+    }
+
     n = hints;
     while (*n != NULL) {
         name = snd_device_name_get_hint(*n, "NAME");

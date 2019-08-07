@@ -57,8 +57,7 @@ struct _GstAvdtpSrc
     GstClockTime duration;
 
     int fd;
-    guint imtu;
-    guint omtu;
+    guint blockSize;
     gint rate;
 };
 

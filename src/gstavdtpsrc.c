@@ -37,8 +37,7 @@ enum
 {
     PROP_0,
     PROP_FD,
-    PROP_IMTU,
-    PROP_OMTU,
+    PROP_BLOCKSIZE,
     PROP_RATE
 };
 
@@ -96,16 +95,10 @@ gst_avdtp_src_class_init (GstAvdtpSrc2Class * klass)
                                                      "Acquired file descriptor",
                                                      -1, 1023, -1, G_PARAM_READWRITE));
 
-  g_object_class_install_property (gobject_class, PROP_IMTU,
-                                   g_param_spec_uint ("imtu",
-                                                     "imtu",
-                                                     "imtu",
-                                                     0, 4096, 0, G_PARAM_READWRITE));
-
-  g_object_class_install_property (gobject_class, PROP_OMTU,
-                                   g_param_spec_uint ("omtu",
-                                                     "omtu",
-                                                     "omtu",
+  g_object_class_install_property (gobject_class, PROP_BLOCKSIZE,
+                                   g_param_spec_uint ("blocksize",
+                                                     "blocksize",
+                                                     "blocksize",
                                                      0, 4096, 0, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_RATE,
@@ -161,11 +154,8 @@ gst_avdtp_src_get_property (GObject * object, guint prop_id,
     case PROP_FD:
         g_value_set_int (value, avdtpsrc->fd);
         break;
-    case PROP_IMTU:
-        g_value_set_uint (value, avdtpsrc->imtu);
-        break;
-    case PROP_OMTU:
-        g_value_set_uint (value, avdtpsrc->omtu);
+    case PROP_BLOCKSIZE:
+        g_value_set_uint (value, avdtpsrc->blockSize);
         break;
     case PROP_RATE:
         g_value_set_int (value, avdtpsrc->rate);
@@ -186,11 +176,8 @@ gst_avdtp_src_set_property (GObject * object, guint prop_id,
     case PROP_FD:
         avdtpsrc->fd = g_value_get_int (value);
         break;
-    case PROP_IMTU:
-        avdtpsrc->imtu = g_value_get_uint(value);
-        break;
-    case PROP_OMTU:
-        avdtpsrc->omtu = g_value_get_uint(value);
+    case PROP_BLOCKSIZE:
+        avdtpsrc->blockSize = g_value_get_uint(value);
         break;
     case PROP_RATE:
         avdtpsrc->rate = g_value_get_int (value);
@@ -258,9 +245,8 @@ gst_avdtp_src_start (GstBaseSrc * bsrc)
 {
   GstAvdtpSrc2 *avdtpsrc = GST_AVDTP_SRC (bsrc);
 
-   //@TODO(mawe): use omtu or imtu? original avdtpsrc impl uses omtu.
-  GST_DEBUG_OBJECT (avdtpsrc, "Setting block size to link MTU (%d)", avdtpsrc->omtu);
-  gst_base_src_set_blocksize (GST_BASE_SRC (avdtpsrc), avdtpsrc->omtu);
+  GST_DEBUG_OBJECT (avdtpsrc, "Setting block size to link MTU (%d)", avdtpsrc->blockSize);
+  gst_base_src_set_blocksize (GST_BASE_SRC (avdtpsrc), avdtpsrc->blockSize);
 
   gst_poll_fd_init (&avdtpsrc->pfd);
   avdtpsrc->pfd.fd = avdtpsrc->fd;
