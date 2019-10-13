@@ -17,13 +17,16 @@ public:
 
     void setLevel(uint8_t phon);
 
+    void setVolume(float volume);
+
 private:
     virtual bool setup_vfunc(const Gst::AudioInfo& info) override;
     static GstFlowReturn transform_ip(GstBaseTransform* self, GstBuffer* buf);
     void process(GstBuffer* buf);
 
     Gst::AudioInfo  m_audioInfo;
-    float  m_volume = 1.0;
+    float   m_headroom = 1.0;
+    float   m_volume = 1.0;
     Biquad          m_pk1;
     Biquad          m_pk2;
     Biquad          m_hs;

@@ -48,7 +48,12 @@ void Loudness::setLevel(uint8_t phon)
     m_hs.setFilter( { FilterType::HighShelf, 10000.0, phon*0.225, 0.80 });
 
     // Headroom generator: <phon> * -0,425 (actually 0,475).
-    m_volume = pow(10, (phon*-0.425)/20.0);
+    m_headroom = pow(10, (phon*-0.425)/20.0);
+}
+
+void Loudness::setVolume(float volume)
+{
+    m_volume = volume;
 }
 
 bool Loudness::setup_vfunc(const Gst::AudioInfo& info)
@@ -90,14 +95,17 @@ void Loudness::process(GstBuffer* buf)
     float* data = (float*)(map.data);
     uint   frameCount = map.size/m_audioInfo.get_bpf();
 
+    // We respect user volume as well as headroom
+    float volume = std::min(m_volume, m_headroom);
+
     // If there is no headroom, we do not have loudness set.
-    if (m_volume == 1.0f) {
+    if (volume == 1.0f) {
         return;
     }
 
     // Apply volume
     for (uint i = 0; i < frameCount*m_audioInfo.get_channels(); ++i) {
-        data[i] *= m_volume;
+        data[i] *= volume;
     }
 
     m_mutex.lock();
