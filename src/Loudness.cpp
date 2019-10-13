@@ -98,7 +98,7 @@ void Loudness::process(GstBuffer* buf)
     // We respect user volume as well as headroom
     float volume = std::min(m_volume, m_headroom);
 
-    // If there is no headroom, we do not have loudness set.
+    // If there is no volume, we return.
     if (volume == 1.0f) {
         return;
     }
@@ -106,6 +106,11 @@ void Loudness::process(GstBuffer* buf)
     // Apply volume
     for (uint i = 0; i < frameCount*m_audioInfo.get_channels(); ++i) {
         data[i] *= volume;
+    }
+
+    // If there is no headroom, we do not have loudness set.
+    if (m_headroom == 1.0f) {
+        return;
     }
 
     m_mutex.lock();
