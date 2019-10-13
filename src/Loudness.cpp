@@ -90,11 +90,14 @@ void Loudness::process(GstBuffer* buf)
     float* data = (float*)(map.data);
     uint   frameCount = map.size/m_audioInfo.get_bpf();
 
+    // If there is no headroom, we do not have loudness set.
+    if (m_volume == 1.0f) {
+        return;
+    }
+
     // Apply volume
-    if (m_volume != 1.0f) {
-        for (uint i = 0; i < frameCount*m_audioInfo.get_channels(); ++i) {
-            data[i] *= m_volume;
-        }
+    for (uint i = 0; i < frameCount*m_audioInfo.get_channels(); ++i) {
+        data[i] *= m_volume;
     }
 
     m_mutex.lock();
