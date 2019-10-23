@@ -13,7 +13,7 @@ public:
     std::list<AudioDeviceInfo> enumerateDevices();
 
 private:
-    std::list<AudioDeviceInfo> m_devices;
+    std::list<AudioDeviceInfo> m_outputDevices;
 };
 
 } // namespace GstDsp

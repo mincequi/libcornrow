@@ -43,9 +43,9 @@ void Loudness::setLevel(uint8_t phon)
     // Filter 1> t: pk, f: 35.5, q: 0.56, g: <phon>/40 * 12db
     // Filter 2> t: pk, f: 100,  q: 0.25, g: <phon>/40 * 9db
     // Filter 3> t: hs, f: 1000, q: 0.8,  g: <phon>/40 * 9db
-    m_pk1.setFilter({ FilterType::Peak,         35.5, phon*0.3,   0.56 });
-    m_pk2.setFilter({ FilterType::Peak,        100.0, phon*0.225, 0.25 });
-    m_hs.setFilter( { FilterType::HighShelf, 10000.0, phon*0.225, 0.80 });
+    m_pk1.setFilter({ FilterType::Peak,         35.5f, phon*0.3f,   0.56f });
+    m_pk2.setFilter({ FilterType::Peak,        100.0f, phon*0.225f, 0.25f });
+    m_hs.setFilter( { FilterType::HighShelf, 10000.0f, phon*0.225f, 0.80f });
 
     // Headroom generator: <phon> * -0,425 (actually 0,475).
     m_headroom = pow(10, (phon*-0.425)/20.0);

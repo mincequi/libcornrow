@@ -7,6 +7,7 @@ endmacro()
 
 gstdsp_tests(
     allovertest
+    alsautiltest
 #    biquadtest
     changepipelinetest
     crossovertest

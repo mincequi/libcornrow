@@ -11,45 +11,46 @@ AlsaUtil::AlsaUtil()
 
 std::list<AudioDeviceInfo> AlsaUtil::enumerateDevices()
 {
-    void **hints, **n;
-    char *name, *descr, *descr1, *io;
+    m_outputDevices.clear();
 
-    if (snd_device_name_hint(-1, "pcm", &hints) < 0) {
+    void** hints;
+    void** n;
+    char*  name;
+    char*  desc;
+    char*  ioid;
+
+    // Enumerate sound devices
+    if (snd_device_name_hint(-1, "pcm", &hints)) {
         return {};
     }
 
     n = hints;
     while (*n != NULL) {
         name = snd_device_name_get_hint(*n, "NAME");
-        descr = snd_device_name_get_hint(*n, "DESC");
-        io = snd_device_name_get_hint(*n, "IOID");
-        if (io != NULL && strcmp(io, "Output") != 0) {
-            goto __end;
+        desc = snd_device_name_get_hint(*n, "DESC");
+        ioid = snd_device_name_get_hint(*n, "IOID");
+
+        if (ioid && strcmp(ioid, "Output")) {
+            goto end;
         }
-        printf("%s\n", name);
-        if ((descr1 = descr) != NULL) {
-            printf("    ");
-            while (*descr1) {
-                if (*descr1 == '\n')
-                    printf("\n    ");
-                else
-                    putchar(*descr1);
-                descr1++;
-            }
-            putchar('\n');
+
+        if (!strcmp(name, "default") ||
+                !strncmp(name, "iec958", 6) ||
+                !strncmp(name, "spdif", 5)) {
+            m_outputDevices.push_back(GstDsp::AudioDeviceInfo(name));
         }
-__end:
-        if (name != NULL)
-            free(name);
-        if (descr != NULL)
-            free(descr);
-        if (io != NULL)
-            free(io);
-        n++;
+
+        end:
+        if (name) free(name);
+        if (desc) free(desc);
+        if (ioid) free(ioid);
+        ++n;
     }
+
+    // Free hint buffer
     snd_device_name_free_hint(hints);
 
-    return {};
+    return m_outputDevices;
 }
 
 } // namespace GstDsp

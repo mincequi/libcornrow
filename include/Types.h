@@ -79,16 +79,18 @@ struct QuadLfeFrame : public StereoLfeFrame<T>
 
 enum class AudioDeviceType : uint8_t
 {
-    Pcm,
+    Invalid,
+    Default,
     Spdif,
     Hdmi,
 };
 
 struct AudioDeviceInfo
 {
-    explicit AudioDeviceInfo(const std::string& _name);
+    explicit AudioDeviceInfo(const std::string& name, const std::string& desc = std::string());
 
     std::string name;
+    std::string desc;
     AudioDeviceType type;
 };
 using AudioDeviceInfoList = std::list<AudioDeviceInfo>;
