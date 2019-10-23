@@ -1,11 +1,11 @@
 #include <iostream>
 
-#include "../src/AlsaUtil.h"
+#include <gstdsp/AlsaUtil.h>
 
 int main(void)
 {
     GstDsp::AlsaUtil alsaUtil;
-    auto outputDevices = alsaUtil.enumerateDevices();
+    auto outputDevices = alsaUtil.outputDevices();
 
     for (const auto& dev : outputDevices) {
         std::cout << dev.name << std::endl;

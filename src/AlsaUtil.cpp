@@ -1,4 +1,4 @@
-#include "AlsaUtil.h"
+#include "gstdsp/AlsaUtil.h"
 
 #include <alsa/asoundlib.h>
 
@@ -9,7 +9,7 @@ AlsaUtil::AlsaUtil()
 {
 }
 
-std::list<AudioDeviceInfo> AlsaUtil::enumerateDevices()
+std::list<AudioDeviceInfo> AlsaUtil::outputDevices()
 {
     m_outputDevices.clear();
 

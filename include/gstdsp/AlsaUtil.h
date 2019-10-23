@@ -10,7 +10,7 @@ class AlsaUtil
 public:
     AlsaUtil();
 
-    std::list<AudioDeviceInfo> enumerateDevices();
+    std::list<AudioDeviceInfo> outputDevices();
 
 private:
     std::list<AudioDeviceInfo> m_outputDevices;
