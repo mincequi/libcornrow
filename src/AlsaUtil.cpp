@@ -34,7 +34,7 @@ std::list<AudioDeviceInfo> AlsaUtil::outputDevices()
             goto end;
         }
 
-        if (!strcmp(name, "default") ||
+        if (!strncmp(name, "default", 7) ||
                 !strncmp(name, "iec958", 6) ||
                 !strncmp(name, "spdif", 5)) {
             m_outputDevices.push_back(GstDsp::AudioDeviceInfo(name));
