@@ -89,19 +89,19 @@ GstFlowReturn Loudness::transform_ip(GstBaseTransform* self, GstBuffer* buf)
 
 void Loudness::process(GstBuffer* buf)
 {
+    // Loudness generates headroom, check which one is lower
+    float volume = std::min(m_volume, m_headroom);
+
+    // No volume, no headroom -> no processing.
+    if (volume == 1.0f) {
+        return;
+    }
+
     GstMapInfo map;
     gst_buffer_map(buf, &map, (GstMapFlags)GST_MAP_READWRITE);
 
     float* data = (float*)(map.data);
     uint   frameCount = map.size/m_audioInfo.get_bpf();
-
-    // We respect user volume as well as headroom
-    float volume = std::min(m_volume, m_headroom);
-
-    // If there is no volume, we return.
-    if (volume == 1.0f) {
-        return;
-    }
 
     // Apply volume
     for (uint i = 0; i < frameCount*m_audioInfo.get_channels(); ++i) {
@@ -110,7 +110,7 @@ void Loudness::process(GstBuffer* buf)
 
     // If there is no headroom, we do not have loudness set.
     if (m_headroom == 1.0f) {
-        return;
+        goto end;
     }
 
     m_mutex.lock();
@@ -121,6 +121,7 @@ void Loudness::process(GstBuffer* buf)
 
     m_mutex.unlock();
 
+end:
     gst_buffer_unmap(buf, &map);
 }
 

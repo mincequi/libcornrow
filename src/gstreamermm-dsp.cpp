@@ -2,6 +2,7 @@
 
 #include <gstreamermm.h>
 
+#include "AppSource.h"
 #include "Crossover.h"
 #include "Loudness.h"
 #include "Peq.h"
@@ -24,6 +25,7 @@ bool registerElements(Glib::RefPtr<Gst::Plugin> plugin)
 
     success &= gst_element_register(plugin->gobj(), "alsapassthroughsink", GST_RANK_PRIMARY, GST_TYPE_ALSA_PASSTHROUGH_SINK);
     success &= gst_element_register(plugin->gobj(), "avdtpsrc2", GST_RANK_PRIMARY, GST_TYPE_AVDTP_SRC2);
+    success &= gst_element_register(plugin->gobj(), "cr_appsrc", GST_RANK_PRIMARY, GST_TYPE_CR_APP_SOURCE);
     success &= gst_element_register(plugin->gobj(), "fdsrc2", GST_RANK_PRIMARY+1, GST_TYPE_FD_SRC2);
     success &= gst_element_register(plugin->gobj(), "sbcparse", GST_RANK_PRIMARY+1, GST_TYPE_SBC_PARSE);
 
