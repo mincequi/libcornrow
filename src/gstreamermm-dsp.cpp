@@ -6,6 +6,7 @@
 #include "Crossover.h"
 #include "Loudness.h"
 #include "Peq.h"
+#include "rtp/RtpSbcDepay.h"
 
 #include "gstalsapassthroughsink.h"
 #include "gstavdtpsrc.h"
@@ -28,6 +29,8 @@ bool registerElements(Glib::RefPtr<Gst::Plugin> plugin)
     success &= gst_element_register(plugin->gobj(), "cr_appsrc", GST_RANK_PRIMARY, GST_TYPE_CR_APP_SOURCE);
     success &= gst_element_register(plugin->gobj(), "fdsrc2", GST_RANK_PRIMARY+1, GST_TYPE_FD_SRC2);
     success &= gst_element_register(plugin->gobj(), "sbcparse", GST_RANK_PRIMARY+1, GST_TYPE_SBC_PARSE);
+
+    success &= gst_element_register(plugin->gobj(), "cr_rtpsbcdepay", GST_RANK_SECONDARY, CR_TYPE_RTP_SBC_DEPAY);
 
     return success;
 }
