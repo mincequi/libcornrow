@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include <core/Buffer.h>
+
 #define parent_class cr_app_source_parent_class
 G_DEFINE_TYPE (CrAppSource, cr_app_source, GST_TYPE_PUSH_SRC);
 
@@ -89,7 +91,8 @@ void cr_app_source_push_buffer (CrAppSource * buffersrc, GstBuffer * buffer)
 {
     g_mutex_lock (&buffersrc->mutex);
 
-    std::cout << __func__ << gst_buffer_get_size(buffer) << std::endl;
+    std::cout << __func__ << "> hash: " << coro::core::Buffer::hash(buffer) << std::endl;
+
     gst_buffer_ref(buffer);
     g_queue_push_tail (buffersrc->queue, buffer);
     g_cond_broadcast (&buffersrc->cond);

@@ -1,6 +1,9 @@
 #include "RtpSbcDepay.h"
 
+#include <iostream>
 #include <stdint.h>
+
+#include <core/Buffer.h>
 
 GST_DEBUG_CATEGORY_STATIC (rtpsbcdepay_debug);
 #define GST_CAT_DEFAULT (rtpsbcdepay_debug)
@@ -122,7 +125,7 @@ static GstBuffer* cr_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBu
     gint samples = 0;
     gint frameSize = 0;
 
-    GST_LOG_OBJECT(depay, "Got %" G_GSIZE_FORMAT " bytes", gst_buffer_get_size (rtp->buffer));
+    std::cout << __func__ << "> hash: " << coro::core::Buffer::hash(rtp->buffer) << std::endl;
 
     // Marker shall be zero
     if (gst_rtp_buffer_get_marker (rtp)) {
