@@ -27,6 +27,7 @@ add_library(${PROJECT_NAME} STATIC
     src/gstfdsrc.c
     src/gstsbcparse.c
 
+    src/core/Buffer.cpp
     src/rtp/RtpSbcDepay.cpp
     src/rtp/RtpTypes.cpp
 )
@@ -40,7 +41,12 @@ PRIVATE
     src
 )
 
-target_link_libraries(${PROJECT_NAME} ${GSTMM_LIBRARIES} ${ALSA_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}
+    ${GSTMM_LIBRARIES}
+    ${ALSA_LIBRARIES}
+    xxhash
+)
+
 target_compile_options(${PROJECT_NAME} PUBLIC ${GSTMM_CFLAGS_OTHER})
 
 add_subdirectory(tests)
