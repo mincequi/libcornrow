@@ -1,9 +1,7 @@
 #pragma once
 
+#include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
-
-#include <condition_variable>
-#include <mutex>
 
 G_BEGIN_DECLS
 #define GST_TYPE_CR_APP_SOURCE \
@@ -25,11 +23,11 @@ struct _CrAppSource
 {
     GstPushSrc basesrc;
 
-    std::mutex              m_mutex;
-    std::condition_variable m_condVar;
-    GQueue* m_queue;
+    GCond cond;
+    GMutex mutex;
+    GQueue *queue;
 
-    gboolean m_isFlushing;
+    gboolean isFlushing;
 };
 
 GType cr_app_source_get_type (void);
