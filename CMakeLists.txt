@@ -3,8 +3,7 @@ cmake_minimum_required(VERSION 3.7)
 project(gstreamermm-dsp)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -DG_DISABLE_ASSERT")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall -Werror \
-    -Wno-unused-private-field")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall -Werror")
 
 find_package(PkgConfig REQUIRED)
 find_package(ALSA REQUIRED)

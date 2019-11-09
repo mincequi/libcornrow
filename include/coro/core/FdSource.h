@@ -37,7 +37,7 @@ public:
     uint32_t    m_blockSize = 4096;
     uint8_t     m_allocFactor = 1;
 
-    uint32_t    m_currentPacketSize = 0;
+    int         m_currentPacketSize = -1;
 
     std::queue<GstBuffer*> m_pendingBuffers;
 };
