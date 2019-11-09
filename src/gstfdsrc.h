@@ -54,23 +54,11 @@ typedef struct _GstFd2SrcClass GstFd2SrcClass;
 struct _GstFd2Src {
   GstPushSrc element;
 
-  /*< private >*/
-  /* new_fd is copied to fd on READY->PAUSED */
-  gint new_fd;
-
   /* fd and flag indicating whether fd is seekable */
-  gint fd;
-  gboolean seekable_fd;
-  guint64 size;
-
-  /* poll timeout */
-  guint64 timeout;
-
-  gchar *uri;
+  gint fd = -1;
+  guint64 size = -1;
 
   GstPoll *fdset;
-
-  gulong curoffset; /* current offset in file */
 };
 
 struct _GstFd2SrcClass {

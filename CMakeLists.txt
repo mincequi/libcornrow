@@ -14,7 +14,6 @@ pkg_check_modules(GSTMM REQUIRED gstreamermm-1.0)
 add_library(${PROJECT_NAME} STATIC
     src/gstreamermm-dsp.cpp
     src/AlsaUtil.cpp
-    src/AppSource.cpp
     src/Biquad.cpp
     src/Crossover.cpp
     src/Loudness.cpp
@@ -23,11 +22,13 @@ add_library(${PROJECT_NAME} STATIC
     src/Util.cpp
 
     src/gstalsapassthroughsink.c
-    src/gstavdtpsrc.c
-    src/gstfdsrc.c
+    src/gstavdtpsrc.cpp
+    src/gstfdsrc.cpp
     src/gstsbcparse.c
 
+    src/core/AppSource.cpp
     src/core/Buffer.cpp
+    src/core/FdSource.cpp
     src/rtp/RtpSbcDepay.cpp
     src/rtp/RtpTypes.cpp
 )
@@ -39,6 +40,7 @@ PUBLIC
     ${GSTMM_INCLUDE_DIRS}
 PRIVATE
     src
+    include/coro
 )
 
 target_link_libraries(${PROJECT_NAME}

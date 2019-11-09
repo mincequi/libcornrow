@@ -9,7 +9,7 @@ namespace core {
 
 class Buffer {
 public:
-    static uint32_t hash(GstBuffer*);
+    static uint16_t hash(GstBuffer*);
 };
 
 } // namespace core

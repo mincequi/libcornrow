@@ -5,7 +5,7 @@
 namespace coro {
 namespace core {
 
-uint32_t Buffer::hash(GstBuffer* buffer)
+uint16_t Buffer::hash(GstBuffer* buffer)
 {
     auto memory = gst_buffer_get_all_memory(buffer);
     GstMapInfo mapInfo;

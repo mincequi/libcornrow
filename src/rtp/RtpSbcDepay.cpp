@@ -125,7 +125,7 @@ static GstBuffer* cr_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBu
     gint samples = 0;
     gint frameSize = 0;
 
-    std::cout << __func__ << "> hash: " << coro::core::Buffer::hash(rtp->buffer) << std::endl;
+    //std::cout << __func__ << "> hash: " << coro::core::Buffer::hash(rtp->buffer) << std::endl;
 
     // Marker shall be zero
     if (gst_rtp_buffer_get_marker (rtp)) {

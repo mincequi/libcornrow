@@ -1,8 +1,9 @@
-#include "AppSource.h"
-
-#include <iostream>
+#include "core/AppSource.h"
 
 #include <core/Buffer.h>
+
+#include <iostream>
+#include <unistd.h>
 
 #define parent_class cr_app_source_parent_class
 G_DEFINE_TYPE (CrAppSource, cr_app_source, GST_TYPE_PUSH_SRC);
@@ -46,32 +47,31 @@ static void cr_app_source_class_init (CrAppSourceClass * klass)
     gst_element_class_add_pad_template (elementClass, templ);
 }
 
-static void cr_app_source_init (CrAppSource * buffersrc)
+static void cr_app_source_init (CrAppSource * self)
 {
-    buffersrc->queue = g_queue_new ();
-    g_mutex_init(&buffersrc->mutex);
+    self->queue = g_queue_new ();
+    g_mutex_init(&self->mutex);
 
-    gst_base_src_set_format (GST_BASE_SRC (buffersrc), GST_FORMAT_TIME);
-    gst_base_src_set_live (GST_BASE_SRC (buffersrc), TRUE);
-    gst_base_src_set_do_timestamp (GST_BASE_SRC (buffersrc), TRUE);
+    gst_base_src_set_format (GST_BASE_SRC (self), GST_FORMAT_TIME);
+    gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
+    gst_base_src_set_do_timestamp (GST_BASE_SRC (self), TRUE);
 }
 
 static void cr_app_source_finalize (GObject * gObj)
 {
-    CrAppSource *buffersrc = (CrAppSource*)gObj;
+    CrAppSource *self = (CrAppSource*)gObj;
 
-    g_queue_free(buffersrc->queue);
+    g_queue_free(self->queue);
 }
 
 static GstFlowReturn cr_app_source_create(GstPushSrc * bsrc, GstBuffer ** buf)
 {
     CrAppSource *self = (CrAppSource*)bsrc;
-
     g_mutex_lock (&self->mutex);
 
     while (TRUE) {
         if (!g_queue_is_empty (self->queue)) {
-            *buf = (GstBuffer*)g_queue_pop_head (self->queue);
+            *buf = (GstBuffer*)g_queue_pop_head(self->queue);
             gst_buffer_unref(*buf);
             break;
         }
@@ -80,7 +80,7 @@ static GstFlowReturn cr_app_source_create(GstPushSrc * bsrc, GstBuffer ** buf)
             break;
         }
 
-        g_cond_wait (&self->cond, &self->mutex);
+        g_cond_wait(&self->cond, &self->mutex);
     }
 
     g_mutex_unlock (&self->mutex);
@@ -100,6 +100,19 @@ void cr_app_source_push_buffer (CrAppSource * buffersrc, GstBuffer * buffer)
     g_mutex_unlock (&buffersrc->mutex);
 }
 
+void CrAppSource::pushBuffer(GstBuffer* buffer)
+{
+    g_mutex_lock(&mutex);
+
+    std::cout << __func__ << "> hash: " << coro::core::Buffer::hash(buffer) << std::endl;
+
+    gst_buffer_ref(buffer);
+    g_queue_push_tail(queue, buffer);
+    g_cond_broadcast(&cond);
+
+    g_mutex_unlock(&mutex);
+}
+
 static gboolean cr_app_source_unlock (GstBaseSrc * bsrc)
 {
     CrAppSource *self = (CrAppSource*)bsrc;
@@ -108,6 +121,8 @@ static gboolean cr_app_source_unlock (GstBaseSrc * bsrc)
     self->isFlushing = TRUE;
     g_cond_broadcast (&self->cond);
     g_mutex_unlock (&self->mutex);
+
+    gst_poll_set_flushing (self->poll, TRUE);
 
     return TRUE;
 }
@@ -126,9 +141,9 @@ static gboolean cr_app_source_unlock_stop (GstBaseSrc * bsrc)
 static void cr_app_source_flush_queued (CrAppSource * self)
 {
     GstBuffer *buf;
-
-    while ((buf = (GstBuffer*)g_queue_pop_head (self->queue)))
-        gst_buffer_unref (buf);
+    while ((buf = (GstBuffer*)g_queue_pop_head(self->queue))) {
+        gst_buffer_unref(buf);
+    }
 }
 
 static gboolean cr_app_source_start (GstBaseSrc * bsrc)
@@ -139,12 +154,30 @@ static gboolean cr_app_source_start (GstBaseSrc * bsrc)
     self->isFlushing = FALSE;
     g_mutex_unlock (&self->mutex);
 
-  return TRUE;
+    // If FD is set, we start polling it
+    if (self->pfd.fd > 0) {
+        self->poll = gst_poll_new(TRUE);
+        gst_poll_fd_init(&self->pfd);
+        gst_poll_add_fd(self->poll, &self->pfd);
+        gst_poll_fd_ctl_read(self->poll, &self->pfd, TRUE);
+        gst_poll_set_flushing(self->poll, FALSE);
+    }
+
+    return TRUE;
 }
 
 static gboolean cr_app_source_stop (GstBaseSrc * bsrc)
 {
     CrAppSource *self = (CrAppSource*)bsrc;
+
+    if (self->poll) {
+        gst_poll_remove_fd(self->poll, &self->pfd);
+        gst_poll_set_flushing(self->poll, TRUE);
+        close(self->pfd.fd);
+        gst_poll_free(self->poll);
+        self->poll = nullptr;
+        self->pfd.fd = -1;
+    }
 
     g_mutex_lock (&self->mutex);
     self->isFlushing = TRUE;
