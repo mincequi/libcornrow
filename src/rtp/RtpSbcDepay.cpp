@@ -5,6 +5,8 @@
 
 #include <core/Buffer.h>
 
+#include <spdlog/spdlog.h>
+
 GST_DEBUG_CATEGORY_STATIC (rtpsbcdepay_debug);
 #define GST_CAT_DEFAULT (rtpsbcdepay_debug)
 
@@ -115,9 +117,16 @@ bad_caps:
 
 static GstBuffer* cr_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp)
 {
-    CrRtpSbcDepay *depay = CR_RTP_SBC_DEPAY (base);
-    GstBuffer *data = NULL;
+    CrRtpSbcDepay *self = CR_RTP_SBC_DEPAY (base);
 
+    // Some logging
+    auto bufferSize = gst_buffer_get_size(rtp->buffer);
+    if (self->m_currenBufferSize != bufferSize) {
+        spdlog::info("RtpSbcDepay> current packet buffer size: {0}", bufferSize);
+        self->m_currenBufferSize = bufferSize;
+    }
+
+    GstBuffer *data = NULL;
     gboolean isFragmented;
     guint8 framesCount;
     guint8 *payload;
@@ -129,7 +138,7 @@ static GstBuffer* cr_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBu
 
     // Marker shall be zero
     if (gst_rtp_buffer_get_marker (rtp)) {
-        GST_WARNING_OBJECT (depay, "Marker bit was set");
+        GST_WARNING_OBJECT (self, "Marker bit was set");
         goto bad_packet;
     }
 
@@ -144,32 +153,32 @@ static GstBuffer* cr_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBu
 
     // Do sanity checks
     if (isFragmented) {
-        GST_WARNING_OBJECT (depay, "Fragmented packet(s) not supported");
+        GST_WARNING_OBJECT (self, "Fragmented packet(s) not supported");
         goto bad_packet;
     }
     if (payloadSize < 3) {
-        GST_WARNING_OBJECT (depay, "Payload too small");
+        GST_WARNING_OBJECT (self, "Payload too small");
         goto bad_packet;
     }
     if (payload[0] != 0x9c) {
-        GST_WARNING_OBJECT (depay, "Syncword invalid");
+        GST_WARNING_OBJECT (self, "Syncword invalid");
         goto bad_packet;
     }
 
     frameSize = cr_rtp_sbc_depay_get_params(payload, &samples);
     samples *= framesCount;
     if (framesCount * frameSize > (gint) payloadSize) {
-        GST_WARNING_OBJECT (depay, "Short packet");
+        GST_WARNING_OBJECT (self, "Short packet");
         goto bad_packet;
     } else if (framesCount * frameSize < (gint) payloadSize) {
-        GST_WARNING_OBJECT (depay, "Junk at end of packet");
+        GST_WARNING_OBJECT (self, "Junk at end of packet");
     }
 
-    GST_LOG_OBJECT (depay, "Got %d frames with a total payload size of %d", framesCount, payloadSize);
+    GST_LOG_OBJECT (self, "Got %d frames with a total payload size of %d", framesCount, payloadSize);
     return cr_rtp_sbc_depay_get_payload_subbuffer(rtp, 1);
 
 bad_packet:
-    GST_ELEMENT_WARNING (depay, STREAM, DECODE, ("Received invalid RTP payload, dropping"), (NULL));
+    GST_ELEMENT_WARNING (self, STREAM, DECODE, ("Received invalid RTP payload, dropping"), (NULL));
     gst_buffer_unref (data);
     data = NULL;
     return NULL;

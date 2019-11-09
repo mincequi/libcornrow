@@ -150,7 +150,7 @@ static GstFlowReturn gst_sbc_parse_handle_frame (GstBaseParse * parse, GstBasePa
     // Some logging
     auto bufferSize = gst_buffer_get_size(frame->buffer);
     if (self->m_currenBufferSize != bufferSize) {
-        spdlog::info("Current packet buffer size: {0}", bufferSize);
+        spdlog::info("SbcParse> current packet buffer size: {0}", bufferSize);
         self->m_currenBufferSize = bufferSize;
     }
 

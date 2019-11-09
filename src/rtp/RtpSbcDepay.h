@@ -23,6 +23,7 @@ struct _CrRtpSbcDepay
     GstRTPBaseDepayload base;
 
     int m_sampleRate;
+    uint m_currenBufferSize = 0;
 };
 
 struct _CrRtpSbcDepayClass
