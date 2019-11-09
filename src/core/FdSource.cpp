@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <unistd.h>
+#include <spdlog/spdlog.h>
 
 #define cr_fd_source_parent_class parent_class
 G_DEFINE_TYPE (CrFdSource, cr_fd_source, GST_TYPE_PUSH_SRC);
@@ -11,6 +12,8 @@ static gboolean cr_fd_source_start (GstBaseSrc * bsrc);
 static gboolean cr_fd_source_stop (GstBaseSrc * bsrc);
 static gboolean cr_fd_source_unlock (GstBaseSrc * bsrc);
 static gboolean cr_fd_source_unlock_stop (GstBaseSrc * bsrc);
+
+auto crlog = spdlog::stdout_logger_mt("console");
 
 static void cr_fd_source_class_init (CrFdSourceClass * klass)
 {
@@ -50,10 +53,49 @@ static void cr_fd_source_init (CrFdSource * self)
     gst_base_src_set_do_timestamp (GST_BASE_SRC (self), TRUE);
 }
 
-void CrFdSource::init(int fd, uint32_t blockSize)
+void CrFdSource::init(int fd, uint32_t blockSize, uint8_t allocFactor)
 {
     m_fd = fd;
     m_blockSize = blockSize;
+    m_allocFactor = allocFactor;
+}
+
+GstBuffer* CrFdSource::readFd()
+{
+    // The allocFactor multiplies the space that is actually needed for a single block (since
+    // there might be multiple blocks waiting on the file descriptor).
+    //   * 4 seems to be enough for most cases.
+    //   * 7 might be reasonable, so we can decode SBC frames in-place (but we need to allocate it for each slice).
+    //   * 10 seems to be the max (for maxSize 672 and real size 608).
+    auto data = new char[m_blockSize*m_allocFactor];
+    auto size = read(m_pfd.fd, data, m_blockSize*m_allocFactor);
+    if (size < 1) {
+        delete [] data;
+        return nullptr;
+    }
+    auto buffer = gst_buffer_new_wrapped(data, m_blockSize*m_allocFactor);
+    int slices = 1+(size/m_blockSize); // 608 -> 1, 1216 -> 2, 1824 -> 3, 4864 -> 8
+    if (slices == 1) {
+        gst_buffer_resize(buffer, 0, size);
+    } else if (size%slices != 0) {
+        crlog->warn("Cannot estimate number of slices. Pushing as a whole.");
+        gst_buffer_resize(buffer, 0, size);
+    } else {
+        // Create pending buffers
+        for (int i = 1; i < slices; ++i) {
+            m_pendingBuffers.push(gst_buffer_copy_region(buffer, GST_BUFFER_COPY_ALL, i*(size/slices), size/slices));
+        }
+        // Resize original buffer
+        gst_buffer_resize(buffer, 0, size/slices);
+    }
+
+    // Some logging
+    if (m_currentPacketSize != size) {
+        crlog->info("Current packet size: {0}", size);
+        m_currentPacketSize = size;
+    }
+
+    return buffer;
 }
 
 static GstFlowReturn cr_fd_source_create(GstPushSrc* bsrc, GstBuffer** outBuffer)
@@ -64,6 +106,21 @@ static GstFlowReturn cr_fd_source_create(GstPushSrc* bsrc, GstBuffer** outBuffer
         return GST_FLOW_FLUSHING;
     }
 
+    // Deliver pending buffer
+    if (!self->m_pendingBuffers.empty()) {
+        *outBuffer = self->m_pendingBuffers.front();
+        self->m_pendingBuffers.pop();
+        return GST_FLOW_OK;
+    }
+
+    // Try if we can read
+    auto buffer = self->readFd();
+    if (buffer) {
+        *outBuffer = buffer;
+        return GST_FLOW_OK;
+    }
+
+    // Now wait
     gint ret;
     while ((ret = gst_poll_wait(self->m_poll, GST_CLOCK_TIME_NONE))) {
         if (g_atomic_int_get(&self->m_isFlushing)) {
@@ -80,12 +137,7 @@ static GstFlowReturn cr_fd_source_create(GstPushSrc* bsrc, GstBuffer** outBuffer
         }
     }
 
-    auto data = new char[self->m_blockSize];
-    auto size = read(self->m_pfd.fd, data, self->m_blockSize);
-    auto buffer = gst_buffer_new_wrapped(data, self->m_blockSize);
-    gst_buffer_resize(buffer, 0, size);
-    *outBuffer = buffer;
-    //*outBuffer = gst_buffer_new_and_alloc(1);
+    *outBuffer = self->readFd();
 
     return GST_FLOW_OK;
 }
@@ -138,6 +190,12 @@ static gboolean cr_fd_source_stop (GstBaseSrc * bsrc)
         gst_poll_free(self->m_poll);
         self->m_poll = nullptr;
         self->m_fd = -1;
+    }
+
+    // Clear pending buffers
+    while (!self->m_pendingBuffers.empty()) {
+        gst_buffer_unref(self->m_pendingBuffers.front());
+        self->m_pendingBuffers.pop();
     }
 
     return TRUE;

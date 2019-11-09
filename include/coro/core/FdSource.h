@@ -4,6 +4,8 @@
 
 #include <stdint.h>
 
+#include <queue>
+
 G_BEGIN_DECLS
 
 #define CR_TYPE_FD_SOURCE    (cr_fd_source_get_type())
@@ -18,11 +20,13 @@ struct _CrFdSourceClass
     GstPushSrcClass parentClass;
 };
 
-struct _CrFdSource
+class _CrFdSource
 {
+public:
     GstPushSrc pushSource;
 
-    void init(int fd, uint32_t blockSize);
+    void init(int fd, uint32_t blockSize, uint8_t allocFactor = 1);
+    GstBuffer* readFd();
 
     volatile gint m_isFlushing;
 
@@ -31,6 +35,11 @@ struct _CrFdSource
     GstPoll*    m_poll = nullptr;
     GstPollFD   m_pfd;
     uint32_t    m_blockSize = 4096;
+    uint8_t     m_allocFactor = 1;
+
+    uint32_t    m_currentPacketSize = 0;
+
+    std::queue<GstBuffer*> m_pendingBuffers;
 };
 
 GType cr_fd_source_get_type (void);
