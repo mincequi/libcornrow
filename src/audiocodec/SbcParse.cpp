@@ -16,9 +16,10 @@ GST_DEBUG_CATEGORY_STATIC (sbcparse_debug);
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-sbc, parsed = (boolean) true, "
-        "channels = (int) [ 1, 2 ], "
-        "rate = (int) { 44100, 48000 }")
+    GST_STATIC_CAPS ("audio/x-sbc, "
+                     "parsed = (boolean) true, "
+                     "channels = (int) [ 1, 2 ], "
+                     "rate = (int) { 44100, 48000 }")
     );
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -148,6 +149,7 @@ static GstFlowReturn gst_sbc_parse_handle_frame (GstBaseParse * parse, GstBasePa
     GstSbcParse *self = GST_SBC_PARSE (parse);
 
     // Some logging
+    // @TODO(mawe): here, packets arrive corrupted.
     auto bufferSize = gst_buffer_get_size(frame->buffer);
     if (self->m_currenBufferSize != bufferSize) {
         spdlog::info("SbcParse> current packet buffer size: {0}", bufferSize);
@@ -179,16 +181,16 @@ static GstFlowReturn gst_sbc_parse_handle_frame (GstBaseParse * parse, GstBasePa
             || self->n_blocks != n_blocks
             || self->n_subbands != n_subbands || self->bitpool != bitpool) {
         guint avg_bitrate;
-        GstCaps *caps;
 
         /* FIXME: do all of these need to be in the caps? */
-        caps = gst_caps_new_simple ("audio/x-sbc", "rate", G_TYPE_INT, rate,
+        auto caps = gst_caps_new_simple ("audio/x-sbc", "rate", G_TYPE_INT, rate,
                                     "channels", G_TYPE_INT, (ch_mode == GST_SBC_CHANNEL_MODE_MONO) ? 1 : 2,
                                     "channel-mode", G_TYPE_STRING, gst_sbc_channel_mode_get_name (ch_mode),
                                     "blocks", G_TYPE_INT, n_blocks, "subbands", G_TYPE_INT, n_subbands,
                                     "allocation-method", G_TYPE_STRING,
                                     gst_sbc_allocation_method_get_name (alloc_method),
-                                    "bitpool", G_TYPE_INT, bitpool, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+                                    "bitpool", G_TYPE_INT, bitpool,
+                                    "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
 
         GST_INFO_OBJECT (self, "caps changed to %" GST_PTR_FORMAT, caps);
 

@@ -19,7 +19,8 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
         "blocks = (int) { 4, 8, 12, 16 }, "                 // usually 16
         "subbands = (int) { 4, 8 }, "                       // usually 8
         "allocation-method = (string) { snr, loudness }, "  // usually loudness
-        "bitpool = (int) [ 2, 64 ]")
+        "bitpool = (int) [ 2, 64 ], "
+        "parsed = (boolean) true")
     );
 
 static GstStaticPadTemplate cr_rtp_sbc_depay_sink_template =
@@ -95,24 +96,43 @@ static int cr_rtp_sbc_depay_get_params(const guint8* data, int* samples)
 
 static gboolean cr_rtp_sbc_depay_setcaps (GstRTPBaseDepayload * base, GstCaps * caps)
 {
-    CrRtpSbcDepay *depay = CR_RTP_SBC_DEPAY (base);
+    auto outcaps = gst_caps_new_simple ("audio/x-sbc",
+                                "rate", G_TYPE_INT, 44100,
+                                "channels", G_TYPE_INT, 2,
+                                "channel-mode", G_TYPE_STRING, "joint",
+                                "blocks", G_TYPE_INT, 16,
+                                "subbands", G_TYPE_INT, 8,
+                                "allocation-method", G_TYPE_STRING, "loudness",
+                                "bitpool", G_TYPE_INT, 53,
+                                "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+
+    gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (base), outcaps);
+    gst_caps_unref (outcaps);
+
+    return TRUE;
+
+    /*
+    CrRtpSbcDepay *self = CR_RTP_SBC_DEPAY (base);
     GstStructure *structure;
     GstCaps *outcaps;
 
     structure = gst_caps_get_structure (caps, 0);
 
-    if (!gst_structure_get_int (structure, "clock-rate", &depay->m_sampleRate))
+    if (!gst_structure_get_int (structure, "clock-rate", &self->m_sampleRate))
         goto bad_caps;
 
-    outcaps = gst_caps_new_simple ("audio/x-sbc", "rate", G_TYPE_INT, depay->m_sampleRate, NULL);
+    outcaps = gst_caps_new_simple ("audio/x-sbc",
+        "rate", G_TYPE_INT, self->m_sampleRate,
+        NULL);
     gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (base), outcaps);
     gst_caps_unref (outcaps);
 
     return TRUE;
 
 bad_caps:
-    GST_WARNING_OBJECT (depay, "Can't support the caps we got: %" GST_PTR_FORMAT, caps);
+    GST_WARNING_OBJECT (self, "Can't support the caps we got: %" GST_PTR_FORMAT, caps);
     return FALSE;
+    */
 }
 
 static GstBuffer* cr_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp)
