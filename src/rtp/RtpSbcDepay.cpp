@@ -196,8 +196,3 @@ wrong_offset:
         return NULL;
     }
 }
-
-gboolean cr_rtp_sbc_depay_plugin_init (GstPlugin * plugin)
-{
-    return gst_element_register (plugin, "rtpsbcdepay", GST_RANK_SECONDARY, CR_TYPE_RTP_SBC_DEPAY);
-}

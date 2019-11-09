@@ -1,6 +1,5 @@
 #pragma once
 
-//#include <gst/gst.h>
 #include <gst/rtp/gstrtpbasedepayload.h>
 
 G_BEGIN_DECLS
@@ -32,7 +31,5 @@ struct _CrRtpSbcDepayClass
 };
 
 GType cr_rtp_sbc_depay_get_type (void);
-
-gboolean cr_rtp_sbc_depay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS

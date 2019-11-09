@@ -23,8 +23,8 @@ add_library(${PROJECT_NAME} STATIC
     src/gstalsapassthroughsink.c
     src/gstavdtpsrc.cpp
     src/gstfdsrc.cpp
-    src/gstsbcparse.c
 
+    src/audiocodec/SbcParse.cpp
     src/core/AppSource.cpp
     src/core/Buffer.cpp
     src/core/FdSource.cpp

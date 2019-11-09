@@ -1,47 +1,12 @@
-/* GStreamer SBC audio parser
- * Copyright (C) 2012 Collabora Ltd. <tim.muller@collabora.co.uk>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- */
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-/**
- * SECTION:element-sbcparse
- * @see_also: sbcdec, sbcenc
- *
- * The sbcparse element will parse a bluetooth SBC audio stream into
- * frames and timestamp them properly.
- *
- * Since: 1.2.0
- */
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include "gstsbcparse.h"
+#include "audiocodec/SbcParse.h"
 
 #include <string.h>
 #include <gst/tag/tag.h>
 #include <gst/audio/audio.h>
 #include <gst/base/base.h>
 #include <gst/pbutils/pbutils.h>
+
+#include <spdlog/spdlog.h>
 
 #define SBC_SYNCBYTE 0x9C
 
@@ -53,7 +18,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-sbc, parsed = (boolean) true, "
         "channels = (int) [ 1, 2 ], "
-        "rate = (int) { 16000, 32000, 44100, 48000 }")
+        "rate = (int) { 44100, 48000 }")
     );
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -178,132 +143,137 @@ gst_sbc_allocation_method_get_name (GstSbcAllocationMethod alloc_method)
   return "invalid";
 }
 
-static GstFlowReturn
-gst_sbc_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
-    gint * skipsize)
+static GstFlowReturn gst_sbc_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame, gint * skipsize)
 {
-  GstSbcParse *sbcparse = GST_SBC_PARSE (parse);
-  GstSbcAllocationMethod alloc_method = GST_SBC_ALLOCATION_METHOD_INVALID;
-  GstSbcChannelMode ch_mode = GST_SBC_CHANNEL_MODE_INVALID;
-  GstMapInfo map;
-  guint rate = 0, n_blocks = 0, n_subbands = 0, bitpool = 0;
-  gsize frame_len, next_len;
-  gint i, max_frames;
+    GstSbcParse *self = GST_SBC_PARSE (parse);
 
-  gst_buffer_map (frame->buffer, &map, GST_MAP_READ);
-
-  g_assert (map.size >= 6);
-
-  frame_len = gst_sbc_parse_header (map.data, &rate, &n_blocks, &ch_mode,
-      &alloc_method, &n_subbands, &bitpool);
-
-  GST_LOG_OBJECT (parse, "frame_len: %u", (guint) frame_len);
-
-  if (frame_len == 0)
-    goto resync;
-
-  if (sbcparse->alloc_method != alloc_method
-      || sbcparse->ch_mode != ch_mode
-      || sbcparse->rate != rate
-      || sbcparse->n_blocks != n_blocks
-      || sbcparse->n_subbands != n_subbands || sbcparse->bitpool != bitpool) {
-    guint avg_bitrate;
-    GstCaps *caps;
-
-    /* FIXME: do all of these need to be in the caps? */
-    caps = gst_caps_new_simple ("audio/x-sbc", "rate", G_TYPE_INT, rate,
-        "channels", G_TYPE_INT, (ch_mode == GST_SBC_CHANNEL_MODE_MONO) ? 1 : 2,
-        "channel-mode", G_TYPE_STRING, gst_sbc_channel_mode_get_name (ch_mode),
-        "blocks", G_TYPE_INT, n_blocks, "subbands", G_TYPE_INT, n_subbands,
-        "allocation-method", G_TYPE_STRING,
-        gst_sbc_allocation_method_get_name (alloc_method),
-        "bitpool", G_TYPE_INT, bitpool, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
-
-    GST_INFO_OBJECT (sbcparse, "caps changed to %" GST_PTR_FORMAT, caps);
-
-    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (sbcparse),
-        gst_event_new_caps (caps));
-
-    avg_bitrate = (8 * frame_len * rate) / (n_subbands * n_blocks);
-    gst_base_parse_set_average_bitrate (parse, avg_bitrate);
-
-    gst_base_parse_set_frame_rate (parse, rate, n_subbands * n_blocks, 0, 0);
-
-    sbcparse->alloc_method = alloc_method;
-    sbcparse->ch_mode = ch_mode;
-    sbcparse->rate = rate;
-    sbcparse->n_blocks = n_blocks;
-    sbcparse->n_subbands = n_subbands;
-    sbcparse->bitpool = bitpool;
-
-    gst_caps_unref (caps);
-  }
-
-  if (frame_len > map.size)
-    goto need_more_data;
-
-  GST_BUFFER_OFFSET (frame->buffer) = GST_BUFFER_OFFSET_NONE;
-  GST_BUFFER_OFFSET_END (frame->buffer) = GST_BUFFER_OFFSET_NONE;
-
-  /* completely arbitrary limit, we only process data we already have,
-   * so we aren't introducing latency here */
-  max_frames = MIN (map.size / frame_len, n_blocks * n_subbands * 5);
-  GST_LOG_OBJECT (sbcparse, "parsing up to %d frames", max_frames);
-
-  for (i = 1; i < max_frames; ++i) {
-    next_len = gst_sbc_parse_header (map.data + (i * frame_len), &rate,
-        &n_blocks, &ch_mode, &alloc_method, &n_subbands, &bitpool);
-
-    if (next_len != frame_len || sbcparse->alloc_method != alloc_method ||
-        sbcparse->ch_mode != ch_mode || sbcparse->rate != rate ||
-        sbcparse->n_blocks != n_blocks || sbcparse->n_subbands != n_subbands ||
-        sbcparse->bitpool != bitpool) {
-      break;
+    // Some logging
+    auto bufferSize = gst_buffer_get_size(frame->buffer);
+    if (self->m_currenBufferSize != bufferSize) {
+        spdlog::info("Current packet buffer size: {0}", bufferSize);
+        self->m_currenBufferSize = bufferSize;
     }
-  }
-  GST_LOG_OBJECT (sbcparse, "packing %d SBC frames into next output buffer", i);
 
-  /* Note: local n_subbands and n_blocks variables might be tainted if we
+    GstSbcAllocationMethod alloc_method = GST_SBC_ALLOCATION_METHOD_INVALID;
+    GstSbcChannelMode ch_mode = GST_SBC_CHANNEL_MODE_INVALID;
+    GstMapInfo map;
+    guint rate = 0, n_blocks = 0, n_subbands = 0, bitpool = 0;
+    gsize frame_len, next_len;
+    gint i, max_frames;
+
+    gst_buffer_map (frame->buffer, &map, GST_MAP_READ);
+
+    g_assert (map.size >= 6);
+
+    frame_len = gst_sbc_parse_header (map.data, &rate, &n_blocks, &ch_mode,
+                                      &alloc_method, &n_subbands, &bitpool);
+
+    GST_LOG_OBJECT (parse, "frame_len: %u", (guint) frame_len);
+
+    if (frame_len == 0)
+        goto resync;
+
+    if (self->alloc_method != alloc_method
+            || self->ch_mode != ch_mode
+            || self->rate != rate
+            || self->n_blocks != n_blocks
+            || self->n_subbands != n_subbands || self->bitpool != bitpool) {
+        guint avg_bitrate;
+        GstCaps *caps;
+
+        /* FIXME: do all of these need to be in the caps? */
+        caps = gst_caps_new_simple ("audio/x-sbc", "rate", G_TYPE_INT, rate,
+                                    "channels", G_TYPE_INT, (ch_mode == GST_SBC_CHANNEL_MODE_MONO) ? 1 : 2,
+                                    "channel-mode", G_TYPE_STRING, gst_sbc_channel_mode_get_name (ch_mode),
+                                    "blocks", G_TYPE_INT, n_blocks, "subbands", G_TYPE_INT, n_subbands,
+                                    "allocation-method", G_TYPE_STRING,
+                                    gst_sbc_allocation_method_get_name (alloc_method),
+                                    "bitpool", G_TYPE_INT, bitpool, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+
+        GST_INFO_OBJECT (self, "caps changed to %" GST_PTR_FORMAT, caps);
+
+        gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (self),
+                            gst_event_new_caps (caps));
+
+        avg_bitrate = (8 * frame_len * rate) / (n_subbands * n_blocks);
+        gst_base_parse_set_average_bitrate (parse, avg_bitrate);
+
+        gst_base_parse_set_frame_rate (parse, rate, n_subbands * n_blocks, 0, 0);
+
+        self->alloc_method = alloc_method;
+        self->ch_mode = ch_mode;
+        self->rate = rate;
+        self->n_blocks = n_blocks;
+        self->n_subbands = n_subbands;
+        self->bitpool = bitpool;
+
+        gst_caps_unref (caps);
+    }
+
+    if (frame_len > map.size)
+        goto need_more_data;
+
+    GST_BUFFER_OFFSET (frame->buffer) = GST_BUFFER_OFFSET_NONE;
+    GST_BUFFER_OFFSET_END (frame->buffer) = GST_BUFFER_OFFSET_NONE;
+
+    /* completely arbitrary limit, we only process data we already have,
+   * so we aren't introducing latency here */
+    max_frames = MIN (map.size / frame_len, n_blocks * n_subbands * 5);
+    GST_LOG_OBJECT (self, "parsing up to %d frames", max_frames);
+
+    for (i = 1; i < max_frames; ++i) {
+        next_len = gst_sbc_parse_header (map.data + (i * frame_len), &rate,
+                                         &n_blocks, &ch_mode, &alloc_method, &n_subbands, &bitpool);
+
+        if (next_len != frame_len || self->alloc_method != alloc_method ||
+                self->ch_mode != ch_mode || self->rate != rate ||
+                self->n_blocks != n_blocks || self->n_subbands != n_subbands ||
+                self->bitpool != bitpool) {
+            break;
+        }
+    }
+    GST_LOG_OBJECT (self, "packing %d SBC frames into next output buffer", i);
+
+    /* Note: local n_subbands and n_blocks variables might be tainted if we
    * bailed out of the loop above because of a header configuration mismatch */
-  gst_base_parse_set_frame_rate (parse, rate,
-      sbcparse->n_subbands * sbcparse->n_blocks * i, 0, 0);
+    gst_base_parse_set_frame_rate (parse, rate,
+                                   self->n_subbands * self->n_blocks * i, 0, 0);
 
-  gst_buffer_unmap (frame->buffer, &map);
-  return gst_base_parse_finish_frame (parse, frame, i * frame_len);
+    gst_buffer_unmap (frame->buffer, &map);
+    return gst_base_parse_finish_frame (parse, frame, i * frame_len);
 
 resync:
-  {
-    const guint8 *possible_sync;
+    {
+        const guint8 *possible_sync;
 
-    GST_DEBUG_OBJECT (parse, "no sync, resyncing");
+        GST_DEBUG_OBJECT (parse, "no sync, resyncing");
 
-    possible_sync = memchr (map.data, SBC_SYNCBYTE, map.size);
+        possible_sync = (u_int8_t*)memchr (map.data, SBC_SYNCBYTE, map.size);
 
-    if (possible_sync != NULL)
-      *skipsize = (gint) (possible_sync - map.data);
-    else
-      *skipsize = map.size;
+        if (possible_sync != NULL)
+            *skipsize = (gint) (possible_sync - map.data);
+        else
+            *skipsize = map.size;
 
-    gst_buffer_unmap (frame->buffer, &map);
+        gst_buffer_unmap (frame->buffer, &map);
 
-    /* we could optimise things here by looping over the data and checking
+        /* we could optimise things here by looping over the data and checking
      * whether the sync is good or not instead of handing control back to
      * the base class just to be called again */
-    return GST_FLOW_OK;
-  }
+        return GST_FLOW_OK;
+    }
 need_more_data:
-  {
-    GST_LOG_OBJECT (parse,
-        "need %" G_GSIZE_FORMAT " bytes, but only have %" G_GSIZE_FORMAT,
-        frame_len, map.size);
-    gst_base_parse_set_min_frame_size (parse, frame_len);
-    gst_buffer_unmap (frame->buffer, &map);
-    return GST_FLOW_OK;
-  }
+    {
+        GST_LOG_OBJECT (parse,
+                        "need %" G_GSIZE_FORMAT " bytes, but only have %" G_GSIZE_FORMAT,
+                        frame_len, map.size);
+        gst_base_parse_set_min_frame_size (parse, frame_len);
+        gst_buffer_unmap (frame->buffer, &map);
+        return GST_FLOW_OK;
+    }
 }
 
-static void
-remove_fields (GstCaps * caps)
+static void remove_fields (GstCaps * caps)
 {
   guint i, n;
 
@@ -452,7 +422,7 @@ gst_sbc_parse_header (const guint8 * data, guint * rate, guint * n_blocks,
   *rate = sbc_rates[(data[1] >> 6) & 0x03];
   *n_blocks = sbc_blocks[(data[1] >> 4) & 0x03];
   *ch_mode = (GstSbcChannelMode) ((data[1] >> 2) & 0x03);
-  *alloc_method = (data[1] >> 1) & 0x01;
+  *alloc_method = (GstSbcAllocationMethod)((data[1] >> 1) & 0x01);
   *n_subbands = (data[1] & 0x01) ? 8 : 4;
   *bitpool = data[2];
 
@@ -528,6 +498,8 @@ gst_sbc_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     /* also signals the end of first-frame processing */
     sbcparse->sent_codec_tag = TRUE;
   }
+
+  frame->flags |= GST_BASE_PARSE_FRAME_FLAG_CLIP;
 
   return GST_FLOW_OK;
 }
