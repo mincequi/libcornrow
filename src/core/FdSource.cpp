@@ -13,8 +13,6 @@ static gboolean cr_fd_source_stop (GstBaseSrc * bsrc);
 static gboolean cr_fd_source_unlock (GstBaseSrc * bsrc);
 static gboolean cr_fd_source_unlock_stop (GstBaseSrc * bsrc);
 
-auto crlog = spdlog::stdout_logger_mt("console");
-
 static void cr_fd_source_class_init (CrFdSourceClass * klass)
 {
     //GObjectClass *gObjectClass = G_OBJECT_CLASS (klass);
@@ -78,7 +76,7 @@ GstBuffer* CrFdSource::readFd()
     if (slices == 1) {
         gst_buffer_resize(buffer, 0, size);
     } else if (size%slices != 0) {
-        crlog->warn("Cannot estimate number of slices. Pushing as a whole.");
+        spdlog::warn("Cannot estimate number of slices. Pushing as a whole.");
         gst_buffer_resize(buffer, 0, size);
     } else {
         // Create pending buffers
@@ -91,7 +89,7 @@ GstBuffer* CrFdSource::readFd()
 
     // Some logging
     if (m_currentPacketSize != size) {
-        crlog->info("Current packet size: {0}", size);
+        spdlog::info("Current packet size: {0}", size);
         m_currentPacketSize = size;
     }
 
