@@ -119,13 +119,6 @@ static GstBuffer* cr_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBu
 {
     CrRtpSbcDepay *self = CR_RTP_SBC_DEPAY (base);
 
-    // Some logging
-    auto bufferSize = gst_buffer_get_size(rtp->buffer);
-    if (self->m_currenBufferSize != bufferSize) {
-        spdlog::info("RtpSbcDepay> current packet buffer size: {0}", bufferSize);
-        self->m_currenBufferSize = bufferSize;
-    }
-
     GstBuffer *data = NULL;
     gboolean isFragmented;
     guint8 framesCount;
@@ -187,6 +180,7 @@ bad_packet:
 static GstBuffer * cr_rtp_sbc_depay_get_payload_subbuffer(GstRTPBuffer * buffer, guint offset)
 {
     guint poffset, payloadSize;
+    GstBuffer* out;
 
     payloadSize = gst_buffer_get_size(buffer->buffer) - gst_rtp_buffer_get_header_len (buffer) - buffer->size[3];
     /* we can't go past the length */
@@ -197,11 +191,23 @@ static GstBuffer * cr_rtp_sbc_depay_get_payload_subbuffer(GstRTPBuffer * buffer,
     poffset = gst_rtp_buffer_get_header_len (buffer) + offset;
     payloadSize -= offset;
 
-    return gst_buffer_copy_region (buffer->buffer, GST_BUFFER_COPY_ALL, poffset, payloadSize);
+    out =  gst_buffer_copy_region (buffer->buffer, GST_BUFFER_COPY_ALL, poffset, payloadSize);
+
+    // Some logging
+    {
+        static gsize currenBufferSize = -1;
+        auto bufferSize = gst_buffer_get_size(out);
+        if (currenBufferSize != bufferSize) {
+            spdlog::info("RtpSbcDepay> out buffer size: {0}", bufferSize);
+            currenBufferSize = bufferSize;
+        }
+    }
+
+    return out;
 
 wrong_offset:
     {
-        g_warning ("offset: %u should be less then payload size: %u", offset, payloadSize);
+        spdlog::warn("offset should be less then payload size");
         return NULL;
     }
 }
