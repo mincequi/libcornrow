@@ -36,7 +36,6 @@ GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
 #define cr_rtp_sbc_depay_parent_class parent_class
 G_DEFINE_TYPE (CrRtpSbcDepay, cr_rtp_sbc_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
 
-//static gboolean cr_rtp_sbc_depay_setcaps (GstRTPBaseDepayload * base, GstCaps * caps);
 static GstBuffer *cr_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp);
 static GstBuffer * cr_rtp_sbc_depay_get_payload_subbuffer (GstRTPBuffer * buffer, guint offset);
 
@@ -45,7 +44,6 @@ static void cr_rtp_sbc_depay_class_init (CrRtpSbcDepayClass * klass)
     GstRTPBaseDepayloadClass *rtpBaseDepayloadClass = GST_RTP_BASE_DEPAYLOAD_CLASS (klass);
     GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-    //rtpBaseDepayloadClass->set_caps = cr_rtp_sbc_depay_setcaps;
     rtpBaseDepayloadClass->process_rtp_packet = cr_rtp_sbc_depay_process;
 
     gst_element_class_add_static_pad_template (element_class, &s_srcTemplate);
@@ -117,23 +115,6 @@ static int cr_rtp_sbc_depay_get_params(const guint8* data, int* samples)
     return length;
 }
 
-    /*
-static gboolean cr_rtp_sbc_depay_setcaps (GstRTPBaseDepayload * base, GstCaps * caps)
-{
-    CrRtpSbcDepay *self = CR_RTP_SBC_DEPAY (base);
-
-    // Sample rate
-    auto structure = gst_caps_get_structure(caps, 0);
-    gst_structure_get_int(structure, "clock-rate", &self->m_sampleRate);
-
-    auto outcaps = gst_caps_new_simple("audio/x-sbc", "rate", G_TYPE_INT, self->m_sampleRate, NULL);
-    gst_pad_set_caps(GST_RTP_BASE_DEPAYLOAD_SRCPAD (base), outcaps);
-    gst_caps_unref(outcaps);
-
-    return TRUE;
-}
-    */
-
 static GstBuffer* cr_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp)
 {
     CrRtpSbcDepay *self = CR_RTP_SBC_DEPAY (base);
@@ -178,19 +159,17 @@ static GstBuffer* cr_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBu
     frameSize = cr_rtp_sbc_depay_get_params(payload, &samples);
     samples *= framesCount;
     if (framesCount * frameSize > (gint) payloadSize) {
-        GST_WARNING_OBJECT (self, "Short packet");
+        spdlog::warn("Packet truncated. frameSize: {0}, framesCount: {1}, payloadSize: {2}", frameSize, framesCount, payloadSize);
         goto bad_packet;
     } else if (framesCount * frameSize < (gint) payloadSize) {
-        GST_WARNING_OBJECT (self, "Junk at end of packet");
+        spdlog::warn("Junk after packet. frameSize: {0}, framesCount: {1}, payloadSize: {2}", frameSize, framesCount, payloadSize);
     }
 
     self->pushConf();
-    GST_LOG_OBJECT (self, "Got %d frames with a total payload size of %d", framesCount, payloadSize);
     return cr_rtp_sbc_depay_get_payload_subbuffer(rtp, 1);
 
 bad_packet:
-    GST_ELEMENT_WARNING (self, STREAM, DECODE, ("Received invalid RTP payload, dropping"), (NULL));
-    gst_buffer_unref (data);
+    gst_buffer_unref(data);
     data = NULL;
     return NULL;
 }
