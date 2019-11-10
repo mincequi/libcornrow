@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-namespace GstDsp
+namespace coro
 {
 
 Loudness::Loudness(GstAudioFilter *obj)

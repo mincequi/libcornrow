@@ -1,6 +1,6 @@
 #include "Biquad.h"
 
-namespace GstDsp
+namespace coro
 {
 
 Biquad::Biquad(std::uint8_t channelCount, std::uint8_t cascadeCount, std::uint32_t rate)

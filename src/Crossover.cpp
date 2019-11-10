@@ -6,7 +6,7 @@
 
 #include "Util.h"
 
-namespace GstDsp
+namespace coro
 {
 
 Crossover::Crossover(GstBaseTransform* obj)

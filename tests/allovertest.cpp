@@ -10,7 +10,7 @@
 
 int main(int argc, char** argv)
 {
-    assert(GstDsp::init());
+    assert(coro::init());
 
     // Create mainloop and pipeline
     auto mainloop = Glib::MainLoop::create();
@@ -26,16 +26,16 @@ int main(int argc, char** argv)
     src->property_samplesperbuffer().set_value(44100);
 
     // Create peq
-    Glib::RefPtr<GstDsp::Peq> peq = Glib::RefPtr<GstDsp::Peq>::cast_dynamic(Gst::ElementFactory::create_element("peq"));
+    Glib::RefPtr<coro::Peq> peq = Glib::RefPtr<coro::Peq>::cast_dynamic(Gst::ElementFactory::create_element("peq"));
     assert(peq);
-    peq->biquad(0).setFilter( { GstDsp::FilterType::Peak, 1000.0, -12.0, 0.707 } );
-    peq->biquad(1).setFilter( { GstDsp::FilterType::LowPass, 5000.0, 0.0, 1.41 } );
-    peq->biquad(2).setFilter( { GstDsp::FilterType::HighPass, 40.0, 0.0, 0.707 } );
-    peq->biquad(3).setFilter( { GstDsp::FilterType::Peak, 3000.0, -6.0, 10.0 } );
-    peq->biquad(4).setFilter( { GstDsp::FilterType::Peak, 300.0, -2.0, 1.707 } );
+    peq->biquad(0).setFilter( { coro::FilterType::Peak, 1000.0, -12.0, 0.707 } );
+    peq->biquad(1).setFilter( { coro::FilterType::LowPass, 5000.0, 0.0, 1.41 } );
+    peq->biquad(2).setFilter( { coro::FilterType::HighPass, 40.0, 0.0, 0.707 } );
+    peq->biquad(3).setFilter( { coro::FilterType::Peak, 3000.0, -6.0, 10.0 } );
+    peq->biquad(4).setFilter( { coro::FilterType::Peak, 300.0, -2.0, 1.707 } );
 
     // Create crossover
-    Glib::RefPtr<GstDsp::Crossover> xo = Glib::RefPtr<GstDsp::Crossover>::cast_dynamic(Gst::ElementFactory::create_element("crossover"));
+    Glib::RefPtr<coro::Crossover> xo = Glib::RefPtr<coro::Crossover>::cast_dynamic(Gst::ElementFactory::create_element("crossover"));
     assert(xo);
     xo->setFrequency(80.0);
     xo->setLfe(false);

@@ -2,7 +2,7 @@
 
 #include <alsa/asoundlib.h>
 
-namespace GstDsp
+namespace coro
 {
 
 AlsaUtil::AlsaUtil()
@@ -37,7 +37,7 @@ std::list<AudioDeviceInfo> AlsaUtil::outputDevices()
         if (!strncmp(name, "default", 7) ||
                 !strncmp(name, "iec958", 6) ||
                 !strncmp(name, "spdif", 5)) {
-            m_outputDevices.push_back(GstDsp::AudioDeviceInfo(name));
+            m_outputDevices.push_back(coro::AudioDeviceInfo(name));
         }
 
         end:

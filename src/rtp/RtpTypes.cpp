@@ -1,6 +1,6 @@
 #include "RtpTypes.h"
 
-namespace cr {
+namespace coro {
 namespace rtp {
 
 bool RtpHeader::isValidSbc() const
@@ -50,5 +50,14 @@ bool RtpSbcHeader::isValid() const
     return true;
 }
 
+bool SbcFrameHeader::isValid() const
+{
+    if (syncWord != 0x9c) {
+        return false;
+    }
+
+    return true;
+}
+
 } // namespace rtp
-} // namespace cr
+} // namespace coro

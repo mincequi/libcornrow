@@ -2,7 +2,7 @@
 
 #include "Types.h"
 
-namespace GstDsp
+namespace coro
 {
 
 class AlsaUtil

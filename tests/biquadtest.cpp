@@ -5,7 +5,7 @@
 #include <fstream>
 #include <random>
 
-using namespace GstDsp;
+using namespace coro;
 
 int main(int argc, char** argv)
 {
@@ -35,18 +35,18 @@ int main(int argc, char** argv)
     biquads.push_back( {2,1,44100} ); // P9
     biquads.push_back( {2,1,44100} ); // P10
 
-    biquads[0].setFilter( { GstDsp::FilterType::HighPass, 80.0, 0.0, 0.707 } );
-    biquads[1].setFilter( { GstDsp::FilterType::LowPass, 12000.0,  0.0, 0.707 } );
-    biquads[3].setFilter( { GstDsp::FilterType::Peak, 150.0, -6.0, 2.0 } );
-    biquads[4].setFilter( { GstDsp::FilterType::Peak, 200.0, +0.5, 2.0 } );
-    biquads[5].setFilter( { GstDsp::FilterType::Peak, 300.0, -6.0, 2.0 } );
-    biquads[6].setFilter( { GstDsp::FilterType::Peak, 500.0, +0.5, 2.0 } );
-    biquads[7].setFilter( { GstDsp::FilterType::Peak, 750.0, -6.0, 2.0 } );
-    biquads[8].setFilter( { GstDsp::FilterType::Peak, 1200.0, +0.5, 2.0 } );
-    biquads[9].setFilter( { GstDsp::FilterType::Peak, 2000.0, -6.0, 2.0 } );
-    biquads[10].setFilter( { GstDsp::FilterType::Peak, 3000.0, +0.5, 2.0 } );
-    biquads[11].setFilter( { GstDsp::FilterType::Peak, 5000.0, -6.0, 2.0 } );
-    biquads[2].setFilter( { GstDsp::FilterType::Peak,  7500.0, +0.5, 2.0 } );
+    biquads[0].setFilter( { coro::FilterType::HighPass, 80.0, 0.0, 0.707 } );
+    biquads[1].setFilter( { coro::FilterType::LowPass, 12000.0,  0.0, 0.707 } );
+    biquads[3].setFilter( { coro::FilterType::Peak, 150.0, -6.0, 2.0 } );
+    biquads[4].setFilter( { coro::FilterType::Peak, 200.0, +0.5, 2.0 } );
+    biquads[5].setFilter( { coro::FilterType::Peak, 300.0, -6.0, 2.0 } );
+    biquads[6].setFilter( { coro::FilterType::Peak, 500.0, +0.5, 2.0 } );
+    biquads[7].setFilter( { coro::FilterType::Peak, 750.0, -6.0, 2.0 } );
+    biquads[8].setFilter( { coro::FilterType::Peak, 1200.0, +0.5, 2.0 } );
+    biquads[9].setFilter( { coro::FilterType::Peak, 2000.0, -6.0, 2.0 } );
+    biquads[10].setFilter( { coro::FilterType::Peak, 3000.0, +0.5, 2.0 } );
+    biquads[11].setFilter( { coro::FilterType::Peak, 5000.0, -6.0, 2.0 } );
+    biquads[2].setFilter( { coro::FilterType::Peak,  7500.0, +0.5, 2.0 } );
     auto end = std::chrono::steady_clock::now();
     std::chrono::duration<double> diff = end-begin;
     std::cout << "Init time: " << diff.count() << std::endl;

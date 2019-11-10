@@ -4,7 +4,7 @@
 
 int main(void)
 {
-    GstDsp::AlsaUtil alsaUtil;
+    coro::AlsaUtil alsaUtil;
     auto outputDevices = alsaUtil.outputDevices();
 
     for (const auto& dev : outputDevices) {

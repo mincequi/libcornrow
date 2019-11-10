@@ -8,7 +8,7 @@
 
 int main(int argc, char** argv)
 {
-    assert(GstDsp::init());
+    assert(coro::init());
 
     // Create mainloop and pipeline
     auto mainloop = Glib::MainLoop::create();
@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     auto parse = Gst::ElementFactory::create_element("wavparse");
     auto convert = Gst::AudioConvert::create();
 
-    auto loudness = Glib::RefPtr<GstDsp::Loudness>::cast_dynamic(Gst::ElementFactory::create_element("loudness"));
+    auto loudness = Glib::RefPtr<coro::Loudness>::cast_dynamic(Gst::ElementFactory::create_element("loudness"));
     assert(loudness);
     loudness->setLevel(std::atoi(argv[2]));
     auto enc = Gst::ElementFactory::create_element("wavenc");

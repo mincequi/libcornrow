@@ -24,7 +24,6 @@ add_library(${PROJECT_NAME} STATIC
     src/gstavdtpsrc.cpp
     src/gstfdsrc.cpp
 
-    src/audiocodec/SbcParse.cpp
     src/core/AppSource.cpp
     src/core/Buffer.cpp
     src/core/FdSource.cpp

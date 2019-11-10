@@ -8,7 +8,7 @@
 
 #include "Types.h"
 
-namespace GstDsp
+namespace coro
 {
 
 template <typename T>

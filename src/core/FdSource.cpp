@@ -13,6 +13,14 @@ static gboolean cr_fd_source_stop (GstBaseSrc * bsrc);
 static gboolean cr_fd_source_unlock (GstBaseSrc * bsrc);
 static gboolean cr_fd_source_unlock_stop (GstBaseSrc * bsrc);
 
+static GstStaticPadTemplate s_srcTemplate =
+    GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/x-rtp, "
+        "media = (string) \"audio\","
+        "payload = (int) [96, 127], "
+        "clock-rate = (int) { 44100, 48000 }, "
+        "encoding-name = (string) \"SBC\"; "));
+
 static void cr_fd_source_class_init (CrFdSourceClass * klass)
 {
     //GObjectClass *gObjectClass = G_OBJECT_CLASS (klass);
@@ -34,28 +42,29 @@ static void cr_fd_source_class_init (CrFdSourceClass * klass)
                                            "Read from a file descriptor",
                                            "Manuel Weichselbaumer <mincequi@web.de>");
 
-    GstCaps *caps = gst_caps_new_simple ("application/x-rtp",
-                                         "media", G_TYPE_STRING, "audio",
-                                         "payload", GST_TYPE_INT_RANGE, 96, 127,
-                                         "encoding-name", G_TYPE_STRING, "SBC",
-                                         "clock-rate", G_TYPE_INT, 44100,
-                                         NULL);
-    GstPadTemplate* templ = gst_pad_template_new("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
-    gst_element_class_add_pad_template (elementClass, templ);
+    gst_element_class_add_static_pad_template(elementClass, &s_srcTemplate);
 }
 
 static void cr_fd_source_init (CrFdSource * self)
 {
+    self->m_fd = -1;
+    self->m_poll = nullptr;
+    self->m_blockSize = 4096;
+    self->m_allocFactor = 1;
+    self->m_currentPacketSize = -1;
+
     gst_base_src_set_format (GST_BASE_SRC (self), GST_FORMAT_TIME);
     gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
     gst_base_src_set_do_timestamp (GST_BASE_SRC (self), TRUE);
 }
 
-void CrFdSource::init(int fd, uint32_t blockSize, uint8_t allocFactor)
+void CrFdSource::init(uint32_t sampleRate, int fd, uint32_t blockSize, uint8_t allocFactor)
 {
     m_fd = fd;
     m_blockSize = blockSize;
     m_allocFactor = allocFactor;
+
+    pushConf(sampleRate);
 }
 
 GstBuffer* CrFdSource::readFd()
@@ -94,6 +103,18 @@ GstBuffer* CrFdSource::readFd()
     }
 
     return buffer;
+}
+
+void CrFdSource::pushConf(uint32_t sampleRate)
+{
+    auto caps = gst_caps_new_simple("application/x-rtp",
+                                    "media", G_TYPE_STRING, "audio",
+                                    "payload", GST_TYPE_INT_RANGE, 96, 127,
+                                    "encoding-name", G_TYPE_STRING, "SBC",
+                                    NULL);
+    gst_caps_set_simple(caps, "clock-rate", G_TYPE_INT, sampleRate, NULL);
+    gst_pad_push_event (GST_BASE_SRC_PAD(this), gst_event_new_caps (caps));
+    gst_caps_unref(caps);
 }
 
 static GstFlowReturn cr_fd_source_create(GstPushSrc* bsrc, GstBuffer** outBuffer)

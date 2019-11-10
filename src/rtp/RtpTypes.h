@@ -2,10 +2,11 @@
 
 #include <stdint.h>
 
-namespace cr {
+namespace coro {
 namespace rtp {
 
 class RtpHeader {
+public:
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     uint16_t csrcCount:4;
     uint16_t extension:1;
@@ -27,9 +28,11 @@ class RtpHeader {
     uint32_t csrc[16];
 
     bool isValidSbc() const;
+
 } __attribute__ ((packed));
 
 class RtpSbcHeader {
+public:
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     uint8_t frameCount:4;
     uint8_t reserved:1;
@@ -45,9 +48,11 @@ class RtpSbcHeader {
 #endif
 
     bool isValid() const;
+
 } __attribute__ ((packed));
 
 class SbcFrameHeader {
+public:
     uint8_t syncWord;
 
 #if __BYTE_ORDER == __LITTLE_ENDIAN
@@ -76,7 +81,8 @@ class SbcFrameHeader {
 #endif
 
     bool isValid() const;
+
 } __attribute__ ((packed));
 
 } // namespace rtp
-} // namespace cr
+} // namespace coro

@@ -7,7 +7,7 @@
 
 int main(int argc, char** argv)
 {
-    assert(GstDsp::init());
+    assert(coro::init());
 
     // Create mainloop and pipeline
     auto mainloop = Glib::MainLoop::create();

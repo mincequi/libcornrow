@@ -6,7 +6,7 @@
 #include <vector>
 #include <math.h>
 
-namespace GstDsp
+namespace coro
 {
 
 enum class FilterType : uint8_t

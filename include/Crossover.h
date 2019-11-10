@@ -5,7 +5,7 @@
 
 #include "Biquad.h"
 
-namespace GstDsp
+namespace coro
 {
 
 class Crossover : public Gst::BaseTransform

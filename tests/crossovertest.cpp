@@ -9,7 +9,7 @@
 
 int main(int argc, char** argv)
 {
-    assert(GstDsp::init());
+    assert(coro::init());
 
     // Create mainloop and pipeline
     auto mainloop = Glib::MainLoop::create();
@@ -25,7 +25,7 @@ int main(int argc, char** argv)
     src->property_num_buffers().set_value(100);
     src->property_samplesperbuffer().set_value(44100);
 
-    Glib::RefPtr<GstDsp::Crossover> xo = Glib::RefPtr<GstDsp::Crossover>::cast_dynamic(Gst::ElementFactory::create_element("crossover"));
+    Glib::RefPtr<coro::Crossover> xo = Glib::RefPtr<coro::Crossover>::cast_dynamic(Gst::ElementFactory::create_element("crossover"));
     assert(xo);
     xo->setFrequency(2000.0);
     xo->setLfe(true);

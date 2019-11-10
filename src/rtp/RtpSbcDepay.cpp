@@ -3,14 +3,15 @@
 #include <iostream>
 #include <stdint.h>
 
-#include <core/Buffer.h>
-
 #include <spdlog/spdlog.h>
+
+#include <core/Buffer.h>
+#include <rtp/RtpTypes.h>
 
 GST_DEBUG_CATEGORY_STATIC (rtpsbcdepay_debug);
 #define GST_CAT_DEFAULT (rtpsbcdepay_debug)
 
-static GstStaticPadTemplate cr_rtp_sbc_depay_src_template =
+static GstStaticPadTemplate s_srcTemplate =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-sbc, "
         "rate = (int) { 44100, 48000 }, "
@@ -23,7 +24,7 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
         "parsed = (boolean) true")
     );
 
-static GstStaticPadTemplate cr_rtp_sbc_depay_sink_template =
+static GstStaticPadTemplate s_sinkTemplate =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) audio,"
@@ -35,20 +36,20 @@ GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
 #define cr_rtp_sbc_depay_parent_class parent_class
 G_DEFINE_TYPE (CrRtpSbcDepay, cr_rtp_sbc_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
 
-static gboolean cr_rtp_sbc_depay_setcaps (GstRTPBaseDepayload * base, GstCaps * caps);
+//static gboolean cr_rtp_sbc_depay_setcaps (GstRTPBaseDepayload * base, GstCaps * caps);
 static GstBuffer *cr_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp);
 static GstBuffer * cr_rtp_sbc_depay_get_payload_subbuffer (GstRTPBuffer * buffer, guint offset);
 
 static void cr_rtp_sbc_depay_class_init (CrRtpSbcDepayClass * klass)
 {
-    GstRTPBaseDepayloadClass *gstbasertpdepayload_class = GST_RTP_BASE_DEPAYLOAD_CLASS (klass);
+    GstRTPBaseDepayloadClass *rtpBaseDepayloadClass = GST_RTP_BASE_DEPAYLOAD_CLASS (klass);
     GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-    gstbasertpdepayload_class->set_caps = cr_rtp_sbc_depay_setcaps;
-    gstbasertpdepayload_class->process_rtp_packet = cr_rtp_sbc_depay_process;
+    //rtpBaseDepayloadClass->set_caps = cr_rtp_sbc_depay_setcaps;
+    rtpBaseDepayloadClass->process_rtp_packet = cr_rtp_sbc_depay_process;
 
-    gst_element_class_add_static_pad_template (element_class, &cr_rtp_sbc_depay_src_template);
-    gst_element_class_add_static_pad_template (element_class, &cr_rtp_sbc_depay_sink_template);
+    gst_element_class_add_static_pad_template (element_class, &s_srcTemplate);
+    gst_element_class_add_static_pad_template (element_class, &s_sinkTemplate);
 
     GST_DEBUG_CATEGORY_INIT (rtpsbcdepay_debug, "rtpsbcdepay", 0,
                              "SBC Audio RTP Depayloader");
@@ -60,8 +61,30 @@ static void cr_rtp_sbc_depay_class_init (CrRtpSbcDepayClass * klass)
                                            "Manuel Weichselbaumer <mincequi@web.de>");
 }
 
-static void cr_rtp_sbc_depay_init(CrRtpSbcDepay * rtpsbcdepay)
+static void cr_rtp_sbc_depay_init(CrRtpSbcDepay* self)
 {
+}
+
+void CrRtpSbcDepay::pushConf()
+{
+    // Rates
+    std::vector<int> rates = { 16000, 32000, 44100, 48000 };
+    // Modes
+    std::vector<std::string> chModes = { "mono", "dual", "stereo", "joint" };
+
+    auto caps = gst_caps_new_simple(
+                "audio/x-sbc",
+                "rate", G_TYPE_INT, rates[m_sbcHeader.sampleRate],
+                "channels", G_TYPE_INT, (m_sbcHeader.channelMode > 0) ? 2 : 1,
+                "channel-mode", G_TYPE_STRING, chModes[m_sbcHeader.channelMode].c_str(),
+            "blocks", G_TYPE_INT, (1+m_sbcHeader.blockSize)*4,
+            "subbands", G_TYPE_INT, m_sbcHeader.subBandCount ? 8 : 4,
+            "allocation-method", G_TYPE_STRING, m_sbcHeader.allocMethod ? "snr" : "loudness",
+            "bitpool", G_TYPE_INT, m_sbcHeader.bitPool,
+            "parsed", G_TYPE_BOOLEAN, TRUE,
+            NULL);
+    gst_pad_push_event(GST_RTP_BASE_DEPAYLOAD_SRCPAD(this), gst_event_new_caps(caps));
+    gst_caps_unref(caps);
 }
 
 // Returns size of single frame
@@ -94,87 +117,61 @@ static int cr_rtp_sbc_depay_get_params(const guint8* data, int* samples)
     return length;
 }
 
+    /*
 static gboolean cr_rtp_sbc_depay_setcaps (GstRTPBaseDepayload * base, GstCaps * caps)
 {
-    auto outcaps = gst_caps_new_simple ("audio/x-sbc",
-                                "rate", G_TYPE_INT, 44100,
-                                "channels", G_TYPE_INT, 2,
-                                "channel-mode", G_TYPE_STRING, "joint",
-                                "blocks", G_TYPE_INT, 16,
-                                "subbands", G_TYPE_INT, 8,
-                                "allocation-method", G_TYPE_STRING, "loudness",
-                                "bitpool", G_TYPE_INT, 53,
-                                "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
-
-    gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (base), outcaps);
-    gst_caps_unref (outcaps);
-
-    return TRUE;
-
-    /*
     CrRtpSbcDepay *self = CR_RTP_SBC_DEPAY (base);
-    GstStructure *structure;
-    GstCaps *outcaps;
 
-    structure = gst_caps_get_structure (caps, 0);
+    // Sample rate
+    auto structure = gst_caps_get_structure(caps, 0);
+    gst_structure_get_int(structure, "clock-rate", &self->m_sampleRate);
 
-    if (!gst_structure_get_int (structure, "clock-rate", &self->m_sampleRate))
-        goto bad_caps;
-
-    outcaps = gst_caps_new_simple ("audio/x-sbc",
-        "rate", G_TYPE_INT, self->m_sampleRate,
-        NULL);
-    gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (base), outcaps);
-    gst_caps_unref (outcaps);
+    auto outcaps = gst_caps_new_simple("audio/x-sbc", "rate", G_TYPE_INT, self->m_sampleRate, NULL);
+    gst_pad_set_caps(GST_RTP_BASE_DEPAYLOAD_SRCPAD (base), outcaps);
+    gst_caps_unref(outcaps);
 
     return TRUE;
-
-bad_caps:
-    GST_WARNING_OBJECT (self, "Can't support the caps we got: %" GST_PTR_FORMAT, caps);
-    return FALSE;
-    */
 }
+    */
 
 static GstBuffer* cr_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp)
 {
     CrRtpSbcDepay *self = CR_RTP_SBC_DEPAY (base);
 
     GstBuffer *data = NULL;
-    gboolean isFragmented;
+    uint8_t* payload = (uint8_t*)gst_rtp_buffer_get_payload(rtp);
     guint8 framesCount;
-    guint8 *payload;
-    guint payloadSize;
+    guint payloadSize = gst_rtp_buffer_get_payload_len(rtp);
     gint samples = 0;
     gint frameSize = 0;
 
-    //std::cout << __func__ << "> hash: " << coro::core::Buffer::hash(rtp->buffer) << std::endl;
-
-    // Marker shall be zero
-    if (gst_rtp_buffer_get_marker (rtp)) {
-        GST_WARNING_OBJECT (self, "Marker bit was set");
+    coro::rtp::RtpHeader* rtpHeader = (coro::rtp::RtpHeader*)(rtp->data[0]);
+    coro::rtp::RtpSbcHeader* rtpSbcHeader = (coro::rtp::RtpSbcHeader*)(payload);
+    self->m_sbcHeader = *((coro::rtp::SbcFrameHeader*)(payload+1));
+    if (payloadSize < 4) {
+        GST_WARNING_OBJECT (self, "Payload too small");
+        goto bad_packet;
+    }
+    if (!rtpHeader->isValidSbc()) {
+        spdlog::warn("Invalid RTP header");
+        goto bad_packet;
+    }
+    if (!rtpSbcHeader->isValid()) {
+        spdlog::warn("Invalid RTP SBC header");
+        goto bad_packet;
+    }
+    if (rtpSbcHeader->isFragmented) {
+        spdlog::warn("Fragmented packet(s) not supported");
         goto bad_packet;
     }
 
-    payload = (uint8_t*)gst_rtp_buffer_get_payload (rtp);
-    payloadSize = gst_rtp_buffer_get_payload_len (rtp);
-
-    isFragmented = payload[0] & 0x80;
-    framesCount = payload[0] & 0x0f;
-
+    framesCount = rtpSbcHeader->frameCount;
     payload += 1;
     payloadSize -= 1;
 
     // Do sanity checks
-    if (isFragmented) {
-        GST_WARNING_OBJECT (self, "Fragmented packet(s) not supported");
-        goto bad_packet;
-    }
-    if (payloadSize < 3) {
-        GST_WARNING_OBJECT (self, "Payload too small");
-        goto bad_packet;
-    }
-    if (payload[0] != 0x9c) {
-        GST_WARNING_OBJECT (self, "Syncword invalid");
+    if (!self->m_sbcHeader.isValid()) {
+        spdlog::warn("Invalid RTP SBC header");
         goto bad_packet;
     }
 
@@ -187,6 +184,7 @@ static GstBuffer* cr_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBu
         GST_WARNING_OBJECT (self, "Junk at end of packet");
     }
 
+    self->pushConf();
     GST_LOG_OBJECT (self, "Got %d frames with a total payload size of %d", framesCount, payloadSize);
     return cr_rtp_sbc_depay_get_payload_subbuffer(rtp, 1);
 

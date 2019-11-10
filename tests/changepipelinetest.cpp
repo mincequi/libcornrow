@@ -22,12 +22,12 @@ public:
         m_src->property_samplesperbuffer().set_value(44100);
 
         // Create peq
-        m_peq = Glib::RefPtr<GstDsp::Peq>::cast_dynamic(Gst::ElementFactory::create_element("peq"));
-        m_peq->biquad(0).setFilter( { GstDsp::FilterType::Peak, 1000.0, -12.0, 0.707 } );
-        m_peq->biquad(1).setFilter( { GstDsp::FilterType::LowPass, 5000.0, 0.0, 1.41 } );
+        m_peq = Glib::RefPtr<coro::Peq>::cast_dynamic(Gst::ElementFactory::create_element("peq"));
+        m_peq->biquad(0).setFilter( { coro::FilterType::Peak, 1000.0, -12.0, 0.707 } );
+        m_peq->biquad(1).setFilter( { coro::FilterType::LowPass, 5000.0, 0.0, 1.41 } );
 
         // Create crossover
-        m_crossover = Glib::RefPtr<GstDsp::Crossover>::cast_dynamic(Gst::ElementFactory::create_element("crossover"));
+        m_crossover = Glib::RefPtr<coro::Crossover>::cast_dynamic(Gst::ElementFactory::create_element("crossover"));
         m_crossover->setFrequency(2000.0);
         m_crossover->setLfe(false);
 
@@ -133,8 +133,8 @@ private:
     Glib::RefPtr<Gst::AudioConvert> m_alsaConverter;
     Glib::RefPtr<Gst::AlsaSink>     m_alsaSink;
     Glib::RefPtr<Gst::AudioTestSrc> m_src;
-    Glib::RefPtr<GstDsp::Crossover> m_crossover;
-    Glib::RefPtr<GstDsp::Peq>       m_peq;
+    Glib::RefPtr<coro::Crossover> m_crossover;
+    Glib::RefPtr<coro::Peq>       m_peq;
     Glib::RefPtr<Gst::Element>      m_ac3Encoder;
     Glib::RefPtr<Gst::Element>      m_alsaPassthroughSink;
 
@@ -153,7 +153,7 @@ private:
 
 int main(int argc, char** argv)
 {
-    assert(GstDsp::init());
+    assert(coro::init());
 
     // Create mainloop and pipeline
     auto mainloop = Glib::MainLoop::create();

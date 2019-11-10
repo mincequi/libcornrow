@@ -5,7 +5,7 @@
 
 #include "Biquad.h"
 
-namespace GstDsp
+namespace coro
 {
 
 class Peq : public Gst::AudioFilter

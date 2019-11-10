@@ -1,6 +1,6 @@
 #include "Types.h"
 
-namespace GstDsp
+namespace coro
 {
 
 AudioDeviceInfo::AudioDeviceInfo(const std::string& _name, const std::string& _desc)

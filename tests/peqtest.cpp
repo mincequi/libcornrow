@@ -8,7 +8,7 @@
 
 int main(int argc, char** argv)
 {
-    assert(GstDsp::init());
+    assert(coro::init());
 
     // Create mainloop and pipeline
     auto mainloop = Glib::MainLoop::create();
@@ -22,14 +22,14 @@ int main(int argc, char** argv)
     src->property_wave().set_value(Gst::AudioTestSrcWave::AUDIO_TEST_SRC_WAVE_WHITE_NOISE);
     src->property_num_buffers().set_value(100);
     src->property_samplesperbuffer().set_value(44100);
-    Glib::RefPtr<GstDsp::Peq> peq = Glib::RefPtr<GstDsp::Peq>::cast_dynamic(Gst::ElementFactory::create_element("peq"));
+    Glib::RefPtr<coro::Peq> peq = Glib::RefPtr<coro::Peq>::cast_dynamic(Gst::ElementFactory::create_element("peq"));
     assert(peq);
     //peq->biquads().at(0)->filter().set_value( { GstDsp::FilterType::Peak, 1000.0, -12.0, 0.707 } );
-    peq->biquad(0).setFilter( { GstDsp::FilterType::Peak, 1000.0, -6.0, 2.0 } );
-    peq->biquad(1).setFilter( { GstDsp::FilterType::Peak, 500.0, -12.0, 0.707 } );
-    peq->biquad(2).setFilter( { GstDsp::FilterType::Peak, 2000.0, -24.0, 10.0 } );
-    peq->biquad(3).setFilter( { GstDsp::FilterType::Peak, 4000.0, +1.0, 0.2 } );
-    peq->biquad(4).setFilter( { GstDsp::FilterType::Peak, 8000.0, +6.0, 0.5 } );
+    peq->biquad(0).setFilter( { coro::FilterType::Peak, 1000.0, -6.0, 2.0 } );
+    peq->biquad(1).setFilter( { coro::FilterType::Peak, 500.0, -12.0, 0.707 } );
+    peq->biquad(2).setFilter( { coro::FilterType::Peak, 2000.0, -24.0, 10.0 } );
+    peq->biquad(3).setFilter( { coro::FilterType::Peak, 4000.0, +1.0, 0.2 } );
+    peq->biquad(4).setFilter( { coro::FilterType::Peak, 8000.0, +6.0, 0.5 } );
     auto enc = Gst::ElementFactory::create_element("wavenc");
     assert(enc);
     auto sink = Gst::FileSink::create();

@@ -2,6 +2,9 @@
 
 #include <gst/rtp/gstrtpbasedepayload.h>
 
+#include "RtpTypes.h"
+#include <core/Buffer.h>
+
 G_BEGIN_DECLS
 #define CR_TYPE_RTP_SBC_DEPAY \
     (cr_rtp_sbc_depay_get_type())
@@ -18,12 +21,26 @@ G_BEGIN_DECLS
 typedef struct _CrRtpSbcDepay CrRtpSbcDepay;
 typedef struct _CrRtpSbcDepayClass CrRtpSbcDepayClass;
 
-struct _CrRtpSbcDepay
+class _CrRtpSbcDepay
 {
+public:
     GstRTPBaseDepayload base;
+
+    /// Process buffer
+    void process(coro::core::Buffer& buffer);
+
+// protected:
+    /// Push this node's configuration downstream.
+    void pushConf(); // override
+
+// private:
+    /// Handle the upstream node's configuration.
+    void onConfPushed(); // override
 
     int m_sampleRate;
     uint m_currenBufferSize = 0;
+
+    coro::rtp::SbcFrameHeader m_sbcHeader;
 };
 
 struct _CrRtpSbcDepayClass

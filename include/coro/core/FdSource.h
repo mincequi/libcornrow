@@ -25,19 +25,21 @@ class _CrFdSource
 public:
     GstPushSrc pushSource;
 
-    void init(int fd, uint32_t blockSize, uint8_t allocFactor = 1);
+    void init(uint32_t sampleRate, int fd, uint32_t blockSize, uint8_t allocFactor = 1);
+
     GstBuffer* readFd();
+    void pushConf(uint32_t sampleRate);
 
     volatile gint m_isFlushing;
 
     // FD related members
-    int         m_fd = -1;
-    GstPoll*    m_poll = nullptr;
+    int         m_fd;
+    GstPoll*    m_poll;
     GstPollFD   m_pfd;
-    uint32_t    m_blockSize = 4096;
-    uint8_t     m_allocFactor = 1;
+    uint32_t    m_blockSize;
+    uint8_t     m_allocFactor;
 
-    int         m_currentPacketSize = -1;
+    int         m_currentPacketSize;
 
     std::queue<GstBuffer*> m_pendingBuffers;
 };
