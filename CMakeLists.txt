@@ -27,6 +27,7 @@ add_library(${PROJECT_NAME} STATIC
     src/core/AppSource.cpp
     src/core/Buffer.cpp
     src/core/FdSource.cpp
+    src/loguru/loguru.cpp
     src/rtp/RtpSbcDepay.cpp
     src/rtp/RtpTypes.cpp
 )
@@ -46,6 +47,7 @@ target_link_libraries(${PROJECT_NAME}
     ${ALSA_LIBRARIES}
     pthread
     xxhash
+    dl
 )
 
 target_compile_options(${PROJECT_NAME} PUBLIC ${GSTMM_CFLAGS_OTHER})
