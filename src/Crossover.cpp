@@ -157,7 +157,7 @@ Gst::FlowReturn Crossover::transform_vfunc(const Glib::RefPtr<Gst::Buffer>& inbu
 
     //std::cerr << "inbuf: " << inInfo.get_size() << ", outbuf: " << outInfo.get_size() << std::endl;
 
-    m_mutex.lock();
+    std::lock_guard<std::mutex> lock(m_mutex);
     uint   frameCount = inInfo.get_size()/m_info.get_bpf();
 
     if (!isFrequencyValid() && m_lfe) { // Only LFE: L+R+LFE
@@ -189,7 +189,6 @@ Gst::FlowReturn Crossover::transform_vfunc(const Glib::RefPtr<Gst::Buffer>& inbu
     } else {
         return Gst::FlowReturn::FLOW_NOT_SUPPORTED;
     }
-    m_mutex.unlock();
 
     inbuf->unmap(inInfo);
     outbuf->unmap(outInfo);
