@@ -1,8 +1,7 @@
 #include "core/FdSource.h"
 
-#include <iostream>
+#include <loguru/loguru.hpp>
 #include <unistd.h>
-#include <spdlog/spdlog.h>
 
 #define cr_fd_source_parent_class parent_class
 G_DEFINE_TYPE (CrFdSource, cr_fd_source, GST_TYPE_PUSH_SRC);
@@ -85,7 +84,7 @@ GstBuffer* CrFdSource::readFd()
     if (slices == 1) {
         gst_buffer_resize(buffer, 0, size);
     } else if (size%slices != 0) {
-        spdlog::warn("Cannot estimate number of slices. Pushing as a whole.");
+        LOG_F(WARNING, "Cannot estimate number of slices. Pushing as a whole.");
         gst_buffer_resize(buffer, 0, size);
     } else {
         // Create pending buffers
@@ -98,7 +97,7 @@ GstBuffer* CrFdSource::readFd()
 
     // Some logging
     if (m_currentPacketSize != size) {
-        spdlog::info("Current packet size: {0}", size);
+        LOG_F(INFO, "Current packet size: {0}", size);
         m_currentPacketSize = size;
     }
 

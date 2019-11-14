@@ -212,7 +212,7 @@ Glib::RefPtr<Gst::Caps> Crossover::transform_caps_vfunc(Gst::PadDirection direct
         gst_structure_set(outStructure.gobj(), "channel-mask", GST_TYPE_BITMASK, std::uint64_t(0x3), NULL);
         break;
     case Gst::PadDirection::PAD_SINK: {
-        bool frequencyValid = (m_frequency >= 90.0 && m_frequency <= 18000.0);
+        bool frequencyValid = (m_frequency >= 20.0 && m_frequency <= 20000.0);
         if (frequencyValid && !m_lfe) {   // Only crossover: L+R+RL+RR
             gst_structure_set(outStructure.gobj(), "channels", G_TYPE_INT, 4, NULL);
             gst_structure_set(outStructure.gobj(), "channel-mask", GST_TYPE_BITMASK, std::uint64_t(0x33), NULL);

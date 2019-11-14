@@ -1,12 +1,12 @@
 #include "RtpSbcDepay.h"
 
-#include <iostream>
-#include <stdint.h>
+#include "core/Buffer.h"
+#include "rtp/RtpTypes.h"
 
-#include <spdlog/spdlog.h>
+#include <loguru/loguru.hpp>
 
-#include <core/Buffer.h>
-#include <rtp/RtpTypes.h>
+#include <string>
+#include <vector>
 
 GST_DEBUG_CATEGORY_STATIC (rtpsbcdepay_debug);
 #define GST_CAT_DEFAULT (rtpsbcdepay_debug)
@@ -134,15 +134,15 @@ static GstBuffer* cr_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBu
         goto bad_packet;
     }
     if (!rtpHeader->isValidSbc()) {
-        spdlog::warn("Invalid RTP header");
+        LOG_F(WARNING, "Invalid RTP header");
         goto bad_packet;
     }
     if (!rtpSbcHeader->isValid()) {
-        spdlog::warn("Invalid RTP SBC header");
+        LOG_F(WARNING, "Invalid RTP SBC header");
         goto bad_packet;
     }
     if (rtpSbcHeader->isFragmented) {
-        spdlog::warn("Fragmented packet(s) not supported");
+        LOG_F(WARNING, "Fragmented packet(s) not supported");
         goto bad_packet;
     }
 
@@ -152,17 +152,17 @@ static GstBuffer* cr_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBu
 
     // Do sanity checks
     if (!self->m_sbcHeader.isValid()) {
-        spdlog::warn("Invalid RTP SBC header");
+        LOG_F(WARNING, "Invalid RTP SBC header");
         goto bad_packet;
     }
 
     frameSize = cr_rtp_sbc_depay_get_params(payload, &samples);
     samples *= framesCount;
     if (framesCount * frameSize > (gint) payloadSize) {
-        spdlog::warn("Packet truncated. frameSize: {0}, framesCount: {1}, payloadSize: {2}", frameSize, framesCount, payloadSize);
+        LOG_F(WARNING, "Packet truncated. frameSize: {0}, framesCount: {1}, payloadSize: {2}", frameSize, framesCount, payloadSize);
         goto bad_packet;
     } else if (framesCount * frameSize < (gint) payloadSize) {
-        spdlog::warn("Junk after packet. frameSize: {0}, framesCount: {1}, payloadSize: {2}", frameSize, framesCount, payloadSize);
+        LOG_F(WARNING, "Junk after packet. frameSize: {0}, framesCount: {1}, payloadSize: {2}", frameSize, framesCount, payloadSize);
     }
 
     self->pushConf();
@@ -195,7 +195,7 @@ static GstBuffer * cr_rtp_sbc_depay_get_payload_subbuffer(GstRTPBuffer * buffer,
         static gsize currenBufferSize = -1;
         auto bufferSize = gst_buffer_get_size(out);
         if (currenBufferSize != bufferSize) {
-            spdlog::info("RtpSbcDepay> out buffer size: {0}", bufferSize);
+            LOG_F(INFO, "RtpSbcDepay> out buffer size: {0}", bufferSize);
             currenBufferSize = bufferSize;
         }
     }
@@ -204,7 +204,7 @@ static GstBuffer * cr_rtp_sbc_depay_get_payload_subbuffer(GstRTPBuffer * buffer,
 
 wrong_offset:
     {
-        spdlog::warn("offset should be less then payload size");
+        LOG_F(WARNING, "offset should be less then payload size");
         return NULL;
     }
 }
