@@ -195,7 +195,7 @@ static GstBuffer * cr_rtp_sbc_depay_get_payload_subbuffer(GstRTPBuffer * buffer,
         static gsize currenBufferSize = -1;
         auto bufferSize = gst_buffer_get_size(out);
         if (currenBufferSize != bufferSize) {
-            LOG_F(INFO, "RtpSbcDepay> out buffer size: {0}", bufferSize);
+            LOG_F(INFO, "RtpSbcDepay> out buffer size: %i", bufferSize);
             currenBufferSize = bufferSize;
         }
     }
