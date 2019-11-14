@@ -159,10 +159,10 @@ static GstBuffer* cr_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBu
     frameSize = cr_rtp_sbc_depay_get_params(payload, &samples);
     samples *= framesCount;
     if (framesCount * frameSize > (gint) payloadSize) {
-        LOG_F(WARNING, "Packet truncated. frameSize: {0}, framesCount: {1}, payloadSize: {2}", frameSize, framesCount, payloadSize);
+        LOG_F(WARNING, "Packet truncated. frameSize: %i, framesCount: %i, payloadSize: %i", frameSize, framesCount, payloadSize);
         goto bad_packet;
     } else if (framesCount * frameSize < (gint) payloadSize) {
-        LOG_F(WARNING, "Junk after packet. frameSize: {0}, framesCount: {1}, payloadSize: {2}", frameSize, framesCount, payloadSize);
+        LOG_F(WARNING, "Junk after packet. frameSize: %i, framesCount: %i, payloadSize: %i", frameSize, framesCount, payloadSize);
     }
 
     self->pushConf();

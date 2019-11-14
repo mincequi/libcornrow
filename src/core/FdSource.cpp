@@ -97,7 +97,7 @@ GstBuffer* CrFdSource::readFd()
 
     // Some logging
     if (m_currentPacketSize != size) {
-        LOG_F(INFO, "Current packet size: {0}", size);
+        LOG_F(INFO, "Current packet size: %d", size);
         m_currentPacketSize = size;
     }
 
