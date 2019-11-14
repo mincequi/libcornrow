@@ -272,7 +272,7 @@ bool Crossover::get_unit_size_vfunc(const Glib::RefPtr<Gst::Caps>& caps, gsize& 
 
 bool Crossover::isFrequencyValid() const
 {
-    return (m_frequency >= 90.0 && m_frequency <= 18000.0);
+    return (m_frequency >= 20.0 && m_frequency <= 20000.0);
 }
 
 void Crossover::updateCrossover()
