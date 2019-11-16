@@ -1,11 +1,11 @@
 #pragma once
 
-#include <coro/audio/Types.h>
+#include <coro/audio/AudioTypes.h>
 
 namespace coro {
 namespace audio {
 
-class Conf
+class AudioConf
 {
 public:
     Codec      codec;

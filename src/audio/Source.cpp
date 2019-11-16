@@ -1,22 +1,15 @@
-#include "audio/Node.h"
-
-#include <core/Caps.h>
+#include "audio/Source.h"
 
 namespace coro {
 namespace audio {
 
-/*
-Node::Node()
+Source::Source()
 {
-
 }
 
-Node::~Node()
+Source::~Source()
 {
-
 }
-*/
 
 } // namespace audio
 } // namespace coro
-

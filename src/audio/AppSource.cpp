@@ -3,7 +3,15 @@
 namespace coro {
 namespace audio {
 
-void AppSource::pushBuffer(const Conf& _conf, Buffer& buffer)
+AppSource::AppSource()
+{
+}
+
+AppSource::~AppSource()
+{
+}
+
+AudioConf AppSource::pushBuffer(const AudioConf& _conf, AudioBuffer& buffer)
 {
     auto conf = _conf;
     auto next = m_next;
@@ -11,6 +19,8 @@ void AppSource::pushBuffer(const Conf& _conf, Buffer& buffer)
         conf = next->process(conf, buffer);
         next = next->next();
     }
+
+    return conf;
 }
 
 } // namespace audio

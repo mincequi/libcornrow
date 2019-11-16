@@ -3,7 +3,6 @@
 #include <gst/rtp/gstrtpbasedepayload.h>
 
 #include "RtpTypes.h"
-#include <core/Buffer.h>
 
 G_BEGIN_DECLS
 #define CR_TYPE_RTP_SBC_DEPAY \
@@ -27,7 +26,7 @@ public:
     GstRTPBaseDepayload base;
 
     /// Process buffer
-    void process(coro::core::Buffer& buffer);
+   // void process(coro::audio::AudioBuffer& buffer);
 
 // protected:
     /// Push this node's configuration downstream.

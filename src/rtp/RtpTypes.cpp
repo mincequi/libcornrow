@@ -25,6 +25,14 @@ bool RtpHeader::isValidSbc() const
     return true;
 }
 
+uint8_t RtpHeader::size() const
+{
+    uint8_t size = sizeof(RtpHeader);
+    size -= (16-csrcCount) * 4;
+    size -= (1-extension) * 4;
+    return size;
+}
+
 bool RtpSbcHeader::isValid() const
 {
     // frameCount shall never be zero

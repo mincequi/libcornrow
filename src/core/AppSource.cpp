@@ -104,7 +104,7 @@ void CrAppSource::pushBuffer(GstBuffer* buffer)
 {
     g_mutex_lock(&mutex);
 
-    std::cout << __func__ << "> hash: " << coro::core::Buffer::hash(buffer) << std::endl;
+    //std::cout << __func__ << "> hash: " << coro::core::Buffer::hash(buffer) << std::endl;
 
     gst_buffer_ref(buffer);
     g_queue_push_tail(queue, buffer);

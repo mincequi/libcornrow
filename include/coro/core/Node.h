@@ -1,5 +1,8 @@
 #pragma once
 
+// @TODO(mawe): Temporary use audio types
+#include <coro/audio/AudioBuffer.h>
+#include <coro/audio/AudioConf.h>
 #include <coro/core/Caps.h>
 
 namespace coro {
@@ -23,6 +26,9 @@ public:
         prev.m_next = &next;
     }
 
+    Node* next() const;
+    virtual audio::AudioConf process(const audio::AudioConf& conf, audio::AudioBuffer& buffer) { return audio::AudioConf(); }
+
 protected:
     Node* m_next = nullptr;
 };
@@ -39,7 +45,6 @@ constexpr bool Node::canIntersect(const InCaps& in, const OutCaps& out)
     }
     return false;
 }
-
 
 } // namespace core
 } // namespace coro

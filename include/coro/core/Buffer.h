@@ -16,10 +16,7 @@ public:
     size_t size() const;
 
     uint8_t* acquire(size_t size);
-    void commit(size_t size);
-
-    //static uint16_t hash(GstBuffer*);
-
+    void commit(size_t newSize);
 
 protected:
     std::vector<uint8_t> m_buffer;

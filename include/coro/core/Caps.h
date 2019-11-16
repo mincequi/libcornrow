@@ -1,6 +1,6 @@
 #pragma once
 
-//#include <coro/audio/AudioCaps.h>
+#include <coro/audio/AudioCaps.h>
 #include <coro/core/Types.h>
 
 #include <array>
@@ -10,8 +10,6 @@ namespace coro {
 namespace core {
 
 class Caps {
-//public:
-    //int      maxValue = 0;
 
 private:
     template<class In, class Out>
@@ -23,7 +21,11 @@ private:
 template<class In, class Out>
 constexpr bool Caps::canIntersect(const In& in, const Out& out)
 {
-    return true;
+    if (std::is_base_of<coro::audio::AudioCaps, In>::value &&
+            std::is_base_of<coro::audio::AudioCaps, Out>::value) {
+        return audio::AudioCaps::canIntersect(in, out);
+    }
+    return false;
 }
 
 } // namespace core

@@ -1,18 +1,22 @@
 #pragma once
 
 #include <coro/audio/AudioCaps.h>
-#include <coro/audio/Buffer.h>
-#include <coro/audio/Conf.h>
-#include <coro/audio/Types.h>
+#include <coro/audio/AudioBuffer.h>
+#include <coro/audio/AudioConf.h>
+#include <coro/audio/AudioTypes.h>
+#include <coro/core/Node.h>
 
 namespace coro {
 namespace audio {
 
-class Node
+class Node : public core::Node
 {
 public:
-    static constexpr std::array<Caps,0> inCaps() { return {}; }
-    static constexpr std::array<Caps,0> outCaps() { return {}; }
+    //Node();
+    //virtual ~Node();
+
+    static constexpr std::array<AudioCaps,0> inCaps() { return {}; }
+    static constexpr std::array<AudioCaps,0> outCaps() { return {}; }
 
     template<class InCaps, class OutCaps>
     static constexpr bool canIntersect(const InCaps& in, const OutCaps& out);
@@ -25,12 +29,6 @@ public:
     link(Node1& prev, Node2& next) {
         prev.m_next = &next;
     }
-
-    virtual Conf process(const Conf& conf, Buffer& buffer) = 0;
-    Node* next() const;
-
-protected:
-    Node* m_next = nullptr;
 };
 
 template<class InCaps, class OutCaps>
@@ -38,7 +36,7 @@ constexpr bool Node::canIntersect(const InCaps& in, const OutCaps& out)
 {
     for (const auto& i : in) {
         for (const auto& o : out) {
-            if (Caps::canIntersect(i, o)) {
+            if (AudioCaps::canIntersect(i, o)) {
                 return true;
             }
         }

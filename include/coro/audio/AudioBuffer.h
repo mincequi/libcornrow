@@ -5,10 +5,12 @@
 namespace coro {
 namespace audio {
 
-class Buffer : public core::Buffer {
-
+class AudioBuffer : public core::Buffer
+{
+public:
+    AudioBuffer();
+    ~AudioBuffer();
 };
 
 } // namespace audio
 } // namespace coro
-

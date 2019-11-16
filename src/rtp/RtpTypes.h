@@ -25,10 +25,11 @@ public:
     uint16_t sequenceNumber;
     uint32_t timestamp;
     uint32_t ssrc;
-    uint32_t csrc[16];
+    uint32_t csrc[16];  // optional
+    uint32_t headerExtension; // optional
 
     bool isValidSbc() const;
-
+    uint8_t size() const; // max 80 bytes
 } __attribute__ ((packed));
 
 class RtpSbcHeader {

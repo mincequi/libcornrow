@@ -24,9 +24,16 @@ add_library(${PROJECT_NAME} STATIC
     src/gstavdtpsrc.cpp
     src/gstfdsrc.cpp
 
+    src/audio/AppSource.cpp
+    src/audio/AudioBuffer.cpp
+    src/audio/Node.cpp
+    src/audio/SbcDecoder.cpp
+    src/audio/Source.cpp
+    src/core/AppSink.cpp
     src/core/AppSource.cpp
     src/core/Buffer.cpp
     src/core/FdSource.cpp
+    src/core/Node.cpp
     src/loguru/loguru.cpp
     src/rtp/RtpSbcDepay.cpp
     src/rtp/RtpTypes.cpp
@@ -48,6 +55,7 @@ target_link_libraries(${PROJECT_NAME}
     pthread
     xxhash
     dl
+    sbc
 )
 
 target_compile_options(${PROJECT_NAME} PUBLIC ${GSTMM_CFLAGS_OTHER})

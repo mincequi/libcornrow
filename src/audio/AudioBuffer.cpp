@@ -1,22 +1,15 @@
-#include "audio/Node.h"
-
-#include <core/Caps.h>
+#include "audio/AudioBuffer.h"
 
 namespace coro {
 namespace audio {
 
-/*
-Node::Node()
+AudioBuffer::AudioBuffer()
 {
-
 }
 
-Node::~Node()
+AudioBuffer::~AudioBuffer()
 {
-
 }
-*/
 
 } // namespace audio
 } // namespace coro
-
