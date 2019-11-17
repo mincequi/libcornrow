@@ -22,7 +22,7 @@ SbcDecoder::~SbcDecoder()
 
 AudioConf SbcDecoder::process(const AudioConf& conf, AudioBuffer& buffer)
 {
-    auto payload = buffer.data();
+    //auto payload = buffer.data();
     auto payloadOffset = 0;
 
     if (conf.isRtpPayloaded) {
@@ -34,7 +34,7 @@ AudioConf SbcDecoder::process(const AudioConf& conf, AudioBuffer& buffer)
         }
         //LOG_F(INFO, "seq: %i, csrcCount: %i, extension: %i", rtpHeader->sequenceNumber, rtpHeader->csrcCount, rtpHeader->extension);
 
-        payload += rtpHeader->size();
+        //payload += rtpHeader->size();
         payloadOffset += rtpHeader->size();
         coro::rtp::RtpSbcHeader* rtpSbcHeader = (coro::rtp::RtpSbcHeader*)(buffer.data()+rtpHeader->size());
         if (!rtpSbcHeader->isValid()) {
@@ -46,14 +46,17 @@ AudioConf SbcDecoder::process(const AudioConf& conf, AudioBuffer& buffer)
             LOG_F(WARNING, "Fragmented packet(s) not supported");
             goto end;
         }
-        payload += 1;
+        //payload += 1;
         payloadOffset += 1;
+        //if (*payload != 0x9C) {
+        //    LOG_F(WARNING, "Sync byte incorrect");
+        //}
     }
 
     {
         auto newBuffer = buffer.acquire(buffer.size()*5);
         size_t newBufferSize;
-        auto res = sbc_decode(m_sbc, payload, buffer.size()-payloadOffset,
+        auto res = sbc_decode(m_sbc, buffer.data()+payloadOffset, buffer.size()-payloadOffset,
                               newBuffer, buffer.size()*5, &newBufferSize);
         buffer.commit(newBufferSize);
         LOG_IF_F(WARNING, res == -1, "Data stream too short");

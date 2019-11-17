@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <audio/AudioBuffer.h>
+#include <loguru/loguru.hpp>
 
 template std::list<coro::audio::AudioBuffer> coro::core::Buffer::split(size_t) const;
 
@@ -50,6 +51,7 @@ uint8_t* Buffer::acquire(size_t size)
         return m_buffer.data()+m_acquiredOffset;
     }
     // Create space
+    LOG_F(INFO, "Buffer reallocated");
     m_buffer.resize(m_buffer.size()-sizeAtBack+size);
     m_acquiredOffset = m_offset+m_size;
     return m_buffer.data()+m_acquiredOffset;
