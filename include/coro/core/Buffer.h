@@ -14,8 +14,8 @@ class Buffer
 {
 public:
     Buffer(size_t reservedSize = 0);
-    Buffer(uint8_t* data, size_t size, size_t reservedSize = 0);
-    ~Buffer();
+    Buffer(const uint8_t* data, size_t size, size_t reservedSize = 0);
+    virtual ~Buffer();
 
     uint8_t* data();
     size_t size() const;
@@ -28,10 +28,9 @@ public:
 
 protected:
     std::vector<uint8_t> m_buffer;
-    uint8_t* m_data = m_buffer.data();
-    size_t   m_size = m_buffer.size();
-
-    uint8_t* m_acquiredData = nullptr;
+    size_t   m_size = 0;
+    size_t   m_offset = 0;
+    size_t   m_acquiredOffset = 0;
 };
 
 } // namespace core

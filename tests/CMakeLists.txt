@@ -10,6 +10,7 @@ gstdsp_tests(
     alsautiltest
 #    biquadtest
     changepipelinetest
+    corotest
     crossovertest
     loudnesstest
     passthroughtest

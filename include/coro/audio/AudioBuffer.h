@@ -8,10 +8,9 @@ namespace audio {
 class AudioBuffer : public core::Buffer
 {
 public:
-    AudioBuffer();
-    ~AudioBuffer();
-
     using core::Buffer::Buffer;
+
+    std::list<AudioBuffer> split(size_t size) const;
 };
 
 } // namespace audio
