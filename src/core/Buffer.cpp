@@ -1,10 +1,28 @@
 #include "core/Buffer.h"
 
+#include <cstring>
+
+#include <audio/AudioBuffer.h>
+
+template std::list<coro::audio::AudioBuffer> coro::core::Buffer::split(size_t) const;
+
 namespace coro {
 namespace core {
 
-Buffer::Buffer()
+Buffer::Buffer(size_t size)
 {
+    m_buffer.resize(size);
+    m_data = m_buffer.data();
+    m_size = 0;
+}
+
+Buffer::Buffer(uint8_t* data, size_t size, size_t reservedSize)
+{
+    m_buffer.resize(std::max(size, reservedSize));
+    m_data = m_buffer.data();
+    m_size = size;
+
+    std::memcpy(m_data, data, size);
 }
 
 Buffer::~Buffer()
@@ -47,6 +65,16 @@ void Buffer::commit(size_t size)
 {
     m_data = m_acquiredData;
     m_size = size;
+}
+
+template <class T>
+std::list<T> Buffer::split(size_t size) const
+{
+    std::list<T> buffers;
+    for (size_t i = 0; i < m_size; i += size) {
+        buffers.push_back(T(m_data+i, size));
+    }
+    return buffers;
 }
 
 } // namespace core
