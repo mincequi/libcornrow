@@ -1,28 +1,5 @@
-/* GStreamer
- * Copyright (C) 2005 Wim Taymans <wim@fluendo.com>
- * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
- *
- * GstAlsaPassthroughSink.c:
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- */
+#include "gstalsapassthroughsink.h"
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -31,10 +8,7 @@
 #include <getopt.h>
 #include <alsa/asoundlib.h>
 
-#include "gstalsapassthroughsink.h"
-
 #include <gst/audio/gstaudioiec61937.h>
-//#include <gst/gst-i18n-plugin.h>
 #define _
 
 #ifndef ESTRPIPE
@@ -358,30 +332,6 @@ retry:
   rrate = self->rate;
   CHECK (snd_pcm_hw_params_set_rate_near (self->handle, params, &rrate, NULL),
       no_rate);
-
-#ifndef GST_DISABLE_GST_DEBUG
-  /* get and dump some limits */
-  {
-    guint min, max;
-
-    snd_pcm_hw_params_get_buffer_time_min (params, &min, NULL);
-    snd_pcm_hw_params_get_buffer_time_max (params, &max, NULL);
-
-    GST_DEBUG_OBJECT (self, "buffer time %u, min %u, max %u",
-        self->buffer_time, min, max);
-
-    snd_pcm_hw_params_get_period_time_min (params, &min, NULL);
-    snd_pcm_hw_params_get_period_time_max (params, &max, NULL);
-
-    GST_DEBUG_OBJECT (self, "period time %u, min %u, max %u",
-        self->period_time, min, max);
-
-    snd_pcm_hw_params_get_periods_min (params, &min, NULL);
-    snd_pcm_hw_params_get_periods_max (params, &max, NULL);
-
-    GST_DEBUG_OBJECT (self, "periods min %u, max %u", min, max);
-  }
-#endif
 
   /* now try to configure the buffer time and period time, if one
    * of those fail, we fall back to the defaults and emit a warning. */
@@ -871,11 +821,9 @@ prepare_error:
 static GstBuffer *
 gst_alsapassthroughsink_payload (GstAudioBaseSink * sink, GstBuffer * buf)
 {
-  GstAlsaPassthroughSink *alsa;
+  GstAlsaPassthroughSink *self = GST_ALSA_PASSTHROUGH_SINK (sink);
 
-  alsa = GST_ALSA_PASSTHROUGH_SINK (sink);
-
-  if (alsa->passthrough) {
+  if (self->passthrough) {
     GstBuffer *out;
     gint framesize;
     GstMapInfo iinfo, oinfo;

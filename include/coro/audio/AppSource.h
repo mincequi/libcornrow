@@ -16,9 +16,9 @@ public:
     }
 
     AppSource();
-    ~AppSource();
+    virtual ~AppSource();
 
-    AudioConf pushBuffer(const AudioConf& conf, AudioBuffer& buffer);
+    AudioConf process(const AudioConf& conf, AudioBuffer& buffer) override;
 };
 
 } // namespace audio

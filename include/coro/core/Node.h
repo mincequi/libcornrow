@@ -27,6 +27,10 @@ public:
     }
 
     Node* next() const;
+
+    virtual void start() {}
+    virtual void stop() {}
+
     virtual audio::AudioConf process(const audio::AudioConf& conf, audio::AudioBuffer& buffer) { return audio::AudioConf(); }
 
 protected:

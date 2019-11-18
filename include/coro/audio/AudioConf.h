@@ -8,10 +8,15 @@ namespace audio {
 class AudioConf
 {
 public:
-    Codec      codec;
-    SampleRate rate;
-    Channels   channels;
-    bool       isRtpPayloaded = false;
+    Codec       codec = Codec::Invalid;
+    SampleRate  rate = SampleRate::Invalid;
+    ChannelFlags channels = Channels::Invalid;
+    bool        isRtpPayloaded = false;
+
+    int frameSize() const;
+
+    bool operator==(const AudioConf& other) const;
+    bool operator!=(const AudioConf& other) const;
 };
 
 } // namespace audio

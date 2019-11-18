@@ -24,8 +24,11 @@ add_library(${PROJECT_NAME} STATIC
     src/gstavdtpsrc.cpp
     src/gstfdsrc.cpp
 
+    src/audio/AlsaSink.cpp
     src/audio/AppSource.cpp
     src/audio/AudioBuffer.cpp
+    src/audio/AudioConf.cpp
+    src/audio/AudioTypes.cpp
     src/audio/Node.cpp
     src/audio/SbcDecoder.cpp
     src/audio/Source.cpp
@@ -34,6 +37,7 @@ add_library(${PROJECT_NAME} STATIC
     src/core/Buffer.cpp
     src/core/FdSource.cpp
     src/core/Node.cpp
+    src/core/Sink.cpp
     src/loguru/loguru.cpp
     src/rtp/RtpSbcDepay.cpp
     src/rtp/RtpTypes.cpp

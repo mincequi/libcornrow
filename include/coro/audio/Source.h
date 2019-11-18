@@ -14,10 +14,7 @@ public:
     static constexpr std::array<AudioCaps,0> outCaps() { return {}; }
 
     Source();
-    ~Source();
-
-    virtual void start() {}
-    virtual void stop() {}
+    virtual ~Source();
 };
 
 } // namespace audio
