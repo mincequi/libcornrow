@@ -22,6 +22,7 @@ public:
         std::is_base_of_v<Node, Node1> &&
         std::is_base_of_v<Node, Node2> &&
         canIntersect(Node1::outCaps(), Node2::inCaps()), void>
+        //canIntersect(Node1, Node2), void>
     link(Node1& prev, Node2& next) {
         prev.m_next = &next;
     }

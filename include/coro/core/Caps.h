@@ -10,7 +10,6 @@ namespace coro {
 namespace core {
 
 class Caps {
-
 private:
     template<class In, class Out>
     static constexpr bool canIntersect(const In& in, const Out& out);

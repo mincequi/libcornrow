@@ -15,9 +15,6 @@ public:
     Node();
     virtual ~Node();
 
-    static constexpr std::array<AudioCaps,0> inCaps() { return {}; }
-    static constexpr std::array<AudioCaps,0> outCaps() { return {}; }
-
     template<class InCaps, class OutCaps>
     static constexpr bool canIntersect(const InCaps& in, const OutCaps& out);
 

@@ -61,6 +61,7 @@ target_link_libraries(${PROJECT_NAME}
     xxhash
     dl
     sbc
+    ao
 )
 
 target_compile_options(${PROJECT_NAME} PUBLIC ${GSTMM_CFLAGS_OTHER})

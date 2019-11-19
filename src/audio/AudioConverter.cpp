@@ -15,9 +15,9 @@ AudioConverter::~AudioConverter()
 
 AudioConf AudioConverter::process(const AudioConf& conf, AudioBuffer& buffer)
 {
-    auto newBuffer = buffer.acquire(buffer.size()*2);
-    for (int i = 0; i < buffer.size(); i+=size(conf.codec)) {
-        *(newBuffer+i*4) = buffer.data()
+    //auto newBuffer = buffer.acquire(buffer.size()*2);
+    for (size_t i = 0; i < buffer.size(); i+=size(conf.codec)) {
+        //*(newBuffer+i*4) = buffer.data()
     }
 
     auto _conf = conf;

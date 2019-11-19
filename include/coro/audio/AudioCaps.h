@@ -4,6 +4,7 @@
 
 namespace coro {
 namespace audio {
+class Node;
 
 class AudioCaps
 {
@@ -14,10 +15,13 @@ public:
 
     template<class In, class Out>
     static constexpr bool canIntersect(const In& in, const Out& out);
+
+    //static constexpr bool canIntersect(const coro::audio::Node& in, const coro::audio::Node& out);
 };
 
 template<class In, class Out>
 constexpr bool AudioCaps::canIntersect(const In& in, const Out& out)
+//constexpr bool AudioCaps::canIntersect(const audio::Node& in, const audio::Node& out)
 {
     // If in is RTP payloaded, but out does not accept it, we fail
     if (in.codecs.testFlag(Codec::RtpPayload) && !out.codecs.testFlag(Codec::RtpPayload)) {

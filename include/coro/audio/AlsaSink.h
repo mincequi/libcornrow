@@ -3,6 +3,8 @@
 #include <coro/core/Sink.h>
 
 typedef struct _snd_pcm snd_pcm_t;
+struct ao_device;
+struct ao_option;
 
 namespace coro {
 namespace audio {
@@ -25,6 +27,10 @@ public:
 private:
     snd_pcm_t* m_pcm = nullptr;
     AudioConf  m_conf;
+
+    int         m_driverId;
+    ao_device   *m_aoDevice = nullptr;
+    ao_option   *m_aoOptions = nullptr;
 };
 
 } // namespace audio

@@ -1,6 +1,7 @@
 #include "audio/AlsaSink.h"
 
 #include <alsa/asoundlib.h>
+#include <ao/ao.h>
 #include <loguru/loguru.hpp>
 
 namespace coro {
@@ -8,12 +9,48 @@ namespace audio {
 
 AlsaSink::AlsaSink()
 {
+    ao_initialize();
 }
 
 AlsaSink::~AlsaSink()
 {
+    ao_shutdown();
 }
 
+void AlsaSink::start()
+{
+    if (m_aoDevice) {
+        return;
+    }
+
+    ao_sample_format format;
+    memset(&format, 0, sizeof(format));
+
+    format.bits = 16;
+    format.rate = 44100;
+    format.channels = 2;
+    format.byte_format = AO_FMT_NATIVE;
+
+    m_aoDevice = ao_open_live(ao_driver_id("alsa"), &format, m_aoOptions);
+}
+
+void AlsaSink::stop()
+{
+    if (!m_aoDevice) {
+        return;
+    }
+
+    ao_close(m_aoDevice);
+    m_aoDevice = nullptr;
+}
+
+AudioConf AlsaSink::process(const AudioConf& conf, AudioBuffer& buffer)
+{
+    ao_play(m_aoDevice, (char*)buffer.data(), buffer.size());
+    return conf;
+}
+
+#if 0
 void AlsaSink::start()
 {
     if (m_pcm) {
@@ -51,12 +88,15 @@ void AlsaSink::start()
         LOG_F(WARNING, "cannot set channel count (%s)\n", snd_strerror(error));
         return;
     }
+
     /*
     if ((error = snd_pcm_hw_params_set_period_size(m_pcm, hw_params, 512, 0)) < 0) {
         LOG_F(WARNING, "cannot set period size (%s)\n", snd_strerror(error));
         return;
     }
     */
+
+
     if ((error = snd_pcm_hw_params_set_buffer_size(m_pcm, hw_params, 16384)) < 0) {
         LOG_F(WARNING, "cannot set buffer size (%s)\n", snd_strerror(error));
         return;
@@ -108,6 +148,7 @@ AudioConf AlsaSink::process(const AudioConf& conf, AudioBuffer& buffer)
 
     return m_conf;
 }
+#endif
 
 } // namespace audio
 } // namespace coro

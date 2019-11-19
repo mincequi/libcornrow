@@ -14,14 +14,14 @@ int main(int argc, char** argv)
     std::random_device rd;
     std::mt19937 gen;
     std::normal_distribution<> dist;
-    std::uint8_t duration = 10;
+    std::uint16_t duration = 1000;
 
-    std::vector<double> samples(2*44100*duration);
+    std::vector<float> samples(2*44100*duration);
     for (auto & s : samples) {
         s = dist(gen);
     }
 
-    std::vector<TBiquad<double>> biquads;
+    std::vector<TBiquad<float>> biquads;
     biquads.push_back( {2,2,44100} ); // HP
     biquads.push_back( {2,2,44100} ); // LP
     biquads.push_back( {2,1,44100} ); // P1
