@@ -98,10 +98,11 @@ AudioConf AlsaSink::process(const AudioConf& conf, AudioBuffer& buffer)
 
     int error = snd_pcm_writei(m_pcm, buffer.data(), buffer.size()/conf.frameSize());
     if (error < 0) {
+        LOG_F(WARNING, "write to audio interface failed (%s). Recovering...", snd_strerror(error));
         error = snd_pcm_recover(m_pcm, error, 1);
     }
     if (error < 0) {
-        LOG_F(WARNING, "write to audio interface failed (%s)\n", snd_strerror(error));
+        LOG_F(WARNING, "write to audio interface failed (%s)", snd_strerror(error));
         m_conf = AudioConf();
     }
 

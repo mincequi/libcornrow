@@ -28,6 +28,7 @@ add_library(${PROJECT_NAME} STATIC
     src/audio/AppSource.cpp
     src/audio/AudioBuffer.cpp
     src/audio/AudioConf.cpp
+    src/audio/AudioConverter.cpp
     src/audio/AudioTypes.cpp
     src/audio/Node.cpp
     src/audio/SbcDecoder.cpp

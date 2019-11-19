@@ -12,8 +12,8 @@ namespace audio {
 class Node : public core::Node
 {
 public:
-    //Node();
-    //virtual ~Node();
+    Node();
+    virtual ~Node();
 
     static constexpr std::array<AudioCaps,0> inCaps() { return {}; }
     static constexpr std::array<AudioCaps,0> outCaps() { return {}; }

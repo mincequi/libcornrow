@@ -149,4 +149,4 @@ void Biquad::process(float* const _in, float* const _out, std::uint32_t frameCou
     }
 }
 
-} // namespace GstDsp
+} // namespace coro

@@ -66,9 +66,9 @@ AudioConf SbcDecoder::process(const AudioConf& conf, AudioBuffer& buffer)
         size_t readBytes = 0;
         size_t writtenBytes = 0;
         while (totalSize > readBytes) {
-            size_t writtenSize;
+            size_t written;
             res = sbc_decode(m_sbc, buffer.data()+payloadOffset+readBytes, buffer.size(),
-                             newBuffer+writtenBytes, buffer.size(), &writtenSize);
+                             newBuffer+writtenBytes, buffer.size(), &written);
             LOG_IF_F(WARNING, res == -1, "Data stream too short");
             LOG_IF_F(WARNING, res == -2, "Sync byte incorrect");
             LOG_IF_F(WARNING, res == -3, "CRC8 incorrect");
@@ -78,7 +78,7 @@ AudioConf SbcDecoder::process(const AudioConf& conf, AudioBuffer& buffer)
             }
 
             readBytes += res;
-            writtenBytes += writtenSize;
+            writtenBytes += written;
         }
 
         buffer.commit(writtenBytes);

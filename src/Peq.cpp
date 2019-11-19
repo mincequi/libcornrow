@@ -5,6 +5,11 @@
 namespace coro
 {
 
+Peq::Peq()
+    : Gst::AudioFilter(nullptr)
+{
+}
+
 Peq::Peq(GstAudioFilter *obj)
     : Glib::ObjectBase(typeid(Peq)),
       Gst::AudioFilter(obj)
@@ -132,6 +137,19 @@ void Peq::process(GstBuffer* buf)
     m_mutex.unlock();
 
     gst_buffer_unmap(buf, &map);
+}
+
+audio::AudioConf Peq::process(const audio::AudioConf& conf, audio::AudioBuffer& buffer)
+{
+    uint frameCount = buffer.size()/conf.frameSize();
+
+    m_mutex.lock();
+    for (auto& biquad : m_biquads) {
+        biquad.process((float*)buffer.data(), (float*)buffer.data(), frameCount, audio::toInt(conf.channels), audio::toInt(conf.channels));
+    }
+    m_mutex.unlock();
+
+    return conf;
 }
 
 } // namespace GstDsp
