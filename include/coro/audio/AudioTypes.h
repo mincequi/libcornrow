@@ -49,7 +49,11 @@ enum class Channels : uint8_t
     Stereo  = 0x02,
     Lfe     = 0x04,
     RearStereo = 0x08,
-    Quad    = Stereo | RearStereo
+    RearCenter = 0x10,
+    Quad    = Stereo | RearStereo,
+    Surround50 = Quad | Center,
+    Surround51 = Surround50 | Lfe,
+
 };
 using ChannelFlags = core::Flags<Channels>;
 DECLARE_OPERATORS_FOR_FLAGS(ChannelFlags)

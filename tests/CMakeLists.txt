@@ -8,14 +8,10 @@ endmacro()
 gstdsp_tests(
     allovertest
     alsautiltest
-#    biquadtest
+    biquadtest
     corotest
     crossovertest
     loudnesstest
     passthroughtest
     peqtest
-)
-
-add_executable(biquadtest
-    biquadtest.cpp
 )

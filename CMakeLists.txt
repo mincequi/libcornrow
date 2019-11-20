@@ -33,6 +33,7 @@ add_library(${PROJECT_NAME} STATIC
     src/audio/Node.cpp
     src/audio/SbcDecoder.cpp
     src/audio/Source.cpp
+    src/audio/TBiquad.cpp
     src/core/AppSink.cpp
     src/core/AppSource.cpp
     src/core/Buffer.cpp
