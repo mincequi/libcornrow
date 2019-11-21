@@ -16,7 +16,7 @@ template <typename T, typename AccT>
 class TBiquad
 {
 public:
-    TBiquad(std::uint8_t channelCount, std::uint8_t cascadeCount, std::uint32_t rate = 44100);
+    TBiquad(std::uint8_t channelCount = 1, std::uint8_t cascadeCount = 1, std::uint32_t rate = 44100);
 
     void setRate(std::uint32_t rate);
 
@@ -24,14 +24,14 @@ public:
 
     void process(T* const _in, T* const _out, std::uint32_t frameCount, std::uint8_t inSpacing, std::uint8_t outSpacing);
 
-    T process(T in);
+    //T process(T in);
 
 protected:
     /*
     using AccT = typename std::conditional<std::is_floating_point<T>::value, double,
         typename std::conditional<std::is_same<T, int32_t>::value, int64_t,
         int32_t>::type>::type;
-        */
+    */
 
     bool update();
     static AccT scaleUp(double);
@@ -50,14 +50,7 @@ protected:
     };
     std::vector<std::vector<History>> m_history;
 
-    struct IHistory {
-        int64_t x1 = 0.0, x2 = 0.0;
-        int64_t y1 = 0.0, y2 = 0.0;
-        int64_t stateError = 0.0;
-    };
-    std::vector<std::vector<IHistory>> m_iHistory;
-
-    History m_pHistory;
+    //History m_pHistory;
 };
 
 } // namespace coro

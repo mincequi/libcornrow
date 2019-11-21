@@ -9,8 +9,7 @@ namespace coro
 template <typename T, typename U>
 TBiquad<T,U>::TBiquad(std::uint8_t channelCount, std::uint8_t cascadeCount, std::uint32_t rate)
     : m_rate(rate),
-      m_history(cascadeCount, std::vector<History>(channelCount)),
-      m_iHistory(cascadeCount, std::vector<IHistory>(channelCount))
+      m_history(cascadeCount, std::vector<History>(channelCount))
 {
 }
 
@@ -51,19 +50,22 @@ void TBiquad<T,U>::process(T* const _in, T* const _out, std::uint32_t frameCount
         // Ch1|Ch2|Ch3|Ch4 || Ch1|Ch2|Ch3|Ch4 || Ch1|Ch2|Ch3|Ch4    -> 4 Channels, 3 frames -> 12 samples
         for (std::uint32_t j = 0; j < frameCount; ++j) {
             for (auto& channel : m_history.at(i)) {
-                double acc = 0.0;
+
+                U acc = 0.0;
                 acc += m_coeffs.b0**in;
                 acc += m_coeffs.b1*channel.x1;
                 acc += m_coeffs.b2*channel.x2;
                 acc -= m_coeffs.a1*channel.y1;
                 acc -= m_coeffs.a2*channel.y2;
 
-                channel.x2 = channel.x1;
-                channel.x1 = *in;
+                scaleDown(acc);
+
                 channel.y2 = channel.y1;
                 channel.y1 = acc;
+                channel.x2 = channel.x1;
+                channel.x1 = *in;
 
-                *out = channel.y1;
+                *out = acc;
 
                 ++in;
                 ++out;
@@ -75,51 +77,6 @@ void TBiquad<T,U>::process(T* const _in, T* const _out, std::uint32_t frameCount
         inSpacing = outSpacing;
     }
 }
-
-/*
-template <> template <typename U>
-void TBiquad<int16_t,U>::process(int16_t* const _in, int16_t* const _out, std::uint32_t frameCount, std::uint8_t inSpacing, std::uint8_t outSpacing)
-{
-    // Inner history size reflects channels (and spacing).
-    assert(m_history.front().size() == inSpacing);
-
-    // Outer history are the cascades.
-    for (std::size_t i = 0; i < m_iHistory.size(); ++i) {
-        // After first run (or first cascade), we process the out data instead of input data.
-        int16_t* in = (i == 0) ? _in : _out;
-        int16_t* out = _out;
-
-        // Ch1|Ch2|Ch3|Ch4 || Ch1|Ch2|Ch3|Ch4 || Ch1|Ch2|Ch3|Ch4    -> 4 Channels, 3 frames -> 12 samples
-        // A frame is a group of samples containing all channels.
-        for (std::uint32_t j = 0; j < frameCount; ++j) {
-            for (auto& channel : m_iHistory.at(i)) {
-
-                U acc = m_coeffs.b0 * *in
-                        + m_coeffs.b1 * channel.x1
-                        + m_coeffs.b2 * channel.x2
-                        - m_coeffs.a1 * channel.y1
-                        - m_coeffs.a2 * channel.y2;
-                acc >>= 14;
-
-                channel.y2 = channel.y1;
-                channel.y1 = acc;
-
-                channel.x2 = channel.x1;
-                channel.x1 = *in;
-
-                *out = acc;
-
-                ++in;
-                ++out;
-            }
-            in += inSpacing-m_iHistory.at(i).size();
-            out += outSpacing-m_iHistory.at(i).size();
-        }
-        // After first run, we operate on out instead of in. So, we have to use outSpacing for inSpacing
-        inSpacing = outSpacing;
-    }
-}
-*/
 
 template <typename T, typename U>
 bool TBiquad<T,U>::update()
@@ -213,7 +170,7 @@ bool TBiquad<T,U>::update()
 
     return true;
 }
-
+/*
 template <typename T, typename U>
 T TBiquad<T,U>::process(T in)
 {
@@ -233,11 +190,12 @@ T TBiquad<T,U>::process(T in)
 
     return acc;
 }
+*/
 
 template <>
 int32_t TBiquad<int16_t, int32_t>::scaleUp(double in)
 {
-    return int32_t(/*0.5*/ + in * (int32_t(1) << 14));
+    return int32_t(0.5 + in * (int32_t(1) << 14));
 }
 
 template <>
@@ -268,6 +226,5 @@ template<typename T, typename U>
 void TBiquad<T,U>::scaleDown(U& in)
 {
 }
-
 
 } // namespace coro

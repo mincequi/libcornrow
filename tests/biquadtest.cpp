@@ -32,10 +32,12 @@ void runTest(std::string filename, std::uint16_t seconds = 100)
     }
 
     std::vector<TBiquad<T,U>> biquads;
-    biquads.push_back( {1,1,44100} ); // HP
-    biquads.push_back( {1,1,44100} ); // LP
+    biquads.push_back( {2,1,44100} ); // HP
+    biquads.push_back( {2,1,44100} ); // LP
+    biquads.push_back( {2,1,44100} ); // LP
     biquads[0].setFilter( { coro::FilterType::LowPass, 10000.0, 0.0, 0.707 } );
     biquads[1].setFilter( { coro::FilterType::HighPass, 100.0, 0.0, 0.707 } );
+    biquads[1].setFilter( { coro::FilterType::Peak, 1000.0, -12.0, 1.414 } );
 
     auto end = std::chrono::steady_clock::now();
     std::chrono::duration<double> diff = end-begin;
@@ -44,10 +46,10 @@ void runTest(std::string filename, std::uint16_t seconds = 100)
     // Process
     begin = std::chrono::steady_clock::now();
     for (auto & b : biquads) {
-        for (auto& s : samples) {
-            s = b.process(s);
-            //b.process(samples.data(), samples.data(), samples.size()/2, 2, 2);
-        }
+        b.process(samples.data(), samples.data(), samples.size()/2, 2, 2);
+        //for (auto& s : samples) {
+        //    s = b.process(s);
+        //}
     }
 
     end = std::chrono::steady_clock::now();
