@@ -9,7 +9,8 @@ namespace coro
 template <typename T>
 TBiquad<T>::TBiquad(std::uint8_t channelCount, std::uint8_t cascadeCount, std::uint32_t rate)
     : m_rate(rate),
-      m_history(cascadeCount, std::vector<History>(channelCount))
+      m_history(cascadeCount, std::vector<History>(channelCount)),
+      m_iHistory(cascadeCount, std::vector<IHistory>(channelCount))
 {
 }
 
@@ -50,7 +51,7 @@ void TBiquad<T>::process(T* const _in, T* const _out, std::uint32_t frameCount, 
         // Ch1|Ch2|Ch3|Ch4 || Ch1|Ch2|Ch3|Ch4 || Ch1|Ch2|Ch3|Ch4    -> 4 Channels, 3 frames -> 12 samples
         for (std::uint32_t j = 0; j < frameCount; ++j) {
             for (auto& channel : m_history.at(i)) {
-                T acc = 0.0;
+                double acc = 0.0;
                 acc += m_coeffs.b0**in;
                 acc += m_coeffs.b1*channel.x1;
                 acc += m_coeffs.b2*channel.x2;
@@ -82,7 +83,7 @@ void TBiquad<int16_t>::process(int16_t* const _in, int16_t* const _out, std::uin
     assert(m_history.front().size() == inSpacing);
 
     // Outer history are the cascades.
-    for (std::size_t i = 0; i < m_history.size(); ++i) {
+    for (std::size_t i = 0; i < m_iHistory.size(); ++i) {
         // After first run (or first cascade), we process the out data instead of input data.
         int16_t* in = (i == 0) ? _in : _out;
         int16_t* out = _out;
@@ -90,36 +91,28 @@ void TBiquad<int16_t>::process(int16_t* const _in, int16_t* const _out, std::uin
         // Ch1|Ch2|Ch3|Ch4 || Ch1|Ch2|Ch3|Ch4 || Ch1|Ch2|Ch3|Ch4    -> 4 Channels, 3 frames -> 12 samples
         // A frame is a group of samples containing all channels.
         for (std::uint32_t j = 0; j < frameCount; ++j) {
-            for (auto& channel : m_history.at(i)) {
-                int32_t acc = 0;
-                acc += m_iCoeffs.b0**in;
-                acc += m_iCoeffs.b1*channel.x1;
-                acc += m_iCoeffs.b2*channel.x2;
-                acc -= m_iCoeffs.a1*channel.y1;
-                acc -= m_iCoeffs.a2*channel.y2;
+            for (auto& channel : m_iHistory.at(i)) {
 
-                /*
-                if (acc > 0x1FFFFFFF) {
-                    acc = 0x1FFFFFFF;
-                    LOG_F(INFO, "Clipping");
-                } else if (acc < -0x1FFFFFFF) {
-                    acc = -0x1FFFFFFF;
-                    LOG_F(INFO, "Clipping");
-                }
-                */
+                AccT acc = m_coeffs.b0 * *in
+                        + m_coeffs.b1 * channel.x1
+                        + m_coeffs.b2 * channel.x2
+                        - m_coeffs.a1 * channel.y1
+                        - m_coeffs.a2 * channel.y2;
+                acc >>= 14;
+
+                channel.y2 = channel.y1;
+                channel.y1 = acc;
 
                 channel.x2 = channel.x1;
                 channel.x1 = *in;
-                channel.y2 = channel.y1;
-                channel.y1 = (int16_t)(acc>>14);
 
-                *out = channel.y1;
+                *out = acc;
 
                 ++in;
                 ++out;
             }
-            in += inSpacing-m_history.at(i).size();
-            out += outSpacing-m_history.at(i).size();
+            in += inSpacing-m_iHistory.at(i).size();
+            out += outSpacing-m_iHistory.at(i).size();
         }
         // After first run, we operate on out instead of in. So, we have to use outSpacing for inSpacing
         inSpacing = outSpacing;
@@ -129,45 +122,51 @@ void TBiquad<int16_t>::process(int16_t* const _in, int16_t* const _out, std::uin
 template <typename T>
 bool TBiquad<T>::update()
 {
+    double b0 = 0.0;
+    double b1 = 0.0;
+    double b2 = 0.0;
+    double a0 = 0.0;
+    double a1 = 0.0;
+    double a2 = 0.0;
+
     switch (m_filter.type) {
     case FilterType::Peak: {
         double A = pow(10, m_filter.g/40.0);
         double w0 = 2*M_PI*m_filter.f/m_rate;
         double alpha = sin(w0)*0.5/m_filter.q;
-
         double alpha1 = alpha*A;
         double alpha2 = alpha/A;
-        double a0     = 1.0 + alpha2;
 
-        m_coeffs.b0 = ( 1.0 + alpha1 ) / a0;
-        m_coeffs.b1 = (-2.0 * cos(w0)) / a0;
-        m_coeffs.b2 = ( 1.0 - alpha1 ) / a0;
-        m_coeffs.a1 = m_coeffs.b1;
-        m_coeffs.a2 = ( 1.0 - alpha2 ) / a0;
+        a0 = 1.0 + alpha2;
+        b0 = ( 1.0 + alpha1 ) / a0;
+        b1 = (-2.0 * cos(w0)) / a0;
+        b2 = ( 1.0 - alpha1 ) / a0;
+        a1 = b1;
+        a2 = ( 1.0 - alpha2 ) / a0;
         break;
     }
     case FilterType::LowPass: {
         double w0 = 2*M_PI*m_filter.f/m_rate;
         double alpha = sin(w0)*0.5/m_filter.q;
-        double a0    = 1.0 + alpha;
 
-        m_coeffs.b1 = ( 1.0 - cos(w0) ) / a0;
-        m_coeffs.b0 = m_coeffs.b1 * 0.5;
-        m_coeffs.b2 = m_coeffs.b0;
-        m_coeffs.a1 = (-2.0 * cos(w0)) / a0;
-        m_coeffs.a2 = ( 1.0 - alpha  ) / a0;
+        a0 = 1.0 + alpha;
+        b1 = ( 1.0 - cos(w0) ) / a0;
+        b0 = b1 * 0.5;
+        b2 = b0;
+        a1 = (-2.0 * cos(w0)) / a0;
+        a2 = ( 1.0 - alpha  ) / a0;
         break;
     }
     case FilterType::HighPass: {
         double w0 = 2*M_PI*m_filter.f/m_rate;
         double alpha = sin(w0)*0.5/m_filter.q;
-        double a0    = 1.0 + alpha;
 
-        m_coeffs.b1 = -( 1.0 + cos(w0) ) / a0;
-        m_coeffs.b0 = m_coeffs.b1 * -0.5;
-        m_coeffs.b2 = m_coeffs.b0;
-        m_coeffs.a1 = (-2.0 * cos(w0)) / a0;
-        m_coeffs.a2 = ( 1.0 - alpha  ) / a0;
+        a0    = 1.0 + alpha;
+        b1 = -( 1.0 + cos(w0) ) / a0;
+        b0 = b1 * -0.5;
+        b2 = b0;
+        a1 = (-2.0 * cos(w0)) / a0;
+        a2 = ( 1.0 - alpha  ) / a0;
         break;
     }
     case FilterType::LowShelf: {
@@ -176,13 +175,13 @@ bool TBiquad<T>::update()
         double cosW0 = cos(w0);
         double alpha = sin(w0)*0.5/m_filter.q;
         double sqrtAalpha2 = 2.0*sqrt(A)*alpha;
-        double a0 = (A+1) + (A-1)*cosW0 + sqrtAalpha2;
 
-        m_coeffs.b0 =    A*( (A+1) - (A-1)*cosW0 + sqrtAalpha2) / a0;
-        m_coeffs.b1 =  2*A*( (A-1) - (A+1)*cosW0              ) / a0;
-        m_coeffs.b2 =    A*( (A+1) - (A-1)*cosW0 - sqrtAalpha2) / a0;
-        m_coeffs.a1 =   -2*( (A-1) + (A+1)*cosW0              ) / a0;
-        m_coeffs.a2 =      ( (A+1) + (A-1)*cosW0 - sqrtAalpha2) / a0;
+        a0 = (A+1) + (A-1)*cosW0 + sqrtAalpha2;
+        b0 =    A*( (A+1) - (A-1)*cosW0 + sqrtAalpha2) / a0;
+        b1 =  2*A*( (A-1) - (A+1)*cosW0              ) / a0;
+        b2 =    A*( (A+1) - (A-1)*cosW0 - sqrtAalpha2) / a0;
+        a1 =   -2*( (A-1) + (A+1)*cosW0              ) / a0;
+        a2 =      ( (A+1) + (A-1)*cosW0 - sqrtAalpha2) / a0;
         break;
     }
     case FilterType::HighShelf: {
@@ -191,26 +190,81 @@ bool TBiquad<T>::update()
         double cosW0 = cos(w0);
         double alpha = sin(w0)*0.5/m_filter.q;
         double sqrtAalpha2 = 2.0*sqrt(A)*alpha;
-        double a0 = (A+1) - (A-1)*cosW0 + sqrtAalpha2;
 
-        m_coeffs.b0 =    A*( (A+1) + (A-1)*cosW0 + sqrtAalpha2) / a0;
-        m_coeffs.b1 = -2*A*( (A-1) + (A+1)*cosW0              ) / a0;
-        m_coeffs.b2 =    A*( (A+1) + (A-1)*cosW0 - sqrtAalpha2) / a0;
-        m_coeffs.a1 =    2*( (A-1) - (A+1)*cosW0              ) / a0;
-        m_coeffs.a2 =      ( (A+1) - (A-1)*cosW0 - sqrtAalpha2) / a0;
+        a0 = (A+1) - (A-1)*cosW0 + sqrtAalpha2;
+        b0 =    A*( (A+1) + (A-1)*cosW0 + sqrtAalpha2) / a0;
+        b1 = -2*A*( (A-1) + (A+1)*cosW0              ) / a0;
+        b2 =    A*( (A+1) + (A-1)*cosW0 - sqrtAalpha2) / a0;
+        a1 =    2*( (A-1) - (A+1)*cosW0              ) / a0;
+        a2 =      ( (A+1) - (A-1)*cosW0 - sqrtAalpha2) / a0;
         break;
     }
     case FilterType::Invalid:
         return false;
     }
 
-    m_iCoeffs.b0 = 16348.0*m_coeffs.b0;
-    m_iCoeffs.b1 = 16348.0*m_coeffs.b1;
-    m_iCoeffs.b2 = 16348.0*m_coeffs.b2;
-    m_iCoeffs.a1 = 16348.0*m_coeffs.a1;
-    m_iCoeffs.a2 = 16348.0*m_coeffs.a2;
+    m_coeffs.b0 = scaleUp(b0);
+    m_coeffs.b1 = scaleUp(b1);
+    m_coeffs.b2 = scaleUp(b2);
+    m_coeffs.a1 = scaleUp(a1);
+    m_coeffs.a2 = scaleUp(a2);
 
     return true;
+}
+
+template <typename T>
+T TBiquad<T>::process(T in)
+{
+    AccT acc = m_coeffs.b0 * in
+            + m_coeffs.b1 * m_pHistory.x1
+            + m_coeffs.b2 * m_pHistory.x2
+            - m_coeffs.a1 * m_pHistory.y1
+            - m_coeffs.a2 * m_pHistory.y2;
+
+    scaleDown(acc);
+
+    m_pHistory.y2 = m_pHistory.y1;
+    m_pHistory.y1 = acc;
+
+    m_pHistory.x2 = m_pHistory.x1;
+    m_pHistory.x1 = in;
+
+    return acc;
+}
+
+template <>
+TBiquad<int16_t>::AccT TBiquad<int16_t>::scaleUp(double in)
+{
+    return TBiquad::AccT(/*0.5*/ + in * (int32_t(1) << 14));
+}
+
+template <>
+TBiquad<int32_t>::AccT TBiquad<int32_t>::scaleUp(double in)
+{
+    return TBiquad::AccT(0.5 + in * (int64_t(1) << 32));
+}
+
+template <typename T>
+typename TBiquad<T>::AccT TBiquad<T>::scaleUp(double in)
+{
+    return in;
+}
+
+template <>
+void TBiquad<int16_t>::scaleDown(AccT& in)
+{
+    in >>= 14;
+}
+
+template <>
+void TBiquad<int32_t>::scaleDown(AccT& in)
+{
+    in >>= 32;
+}
+
+template <typename T>
+void TBiquad<T>::scaleDown(AccT& in)
+{
 }
 
 } // namespace coro
