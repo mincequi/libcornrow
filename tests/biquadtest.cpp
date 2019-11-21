@@ -37,7 +37,7 @@ void runTest(std::string filename, std::uint16_t seconds = 100)
     biquads.push_back( {2,1,44100} ); // LP
     biquads[0].setFilter( { coro::FilterType::LowPass, 10000.0, 0.0, 0.707 } );
     biquads[1].setFilter( { coro::FilterType::HighPass, 100.0, 0.0, 0.707 } );
-    biquads[1].setFilter( { coro::FilterType::Peak, 1000.0, -12.0, 1.414 } );
+    biquads[2].setFilter( { coro::FilterType::Peak, 1000.0, -12.0, 1.414 } );
 
     auto end = std::chrono::steady_clock::now();
     std::chrono::duration<double> diff = end-begin;
@@ -70,17 +70,20 @@ void runTest(std::string filename, std::uint16_t seconds = 100)
 int main()
 {
     // Init
-    std::cout << std::endl << "#### Double test ####" << std::endl;
-    runTest<double,double>("testDouble.raw", 100);
-
     std::cout << std::endl << "#### Float/Float test ####" << std::endl;
     runTest<float,float>("testFloatFloat.raw", 100);
 
     std::cout << std::endl << "#### Float/Double test ####" << std::endl;
     runTest<float,double>("testFloatDouble.raw", 100);
 
+    std::cout << std::endl << "#### Double test ####" << std::endl;
+    runTest<double,double>("testDouble.raw", 100);
+
     std::cout << std::endl << "#### Int16/Int32 test ####" << std::endl;
     runTest<int16_t,int32_t>("testInt16Int32.raw", 100);
+
+    std::cout << std::endl << "#### Int16/Int64 test ####" << std::endl;
+    runTest<int16_t,int64_t>("testInt16Int64.raw", 100);
 
     std::cout << std::endl << "#### Int16/Float test ####" << std::endl;
     runTest<int16_t,float>("testInt16Float.raw", 100);
@@ -88,8 +91,8 @@ int main()
     std::cout << std::endl << "#### Int16/Double test ####" << std::endl;
     runTest<int16_t,double>("testInt16Double.raw", 100);
 
-    //std::cout << std::endl << "#### Int32 test ####" << std::endl;
-    //runTest<int32_t>("testInt32.raw", 100);
+    std::cout << std::endl << "#### Int32/Int64 test ####" << std::endl;
+    runTest<int32_t,int64_t>("testInt32Int64.raw", 100);
 
     return 0;
 }

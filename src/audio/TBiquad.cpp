@@ -1,7 +1,6 @@
 #include "TBiquad.h"
 
 #include <assert.h>
-#include <loguru/loguru.hpp>
 
 namespace coro
 {
@@ -199,6 +198,12 @@ int32_t TBiquad<int16_t, int32_t>::scaleUp(double in)
 }
 
 template <>
+int64_t TBiquad<int16_t, int64_t>::scaleUp(double in)
+{
+    return int64_t(0.5 + in * (int64_t(1) << 32));
+}
+
+template <>
 int64_t TBiquad<int32_t, int64_t>::scaleUp(double in)
 {
     return int64_t(0.5 + in * (int64_t(1) << 32));
@@ -211,15 +216,21 @@ U TBiquad<T, U>::scaleUp(double in)
 }
 
 template<>
-void TBiquad<int32_t, int64_t>::scaleDown(int64_t& in)
+void TBiquad<int16_t, int32_t>::scaleDown(int32_t& in)
+{
+    in >>= 14;
+}
+
+template<>
+void TBiquad<int16_t, int64_t>::scaleDown(int64_t& in)
 {
     in >>= 32;
 }
 
 template<>
-void TBiquad<int16_t, int32_t>::scaleDown(int32_t& in)
+void TBiquad<int32_t, int64_t>::scaleDown(int64_t& in)
 {
-    in >>= 14;
+    in >>= 32;
 }
 
 template<typename T, typename U>
