@@ -12,7 +12,7 @@ struct TBiquadCoeffs
     CoeffT a1 = 0.0, a2 = 0.0;
 };
 
-template <typename T>
+template <typename T, typename AccT>
 class TBiquad
 {
 public:
@@ -27,9 +27,11 @@ public:
     T process(T in);
 
 protected:
+    /*
     using AccT = typename std::conditional<std::is_floating_point<T>::value, double,
         typename std::conditional<std::is_same<T, int32_t>::value, int64_t,
         int32_t>::type>::type;
+        */
 
     bool update();
     static AccT scaleUp(double);
@@ -60,7 +62,10 @@ protected:
 
 } // namespace coro
 
-template class coro::TBiquad<float>;
-template class coro::TBiquad<double>;
-template class coro::TBiquad<int16_t>;
-template class coro::TBiquad<int32_t>;
+template class coro::TBiquad<float, float>;
+template class coro::TBiquad<float, double>;
+template class coro::TBiquad<double, double>;
+template class coro::TBiquad<int16_t, int32_t>;
+template class coro::TBiquad<int16_t, float>;
+template class coro::TBiquad<int16_t, double>;
+template class coro::TBiquad<int32_t, int64_t>;

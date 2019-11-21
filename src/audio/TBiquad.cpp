@@ -6,16 +6,16 @@
 namespace coro
 {
 
-template <typename T>
-TBiquad<T>::TBiquad(std::uint8_t channelCount, std::uint8_t cascadeCount, std::uint32_t rate)
+template <typename T, typename U>
+TBiquad<T,U>::TBiquad(std::uint8_t channelCount, std::uint8_t cascadeCount, std::uint32_t rate)
     : m_rate(rate),
       m_history(cascadeCount, std::vector<History>(channelCount)),
       m_iHistory(cascadeCount, std::vector<IHistory>(channelCount))
 {
 }
 
-template <typename T>
-void TBiquad<T>::setRate(std::uint32_t rate)
+template <typename T, typename U>
+void TBiquad<T,U>::setRate(std::uint32_t rate)
 {
     if (m_rate == rate) {
         return;
@@ -24,8 +24,8 @@ void TBiquad<T>::setRate(std::uint32_t rate)
     update();
 }
 
-template <typename T>
-void TBiquad<T>::setFilter(const Filter& filter)
+template <typename T, typename U>
+void TBiquad<T,U>::setFilter(const Filter& filter)
 {
     if (m_filter == filter) {
         return;
@@ -34,8 +34,8 @@ void TBiquad<T>::setFilter(const Filter& filter)
     update();
 }
 
-template <typename T>
-void TBiquad<T>::process(T* const _in, T* const _out, std::uint32_t frameCount, std::uint8_t inSpacing, std::uint8_t outSpacing)
+template <typename T, typename U>
+void TBiquad<T,U>::process(T* const _in, T* const _out, std::uint32_t frameCount, std::uint8_t inSpacing, std::uint8_t outSpacing)
 {
     // Inner history size reflects channels (and spacing).
     assert(m_history.front().size() == inSpacing);
@@ -76,8 +76,9 @@ void TBiquad<T>::process(T* const _in, T* const _out, std::uint32_t frameCount, 
     }
 }
 
-template <>
-void TBiquad<int16_t>::process(int16_t* const _in, int16_t* const _out, std::uint32_t frameCount, std::uint8_t inSpacing, std::uint8_t outSpacing)
+/*
+template <> template <typename U>
+void TBiquad<int16_t,U>::process(int16_t* const _in, int16_t* const _out, std::uint32_t frameCount, std::uint8_t inSpacing, std::uint8_t outSpacing)
 {
     // Inner history size reflects channels (and spacing).
     assert(m_history.front().size() == inSpacing);
@@ -93,7 +94,7 @@ void TBiquad<int16_t>::process(int16_t* const _in, int16_t* const _out, std::uin
         for (std::uint32_t j = 0; j < frameCount; ++j) {
             for (auto& channel : m_iHistory.at(i)) {
 
-                AccT acc = m_coeffs.b0 * *in
+                U acc = m_coeffs.b0 * *in
                         + m_coeffs.b1 * channel.x1
                         + m_coeffs.b2 * channel.x2
                         - m_coeffs.a1 * channel.y1
@@ -118,9 +119,10 @@ void TBiquad<int16_t>::process(int16_t* const _in, int16_t* const _out, std::uin
         inSpacing = outSpacing;
     }
 }
+*/
 
-template <typename T>
-bool TBiquad<T>::update()
+template <typename T, typename U>
+bool TBiquad<T,U>::update()
 {
     double b0 = 0.0;
     double b1 = 0.0;
@@ -212,10 +214,10 @@ bool TBiquad<T>::update()
     return true;
 }
 
-template <typename T>
-T TBiquad<T>::process(T in)
+template <typename T, typename U>
+T TBiquad<T,U>::process(T in)
 {
-    AccT acc = m_coeffs.b0 * in
+    U acc = m_coeffs.b0 * in
             + m_coeffs.b1 * m_pHistory.x1
             + m_coeffs.b2 * m_pHistory.x2
             - m_coeffs.a1 * m_pHistory.y1
@@ -233,38 +235,39 @@ T TBiquad<T>::process(T in)
 }
 
 template <>
-TBiquad<int16_t>::AccT TBiquad<int16_t>::scaleUp(double in)
+int32_t TBiquad<int16_t, int32_t>::scaleUp(double in)
 {
-    return TBiquad::AccT(/*0.5*/ + in * (int32_t(1) << 14));
+    return int32_t(/*0.5*/ + in * (int32_t(1) << 14));
 }
 
 template <>
-TBiquad<int32_t>::AccT TBiquad<int32_t>::scaleUp(double in)
+int64_t TBiquad<int32_t, int64_t>::scaleUp(double in)
 {
-    return TBiquad::AccT(0.5 + in * (int64_t(1) << 32));
+    return int64_t(0.5 + in * (int64_t(1) << 32));
 }
 
-template <typename T>
-typename TBiquad<T>::AccT TBiquad<T>::scaleUp(double in)
+template <typename T, typename U>
+U TBiquad<T, U>::scaleUp(double in)
 {
     return in;
 }
 
-template <>
-void TBiquad<int16_t>::scaleDown(AccT& in)
-{
-    in >>= 14;
-}
-
-template <>
-void TBiquad<int32_t>::scaleDown(AccT& in)
+template<>
+void TBiquad<int32_t, int64_t>::scaleDown(int64_t& in)
 {
     in >>= 32;
 }
 
-template <typename T>
-void TBiquad<T>::scaleDown(AccT& in)
+template<>
+void TBiquad<int16_t, int32_t>::scaleDown(int32_t& in)
+{
+    in >>= 14;
+}
+
+template<typename T, typename U>
+void TBiquad<T,U>::scaleDown(U& in)
 {
 }
+
 
 } // namespace coro
