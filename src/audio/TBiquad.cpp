@@ -169,27 +169,6 @@ bool TBiquad<T,U>::update()
 
     return true;
 }
-/*
-template <typename T, typename U>
-T TBiquad<T,U>::process(T in)
-{
-    U acc = m_coeffs.b0 * in
-            + m_coeffs.b1 * m_pHistory.x1
-            + m_coeffs.b2 * m_pHistory.x2
-            - m_coeffs.a1 * m_pHistory.y1
-            - m_coeffs.a2 * m_pHistory.y2;
-
-    scaleDown(acc);
-
-    m_pHistory.y2 = m_pHistory.y1;
-    m_pHistory.y1 = acc;
-
-    m_pHistory.x2 = m_pHistory.x1;
-    m_pHistory.x1 = in;
-
-    return acc;
-}
-*/
 
 template <>
 int32_t TBiquad<int16_t, int32_t>::scaleUp(double in)
@@ -234,8 +213,20 @@ void TBiquad<int32_t, int64_t>::scaleDown(int64_t& in)
 }
 
 template<typename T, typename U>
-void TBiquad<T,U>::scaleDown(U& in)
+void TBiquad<T,U>::scaleDown(U&)
 {
+}
+
+template<>
+float TBiquad<int16_t, float>::convert(int16_t& in)
+{
+    return in/32767.0f;
+}
+
+template<typename InT, typename AccT>
+AccT TBiquad<InT,AccT>::convert(InT& in)
+{
+    return in;
 }
 
 } // namespace coro

@@ -4,6 +4,7 @@
 #include <gstreamermm/private/audiofilter_p.h>
 #include <coro/audio/Node.h>
 #include "Biquad.h"
+#include "TBiquad.h"
 
 namespace coro
 {
@@ -23,11 +24,15 @@ public:
     static void class_init(Gst::ElementClass<Peq> *klass);
 
     static constexpr std::array<audio::AudioCaps,1> inCaps() {
-        return {{ { audio::Codec::RawFloat32 } }};
+        return {{ { /*audio::Codec::RawFloat32 |*/ audio::Codec::RawInt16,
+                    audio::SampleRate::Rate44100 | audio::SampleRate::Rate48000,
+                    audio::Channels::Stereo } }};
     }
 
     static constexpr std::array<audio::AudioCaps,1> outCaps() {
-        return {{ { audio::Codec::RawFloat32 } }};
+        return {{ { /*audio::Codec::RawFloat32 |*/ audio::Codec::RawInt16,
+                    audio::SampleRate::Rate44100 | audio::SampleRate::Rate48000,
+                    audio::Channels::Stereo } }};
     }
 
     void setVolume(float volume);
@@ -47,6 +52,7 @@ private:
     Gst::AudioInfo      m_audioInfo;
     float               m_volume = 1.0;
     std::deque<Biquad>  m_biquads;
+    std::deque<TBiquad<int16_t, float>> m_tBiquads;
 
     std::mutex m_mutex;
 };
