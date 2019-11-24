@@ -24,6 +24,7 @@ public:
         int32_t>::type>::type;
     */
 
+    bool isValid() const;
     bool update();
     static AccT scaleUp(double);
     static void scaleDown(AccT&);

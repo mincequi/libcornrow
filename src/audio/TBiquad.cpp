@@ -35,6 +35,10 @@ void TBiquad<T,U>::setFilter(const Filter& filter)
 template <typename T, typename U>
 void TBiquad<T,U>::process(T* const _in, T* const _out, std::uint32_t frameCount, std::uint8_t inSpacing, std::uint8_t outSpacing)
 {
+    if (!isValid()) {
+        return;
+    }
+
     // Inner history size reflects channels (and spacing).
     assert(m_history.front().size() == inSpacing);
 
@@ -75,6 +79,12 @@ void TBiquad<T,U>::process(T* const _in, T* const _out, std::uint32_t frameCount
         // After first run, we operate on out instead of in. So, we have to use outSpacing for inSpacing
         inSpacing = outSpacing;
     }
+}
+
+template <typename T, typename U>
+bool TBiquad<T,U>::isValid() const
+{
+    return (m_rate >= 0 && m_filter.isValid());
 }
 
 template <typename T, typename U>

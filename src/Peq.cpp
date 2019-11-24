@@ -58,7 +58,7 @@ void Peq::setFilters(const std::vector<Filter> filters)
     for (size_t i = 0; i < filters.size(); ++i) {
         m_biquads.at(i).setFilter(filters.at(i));
     }
-    m_tBiquads.resize(filters.size(), TBiquad<int16_t, float>(2, 1, m_audioInfo.get_rate()));
+    m_tBiquads.resize(filters.size(), TBiquad<int16_t, float>(2, 1, 44100));
     for (size_t i = 0; i < filters.size(); ++i) {
         m_tBiquads.at(i).setFilter(filters.at(i));
     }
