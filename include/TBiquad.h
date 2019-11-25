@@ -18,14 +18,9 @@ public:
     void process(InT* const _in, InT* const _out, std::uint32_t frameCount, std::uint8_t inSpacing, std::uint8_t outSpacing);
 
 public:
-    /*
-    using AccT = typename std::conditional<std::is_floating_point<T>::value, double,
-        typename std::conditional<std::is_same<T, int32_t>::value, int64_t,
-        int32_t>::type>::type;
-    */
-
     bool isValid() const;
     bool update();
+
     static AccT scaleUp(double);
     static void scaleDown(AccT&);
     static AccT convert(InT& in);
@@ -34,8 +29,7 @@ public:
     std::uint32_t m_rate = 44100;
     Filter        m_filter;
 
-    struct Coeffs
-    {
+    struct Coeffs {
         AccT b0 = 0.0, b1 = 0.0, b2 = 0.0;
         AccT a1 = 0.0, a2 = 0.0;
     };
@@ -55,7 +49,7 @@ template class coro::TBiquad<float, float>;
 template class coro::TBiquad<float, double>;
 template class coro::TBiquad<double, double>;
 template class coro::TBiquad<int16_t, int32_t>;
-//template class coro::TBiquad<int16_t, int64_t>;
+template class coro::TBiquad<int16_t, int64_t>;
 template class coro::TBiquad<int16_t, float>;
 template class coro::TBiquad<int16_t, double>;
-//template class coro::TBiquad<int32_t, int64_t>;
+template class coro::TBiquad<int32_t, int64_t>;

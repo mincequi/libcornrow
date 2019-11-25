@@ -95,4 +95,4 @@ struct AudioDeviceInfo
 };
 using AudioDeviceInfoList = std::list<AudioDeviceInfo>;
 
-} // namespace GstDsp
+} // namespace coro

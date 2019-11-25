@@ -2,11 +2,10 @@
 
 #include <coro/audio/Node.h>
 
-typedef struct sbc_struct sbc_t;
-
 namespace coro {
 namespace audio {
 
+template <class InT, class OutT>
 class AudioConverter : public Node
 {
 public:
@@ -14,11 +13,21 @@ public:
     virtual ~AudioConverter();
 
     static constexpr std::array<audio::AudioCaps,1> inCaps() {
-        return {{ { Codec::RawInt16 | Codec::RawFloat32 } }};
+        if (std::is_same<InT, int16_t>::value) {
+            return {{ { Codec::RawInt16 } }};
+        } else if (std::is_same<InT, float>::value) {
+            return {{ { Codec::RawFloat32 } }};
+        }
+        return {{ { } }};
     }
 
     static constexpr std::array<audio::AudioCaps,1> outCaps() {
-        return {{ { Codec::RawInt16 | Codec::RawFloat32 } }};
+        if (std::is_same<OutT, int16_t>::value) {
+            return {{ { Codec::RawInt16 } }};
+        } else if (std::is_same<OutT, float>::value) {
+            return {{ { Codec::RawFloat32 } }};
+        }
+        return {{ { } }};
     }
 
 protected:
@@ -27,6 +36,9 @@ protected:
 private:
 
 };
+
+template class AudioConverter<int16_t, float>;
+template class AudioConverter<float, int16_t>;
 
 } // namespace audio
 } // namespace coro
