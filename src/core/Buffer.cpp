@@ -42,6 +42,7 @@ uint8_t* Buffer::acquire(size_t size)
 {
     // If we have space in front
     if (m_offset >= size) {
+        m_acquiredOffset = 0;
         return m_buffer.data();
     }
     // If we have space at back

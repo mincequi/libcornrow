@@ -6,7 +6,7 @@
 #include <glibmm/main.h>
 
 #include <Crossover.h>
-#include <Peq.h>
+#include <coro/audio/Peq.h>
 
 int main(int argc, char** argv)
 {
@@ -26,7 +26,7 @@ int main(int argc, char** argv)
     src->property_samplesperbuffer().set_value(44100);
 
     // Create peq
-    Glib::RefPtr<coro::Peq> peq = Glib::RefPtr<coro::Peq>::cast_dynamic(Gst::ElementFactory::create_element("peq"));
+    Glib::RefPtr<coro::audio::Peq> peq = Glib::RefPtr<coro::audio::Peq>::cast_dynamic(Gst::ElementFactory::create_element("peq"));
     assert(peq);
     peq->biquad(0).setFilter( { coro::FilterType::Peak, 1000.0, -12.0, 0.707 } );
     peq->biquad(1).setFilter( { coro::FilterType::LowPass, 5000.0, 0.0, 1.41 } );

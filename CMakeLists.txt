@@ -15,8 +15,6 @@ add_library(${PROJECT_NAME} STATIC
     src/AlsaUtil.cpp
     src/Biquad.cpp
     src/Crossover.cpp
-    src/Loudness.cpp
-    src/Peq.cpp
     src/Types.cpp
     src/Util.cpp
 
@@ -30,7 +28,9 @@ add_library(${PROJECT_NAME} STATIC
     src/audio/AudioConf.cpp
     src/audio/AudioConverter.cpp
     src/audio/AudioTypes.cpp
+    src/audio/Loudness.cpp
     src/audio/Node.cpp
+    src/audio/Peq.cpp
     src/audio/SbcDecoder.cpp
     src/audio/Source.cpp
     src/audio/TBiquad.cpp

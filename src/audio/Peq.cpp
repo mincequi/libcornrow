@@ -1,8 +1,10 @@
-#include "Peq.h"
+#include "audio/Peq.h"
 
 #include <iostream>
 
 namespace coro
+{
+namespace audio
 {
 
 Peq::Peq()
@@ -156,4 +158,5 @@ audio::AudioConf Peq::process(const audio::AudioConf& conf, audio::AudioBuffer& 
     return conf;
 }
 
-} // namespace GstDsp
+} // namespace audio
+} // namespace coro

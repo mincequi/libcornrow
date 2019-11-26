@@ -4,6 +4,10 @@
 
 namespace coro
 {
+namespace audio
+{
+class Peq;
+}
 
 struct BiquadCoeffs
 {
@@ -39,7 +43,7 @@ private:
     };
     std::vector<std::vector<History>> m_history;
 
-    friend class Peq;
+    friend class audio::Peq;
 };
 
-} // namespace GstDsp
+} // namespace coro

@@ -4,7 +4,7 @@
 #include <gstreamermm-dsp.h>
 #include <glibmm/main.h>
 
-#include <Loudness.h>
+#include <coro/audio/Loudness.h>
 
 int main(int argc, char** argv)
 {
@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     auto parse = Gst::ElementFactory::create_element("wavparse");
     auto convert = Gst::AudioConvert::create();
 
-    auto loudness = Glib::RefPtr<coro::Loudness>::cast_dynamic(Gst::ElementFactory::create_element("loudness"));
+    auto loudness = Glib::RefPtr<coro::audio::Loudness>::cast_dynamic(Gst::ElementFactory::create_element("loudness"));
     assert(loudness);
     loudness->setLevel(std::atoi(argv[2]));
     auto enc = Gst::ElementFactory::create_element("wavenc");
