@@ -11,20 +11,21 @@ namespace core {
 
 class Caps {
 private:
-    template<class In, class Out>
-    static constexpr bool canIntersect(const In& in, const Out& out);
+    template<class T>
+    static constexpr T intersect(const T& in, const T& out);
+
+    constexpr bool isValid() { return false; }
 
     friend class Node;
 };
 
-template<class In, class Out>
-constexpr bool Caps::canIntersect(const In& in, const Out& out)
+template<class T>
+constexpr T Caps::intersect(const T& in, const T& out)
 {
-    if (std::is_base_of<coro::audio::AudioCaps, In>::value &&
-            std::is_base_of<coro::audio::AudioCaps, Out>::value) {
-        return audio::AudioCaps::canIntersect(in, out);
+    if (std::is_base_of<coro::audio::AudioCaps, T>::value) {
+        return audio::AudioCaps::intersect(in, out);
     }
-    return false;
+    return T();
 }
 
 } // namespace core

@@ -11,11 +11,8 @@ namespace core {
 class Node
 {
 public:
-    static constexpr std::array<Caps,0> inCaps() { return {}; }
-    static constexpr std::array<Caps,0> outCaps() { return {}; }
-
-    template<class InCaps, class OutCaps>
-    static constexpr bool canIntersect(const InCaps& in, const OutCaps& out);
+    template<class T>
+    static constexpr bool canIntersect(const T& in, const T& out);
 
     template<class Node1, class Node2>
     static std::enable_if_t<
@@ -38,12 +35,12 @@ protected:
     Node* m_next = nullptr;
 };
 
-template<class InCaps, class OutCaps>
-constexpr bool Node::canIntersect(const InCaps& in, const OutCaps& out)
+template<class T>
+constexpr bool Node::canIntersect(const T& in, const T& out)
 {
     for (const auto& i : in) {
         for (const auto& o : out) {
-            if (Caps::canIntersect(i, o)) {
+            if (Caps::intersect(i, o).isValid()) {
                 return true;
             }
         }

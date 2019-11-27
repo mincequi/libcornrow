@@ -9,27 +9,24 @@ class Node;
 class AudioCaps
 {
 public:
+    static constexpr AudioCaps intersect(const AudioCaps& in, const AudioCaps& out);
+
     Codecs      codecs = Codecs::Any;
     SampleRates rates = SampleRates::Any;
     ChannelFlags channels = ChannelFlags::Any;
 
-    template<class In, class Out>
-    static constexpr bool canIntersect(const In& in, const Out& out);
-
-    //static constexpr bool canIntersect(const coro::audio::Node& in, const coro::audio::Node& out);
+    constexpr bool isValid() const {
+        return codecs && rates && channels;
+    }
 };
 
-template<class In, class Out>
-constexpr bool AudioCaps::canIntersect(const In& in, const Out& out)
-//constexpr bool AudioCaps::canIntersect(const audio::Node& in, const audio::Node& out)
+constexpr AudioCaps AudioCaps::intersect(const AudioCaps& in, const AudioCaps& out)
 {
     // If in is RTP payloaded, but out does not accept it, we fail
     if (in.codecs.testFlag(Codec::RtpPayload) && !out.codecs.testFlag(Codec::RtpPayload)) {
-        return false;
+        return AudioCaps { Codec::Invalid };
     }
-    return ((in.codecs & out.codecs) &&
-            (in.rates & out.rates) &&
-            (in.channels & out.channels));
+    return { (in.codecs & out.codecs), (in.rates & out.rates), (in.channels & out.channels) };
 }
 
 } // namespace audio

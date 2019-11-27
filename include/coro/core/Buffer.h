@@ -23,6 +23,8 @@ public:
     uint8_t* acquire(size_t size);
     void commit(size_t newSize);
 
+    void clear();
+
     template <class T>
     std::list<T> split(size_t size) const;
 

@@ -10,10 +10,13 @@ namespace audio {
 AlsaSink::AlsaSink()
 {
     ao_initialize();
+
+    ao_append_option(&m_aoOptions, "buffer_time", "100");
 }
 
 AlsaSink::~AlsaSink()
 {
+    // This also frees options
     ao_shutdown();
 }
 
@@ -47,6 +50,7 @@ void AlsaSink::stop()
 AudioConf AlsaSink::process(const AudioConf& conf, AudioBuffer& buffer)
 {
     ao_play(m_aoDevice, (char*)buffer.data(), buffer.size());
+    buffer.clear();
     return conf;
 }
 

@@ -1,14 +1,15 @@
-macro(gstdsp_tests)
+macro(coro_tests)
     foreach(_testname ${ARGN})
         add_executable(${_testname} ${_testname}.cpp)
         target_link_libraries(${_testname} ${PROJECT_NAME})
     endforeach(_testname)
 endmacro()
 
-gstdsp_tests(
+coro_tests(
     allovertest
     alsautiltest
     biquadtest
+    convertertest
     corotest
     crossovertest
     loudnesstest

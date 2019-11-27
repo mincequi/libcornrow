@@ -42,6 +42,7 @@ uint8_t* Buffer::acquire(size_t size)
 {
     // If we have space in front
     if (m_offset >= size) {
+        m_acquiredOffset = 0;
         return m_buffer.data();
     }
     // If we have space at back
@@ -61,6 +62,12 @@ void Buffer::commit(size_t size)
 {
     m_offset = m_acquiredOffset;
     m_size = size;
+}
+
+void Buffer::clear()
+{
+    m_offset = 0;
+    m_size = 0;
 }
 
 template <class T>
