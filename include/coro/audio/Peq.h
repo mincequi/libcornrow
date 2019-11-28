@@ -54,7 +54,7 @@ private:
     Gst::AudioInfo      m_audioInfo;
     float               m_volume = 1.0;
     std::deque<Biquad>  m_biquads;
-    std::deque<TBiquad<int16_t, float>> m_tBiquads;
+    std::deque<TBiquad<float, float>> m_tBiquads;
 
     std::mutex m_mutex;
 };

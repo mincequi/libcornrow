@@ -5,6 +5,9 @@
 namespace coro {
 namespace audio {
 
+template class AudioConverter<int16_t, float>;
+template class AudioConverter<float, int16_t>;
+
 template<class InT, class OutT>
 AudioConverter<InT,OutT>::AudioConverter()
 {
@@ -22,7 +25,7 @@ AudioConf AudioConverter<int16_t,float>::process(const AudioConf& conf, AudioBuf
     int16_t* from = (int16_t*)buffer.data();
 
     for (size_t i = 0; i < buffer.size()/size(conf.codec); ++i) {
-        *to = *from/32768.0;
+        *to = *from/32767.0;
         ++to;
         ++from;
     }
@@ -41,7 +44,14 @@ AudioConf AudioConverter<float,int16_t>::process(const AudioConf& conf, AudioBuf
     float* from = (float*)buffer.data();
 
     for (size_t i = 0; i < buffer.size()/size(conf.codec); ++i) {
-        *to = (int16_t)((*from)*32768.0f);
+        if (*from >= 1.0f) {
+            *to = 32767;
+        } else if (*from < -1.0f) {
+            *to = -32768;
+        } else {
+            *to = (int16_t)((*from)*32767.0f);;
+        }
+
         ++to;
         ++from;
     }

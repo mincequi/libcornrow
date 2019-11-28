@@ -37,8 +37,5 @@ private:
 
 };
 
-template class AudioConverter<int16_t, float>;
-template class AudioConverter<float, int16_t>;
-
 } // namespace audio
 } // namespace coro

@@ -7,6 +7,18 @@ namespace coro
 namespace audio
 {
 
+Loudness::Loudness()
+    : Glib::ObjectBase(typeid(Loudness)),
+      Gst::AudioFilter(nullptr),
+      m_pk1(2, 1),
+      m_pk2(2, 1),
+      m_hs(2, 1),
+      m_tpk1(2, 1),
+      m_tpk2(2, 1),
+      m_ths(2, 1)
+{
+}
+
 Loudness::Loudness(GstAudioFilter *obj)
     : Glib::ObjectBase(typeid(Loudness)),
       Gst::AudioFilter(obj),

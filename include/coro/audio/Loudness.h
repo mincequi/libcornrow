@@ -18,6 +18,7 @@ class Loudness : public Gst::AudioFilter,
 
 {
 public:
+    Loudness();
     explicit Loudness(GstAudioFilter *obj);
 
     static void class_init(Gst::ElementClass<Loudness> *klass);
