@@ -43,7 +43,29 @@ int main()
     volatile int16_t* idata = (int16_t*)buffer.data();
     for (int i = 0; i < 5; ++i) {
         assert((int16_t)*idata == intData[i]);
-        printf("i: %d, sample: %d", i, (int16_t)*idata);
+        ++idata;
+    }
+
+
+    // Fill float buffer
+    float* bData = (float*)buffer.acquire(5*sizeof(float));
+    float  fData[] = { 0.5, -0.5, -1.0, 1.1, -1.1 };
+    for (int i = 0; i < 5; ++i) {
+        *bData = fData[i];
+        ++bData;
+    }
+    buffer.commit(5*sizeof(float));
+
+    // Process float buffer
+    m_floatToInt.process(AudioConf{ Codec::RawFloat32 }, buffer);
+
+    std::vector<int16_t> overShoots;
+    // Test buffer after conversion to int16
+    assert(buffer.size() == 5*sizeof(int16_t));
+    idata = (int16_t*)buffer.data();
+    for (int i = 0; i < 5; ++i) {
+        int16_t j = *idata;
+        overShoots.push_back(j);
         ++idata;
     }
 

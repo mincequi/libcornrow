@@ -8,15 +8,14 @@
 
 using namespace coro;
 
-template <class T, class U>
-void runTest(std::string filename, std::uint16_t seconds = 100)
+template <class T>
+std::vector<T> generateWhiteNoise(std::uint16_t seconds = 100)
 {
-    auto begin = std::chrono::steady_clock::now();
     std::random_device rd;
     std::mt19937 gen(rd());
 
     std::vector<T> samples(2*44100*seconds);
-    std::uniform_real_distribution<> dist(-0.8, 0.8);
+    std::uniform_real_distribution<> dist(-1.0, 1.0);
     if (typeid(T) == typeid(int16_t)) {
         for (auto & s : samples) {
             s = 32767.0*dist(gen);
@@ -31,12 +30,35 @@ void runTest(std::string filename, std::uint16_t seconds = 100)
         }
     }
 
+    return samples;
+}
+
+template <class T>
+std::vector<T> readFile(const std::string& fileName)
+{
+    std::vector<T> samples(2*44100*100);
+
+    std::ifstream inFile;
+    inFile.open(fileName, std::ios::in | std::ios::binary);
+    inFile.read((char*)samples.data(), 2*44100*100*std::size<T>);
+
+    return samples;
+}
+
+template <class T, class U>
+void runTest(std::string filename, std::uint16_t seconds = 100)
+{
+    // Read
+
+    auto begin = std::chrono::steady_clock::now();
+    auto samples = generateWhiteNoise<T>();
+
     std::vector<TBiquad<T,U>> biquads;
-    biquads.push_back( {2,2,44100} ); // HP
-    biquads.push_back( {2,2,44100} ); // LP
-    biquads.push_back( {2,1,44100} ); // PK1
-    biquads.push_back( {2,1,44100} ); // PK2
-    biquads.push_back( {2,1,44100} ); // PK3
+    biquads.push_back( {2,1,44100} ); // HP
+    //biquads.push_back( {2,2,44100} ); // LP
+    //biquads.push_back( {2,1,44100} ); // PK1
+    //biquads.push_back( {2,1,44100} ); // PK2
+    //biquads.push_back( {2,1,44100} ); // PK3
     /*biquads.push_back( {2,1,44100} ); // PK4
     biquads.push_back( {2,1,44100} ); // PK5
     biquads.push_back( {2,1,44100} ); // PK6
@@ -44,11 +66,11 @@ void runTest(std::string filename, std::uint16_t seconds = 100)
     biquads.push_back( {2,1,44100} ); // PK8
     biquads.push_back( {2,1,44100} ); // PK9
     biquads.push_back( {2,1,44100} ); // PK10 */
-    biquads[0].setFilter( { coro::FilterType::LowPass, 10000.0, 0.0, 0.707 } );
-    biquads[1].setFilter( { coro::FilterType::HighPass, 100.0, 0.0, 0.707 } );
-    biquads[2].setFilter( { coro::FilterType::Peak, 200.0, -9.0, 1.414 } );
-    biquads[3].setFilter( { coro::FilterType::Peak, 400.0, -9.0, 1.414 } );
-    biquads[4].setFilter( { coro::FilterType::Peak, 800.0, -9.0, 1.414 } );
+    biquads[0].setFilter( { coro::FilterType::Peak, 2000.0, -48.0, 50.0 } );
+    //biquads[1].setFilter( { coro::FilterType::HighPass, 100.0, 0.0, 0.707 } );
+    //biquads[2].setFilter( { coro::FilterType::Peak, 200.0, -9.0, 1.414 } );
+    //biquads[3].setFilter( { coro::FilterType::Peak, 400.0, -9.0, 1.414 } );
+    //biquads[4].setFilter( { coro::FilterType::Peak, 800.0, -9.0, 1.414 } );
     /*biquads[5].setFilter( { coro::FilterType::Peak, 1600.0, -3.0, 1.414 } );
     biquads[6].setFilter( { coro::FilterType::Peak, 3200.0, -3.0, 1.414 } );
     biquads[7].setFilter( { coro::FilterType::Peak, 6400.0, -3.0, 1.414 } );

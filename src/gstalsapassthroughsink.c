@@ -8,7 +8,7 @@
 #include <getopt.h>
 #include <alsa/asoundlib.h>
 
-#include <gst/audio/gstaudioiec61937.h>
+//#include <gst/audio/gstaudioiec61937.h>
 #define _
 
 #ifndef ESTRPIPE
@@ -18,8 +18,10 @@
 #define DEFAULT_DEVICE		"default"
 #define DEFAULT_DEVICE_NAME	""
 #define DEFAULT_CARD_NAME	""
+#define SPDIF_HEADER_SIZE 8
 #define SPDIF_PERIOD_SIZE 1536
 #define SPDIF_BUFFER_SIZE 15360
+#define SPDIF_PAYLOAD_SIZE_AC3 SPDIF_PERIOD_SIZE*4
 
 enum
 {
@@ -50,6 +52,9 @@ static void gst_alsapassthroughsink_reset (GstAudioSink * asink);
 static gboolean gst_alsapassthroughsink_acceptcaps (GstAlsaPassthroughSink * alsa, GstCaps * caps);
 static GstBuffer* gst_alsapassthroughsink_payload (GstAudioBaseSink * sink, GstBuffer * buf);
 static snd_pcm_t* gst_alsapassthroughsink_open_spdif (GstObject * obj, gchar * device, GstAudioRingBufferSpec * spec);
+
+static gboolean coro_audio_spdif_ac3_payload (const guint8 * src, guint src_n, guint8 * dst,
+                                            guint dst_n, const GstAudioRingBufferSpec * spec, gint endianness);
 
 static gint output_ref;         /* 0    */
 static snd_output_t *output;    /* NULL */
@@ -128,7 +133,7 @@ gst_alsapassthroughsink_class_init (GstAlsaPassthroughSinkClass * klass)
 
   gstbasesink_class->query = GST_DEBUG_FUNCPTR (gst_alsapassthroughsink_query);
 
-  gstbaseaudiosink_class->payload = GST_DEBUG_FUNCPTR (gst_alsapassthroughsink_payload);
+  gstbaseaudiosink_class->payload = GST_DEBUG_FUNCPTR (coro_audio_spdif_ac3_payload);
 
   gstaudiosink_class->open = GST_DEBUG_FUNCPTR (gst_alsapassthroughsink_open);
   gstaudiosink_class->prepare = GST_DEBUG_FUNCPTR (gst_alsapassthroughsink_prepare);
@@ -825,20 +830,14 @@ gst_alsapassthroughsink_payload (GstAudioBaseSink * sink, GstBuffer * buf)
 
   if (self->passthrough) {
     GstBuffer *out;
-    gint framesize;
     GstMapInfo iinfo, oinfo;
 
-    framesize = gst_audio_iec61937_frame_size (&sink->ringbuffer->spec);
-    if (framesize <= 0)
-      return NULL;
-
-    out = gst_buffer_new_and_alloc (framesize);
+    out = gst_buffer_new_and_alloc (SPDIF_PAYLOAD_SIZE_AC3);
 
     gst_buffer_map (buf, &iinfo, GST_MAP_READ);
     gst_buffer_map (out, &oinfo, GST_MAP_WRITE);
 
-    if (!gst_audio_iec61937_payload (iinfo.data, iinfo.size,
-            oinfo.data, oinfo.size, &sink->ringbuffer->spec, G_BIG_ENDIAN)) {
+    if (!gst_audio_iec61937_payload(iinfo.data, iinfo.size, oinfo.data, oinfo.size, &sink->ringbuffer->spec, G_BIG_ENDIAN)) {
       gst_buffer_unmap (buf, &iinfo);
       gst_buffer_unmap (out, &oinfo);
       gst_buffer_unref (out);
@@ -894,4 +893,74 @@ gst_alsapassthroughsink_open_spdif (GstObject * obj, gchar * device, GstAudioRin
   }
 
   return pcm;
+}
+
+static gboolean coro_audio_spdif_ac3_payload (const guint8 * src, guint src_n,
+                                              guint8 * dst, guint dst_n,
+                                              const GstAudioRingBufferSpec * spec, gint endianness)
+{
+    guint i;
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+    guint8 zero = 0, one = 1, two = 2, three = 3, four = 4, five = 5, six = 6,
+            seven = 7;
+#else
+    /* We need to send the data byte-swapped */
+    guint8 zero = 1, one = 0, two = 3, three = 2, four = 5, five = 4, six = 7, seven = 6;
+#endif
+
+    g_return_val_if_fail (src != NULL, FALSE);
+    g_return_val_if_fail (dst != NULL, FALSE);
+    g_return_val_if_fail (src != dst, FALSE);
+    g_return_val_if_fail (dst_n >= SPDIF_PAYLOAD_SIZE_AC3, FALSE);
+
+    if (dst_n < src_n + SPDIF_HEADER_SIZE)
+        return FALSE;
+
+    /* Pa, Pb */
+    dst[zero] = 0xF8; // 1111 1000
+    dst[one] = 0x72;  // 0111 0010
+    dst[two] = 0x4E;  // 0100 1110
+    dst[three] = 0x1F;    // 0001 1111
+
+    g_return_val_if_fail (src_n >= 6, FALSE);
+
+    /* Pc: bit 13-15 - stream number (0)
+       *     bit 11-12 - reserved (0)
+       *     bit  8-10 - bsmod from AC3 frame */
+    dst[four] = src[5] & 0x7;
+    /* Pc: bit    7  - error bit (0)
+   *     bit  5-6  - subdata type (0)
+   *     bit  0-4  - data type (1) */
+    dst[five] = 1;
+    /* Pd: bit 15-0  - frame size in bits */
+    guint tmp = src_n * 8;
+    dst[six] = (guint8) (tmp >> 8);
+    dst[seven] = (guint8) (tmp & 0xff);
+
+    /* Copy the payload */
+    i = 8;
+
+    if (G_BYTE_ORDER == endianness) {
+        memcpy (dst + i, src, src_n);
+    } else {
+        /* Byte-swapped again */
+        /* FIXME: orc-ify this */
+        for (tmp = 1; tmp < src_n; tmp += 2) {
+            dst[i + tmp - 1] = src[tmp];
+            dst[i + tmp] = src[tmp - 1];
+        }
+        /* Do we have 1 byte remaining? */
+        if (src_n % 2) {
+            dst[i + src_n - 1] = 0;
+            dst[i + src_n] = src[src_n - 1];
+            i++;
+        }
+    }
+
+    i += src_n;
+
+    /* Zero the rest */
+    memset (dst + i, 0, dst_n - i);
+
+    return TRUE;
 }
