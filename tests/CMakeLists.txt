@@ -6,7 +6,6 @@ macro(coro_tests)
 endmacro()
 
 coro_tests(
-    allovertest
     alsautiltest
     biquadtest
     convertertest
@@ -14,5 +13,4 @@ coro_tests(
     crossovertest
     loudnesstest
     passthroughtest
-    peqtest
 )

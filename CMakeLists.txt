@@ -59,7 +59,7 @@ target_link_libraries(${PROJECT_NAME}
     ${GSTMM_LIBRARIES}
     ${ALSA_LIBRARIES}
     pthread
-    xxhash
+    #xxhash
     dl
     sbc
     ao

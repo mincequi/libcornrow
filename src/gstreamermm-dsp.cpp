@@ -5,8 +5,6 @@
 #include "Crossover.h"
 #include <core/AppSource.h>
 #include <core/FdSource.h>
-#include <coro/audio/Loudness.h>
-#include <coro/audio/Peq.h>
 #include "rtp/RtpSbcDepay.h"
 
 #include "gstalsapassthroughsink.h"
@@ -20,9 +18,7 @@ bool registerElements(Glib::RefPtr<Gst::Plugin> plugin)
 {
     bool success = true;
 
-    success &= Gst::ElementFactory::register_element(plugin, "loudness",  GST_RANK_NONE, Gst::register_mm_type<audio::Loudness>("loudness"));
-    success &= Gst::ElementFactory::register_element(plugin, "peq",       GST_RANK_NONE, Gst::register_mm_type<audio::Peq>("peq"));
-    success &= Gst::ElementFactory::register_element(plugin, "crossover", GST_RANK_NONE, Gst::register_mm_type<Crossover>("crossover"));
+    //success &= Gst::ElementFactory::register_element(plugin, "crossover", GST_RANK_NONE, Gst::register_mm_type<Crossover>("crossover"));
 
     success &= gst_element_register(plugin->gobj(), "alsapassthroughsink", GST_RANK_PRIMARY, GST_TYPE_ALSA_PASSTHROUGH_SINK);
     //success &= gst_element_register(plugin->gobj(), "avdtpsrc2", GST_RANK_PRIMARY, GST_TYPE_AVDTP_SRC2);
