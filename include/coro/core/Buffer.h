@@ -14,13 +14,13 @@ class Buffer
 {
 public:
     Buffer(size_t reservedSize = 0);
-    Buffer(const uint8_t* data, size_t size, size_t reservedSize = 0);
+    Buffer(const char* data, size_t size, size_t reservedSize = 0);
     virtual ~Buffer();
 
-    uint8_t* data();
+    char* data();
     size_t size() const;
 
-    uint8_t* acquire(size_t size);
+    char* acquire(size_t size);
     void commit(size_t newSize);
 
     void clear();
@@ -29,7 +29,7 @@ public:
     std::list<T> split(size_t size) const;
 
 protected:
-    std::vector<uint8_t> m_buffer;
+    std::vector<char> m_buffer;
     size_t   m_size = 0;
     size_t   m_offset = 0;
     size_t   m_acquiredOffset = 0;

@@ -17,7 +17,7 @@ Buffer::Buffer(size_t size)
     m_size = 0;
 }
 
-Buffer::Buffer(const uint8_t* data, size_t size, size_t reservedSize)
+Buffer::Buffer(const char* data, size_t size, size_t reservedSize)
 {
     m_buffer.resize(std::max(size, reservedSize));
     m_size = size;
@@ -28,7 +28,7 @@ Buffer::~Buffer()
 {
 }
 
-uint8_t* Buffer::data()
+char* Buffer::data()
 {
     return m_buffer.data()+m_offset;
 }
@@ -38,7 +38,7 @@ size_t Buffer::size() const
     return m_size;
 }
 
-uint8_t* Buffer::acquire(size_t size)
+char* Buffer::acquire(size_t size)
 {
     // If we have space in front
     if (m_offset >= size) {
