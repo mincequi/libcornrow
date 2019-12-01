@@ -43,21 +43,25 @@ AudioConf AudioConverter<int16_t,float>::process(const AudioConf& conf, AudioBuf
 template<>
 AudioConf AudioConverter<float,int16_t>::process(const AudioConf& conf, AudioBuffer& buffer)
 {
-    int16_t* to = (int16_t*)buffer.acquire(buffer.size()/2);
-    float* from = (float*)buffer.data();
+    char* to = buffer.acquire(buffer.size()/2);
+    char* from = buffer.data();
 
     for (size_t i = 0; i < buffer.size()/size(conf.codec); ++i) {
-        if (*from >= 1.0f) {
-            *to = 32767;
-        } else if (*from < -1.0f) {
-            *to = -32768;
+        float f;
+        std::memcpy(&f, from+(i*4), 4);
+        int16_t temp;
+
+        if (f >= 1.0f) {
+            temp = 32767;
+        } else if (f < -1.0f) {
+            temp = -32768;
         } else {
-            *to = (int16_t)((*from)*32767.0f);;
+            temp = (int16_t)(f*32767.0f);
         }
 
-        ++to;
-        ++from;
+        std::memcpy(to+(i*2), &temp, 2);
     }
+
     buffer.commit(buffer.size()/2);
 
     auto _conf = conf;
