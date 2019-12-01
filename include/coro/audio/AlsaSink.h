@@ -19,7 +19,7 @@ public:
     AlsaSink();
     virtual ~AlsaSink();
 
-    void start() override;
+    void start(const AudioConf& conf);
     void stop() override;
 
     AudioConf process(const AudioConf& conf, AudioBuffer& buffer) override;

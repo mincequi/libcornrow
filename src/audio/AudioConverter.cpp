@@ -22,12 +22,16 @@ template<>
 AudioConf AudioConverter<int16_t,float>::process(const AudioConf& conf, AudioBuffer& buffer)
 {
     float* to = (float*)buffer.acquire(buffer.size()*2);
-    int16_t* from = (int16_t*)buffer.data();
+    //int16_t* from = (int16_t*)buffer.data();
+    uint8_t* from = (uint8_t*)buffer.data();
 
     for (size_t i = 0; i < buffer.size()/size(conf.codec); ++i) {
-        *to = *from/32767.0;
+        //int16_t tmp = *((int16_t*)(from));
+        //*to = *from/32767.0;
+        int16_t tmp = *((int16_t*)(from));
+        *to = tmp/32767.0;
         ++to;
-        ++from;
+        from += size(conf.codec);
     }
 
     buffer.commit(buffer.size()*2);

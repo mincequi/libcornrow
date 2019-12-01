@@ -20,7 +20,7 @@ AlsaSink::~AlsaSink()
     ao_shutdown();
 }
 
-void AlsaSink::start()
+void AlsaSink::start(const AudioConf& conf)
 {
     if (m_aoDevice) {
         return;
@@ -30,7 +30,7 @@ void AlsaSink::start()
     memset(&format, 0, sizeof(format));
 
     format.bits = 16;
-    format.rate = 44100;
+    format.rate = conf.rate == SampleRate::Rate48000 ? 48000 : 44100;
     format.channels = 2;
     format.byte_format = AO_FMT_NATIVE;
 
