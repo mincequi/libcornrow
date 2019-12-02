@@ -29,7 +29,7 @@ public:
     std::list<T> split(size_t size) const;
 
 protected:
-    std::vector<char> m_buffer;
+    std::vector<int32_t> m_buffer; // use int32_t internally to align to 4 byte borders
     size_t   m_size = 0;
     size_t   m_offset = 0;
     size_t   m_acquiredOffset = 0;
