@@ -53,4 +53,4 @@ std::list<AudioDeviceInfo> AlsaUtil::outputDevices()
     return m_outputDevices;
 }
 
-} // namespace GstDsp
+} // namespace coro

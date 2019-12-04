@@ -18,7 +18,7 @@ public:
     virtual ~Buffer();
 
     char* data();
-    size_t size() const;
+    uint32_t size() const;
 
     char* acquire(size_t size);
     void commit(size_t newSize);

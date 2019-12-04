@@ -16,4 +16,4 @@ private:
     std::list<AudioDeviceInfo> m_outputDevices;
 };
 
-} // namespace GstDsp
+} // namespace coro

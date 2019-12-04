@@ -33,7 +33,7 @@ char* Buffer::data()
     return (char*)(m_buffer.data())+m_offset;
 }
 
-size_t Buffer::size() const
+uint32_t Buffer::size() const
 {
     return m_size;
 }
