@@ -17,6 +17,9 @@ public:
     Buffer(const char* data, size_t size, size_t reservedSize = 0);
     virtual ~Buffer();
 
+    Buffer(const Buffer&) = delete;
+    Buffer(Buffer&&) = default;
+
     char* data();
     uint32_t size() const;
 

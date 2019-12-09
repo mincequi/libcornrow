@@ -19,7 +19,7 @@ void Peq::setVolume(float volume)
 void Peq::setFilters(const std::vector<Filter> filters)
 {
     m_mutex.lock();
-    m_tBiquads.resize(filters.size(), TBiquad<float, float>(2, 1, 44100));
+    m_tBiquads.resize(filters.size(), TBiquad<float, float>(2, 1, toInt(m_conf.rate)));
     for (size_t i = 0; i < filters.size(); ++i) {
         m_tBiquads.at(i).setFilter(filters.at(i));
     }
@@ -42,8 +42,8 @@ std::vector<Filter> Peq::filters()
 audio::AudioConf Peq::process(const audio::AudioConf& conf, audio::AudioBuffer& buffer)
 {
     uint frameCount = buffer.size()/conf.frameSize();
-
     m_mutex.lock();
+    m_conf = conf;
     for (auto& biquad : m_tBiquads) {
         biquad.setRate(toInt(conf.rate));
         biquad.process((float*)buffer.data(), (float*)buffer.data(), frameCount, audio::toInt(conf.channels), audio::toInt(conf.channels));

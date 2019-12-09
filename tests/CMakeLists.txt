@@ -8,6 +8,7 @@ endmacro()
 coro_tests(
     alsautiltest
     biquadtest
+    buffertest
     convertertest
     corotest
     crossovertest
