@@ -3,8 +3,6 @@
 #include <coro/core/Sink.h>
 
 typedef struct _snd_pcm snd_pcm_t;
-struct ao_device;
-struct ao_option;
 
 namespace coro {
 namespace audio {
@@ -29,7 +27,6 @@ public:
 private:
     // alsa members
     bool open(const AudioConf& conf);
-    void close();
     bool setHwParams(const AudioConf& conf);
     bool setSwParams();
     bool write(const char* samples, uint32_t bytesCount);
@@ -41,10 +38,6 @@ private:
     AudioConf  m_conf;
 
     std::string m_device = "default";
-
-    int         m_driverId;
-    ao_device   *m_aoDevice = nullptr;
-    ao_option   *m_aoOptions = nullptr;
 };
 
 } // namespace audio

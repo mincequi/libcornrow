@@ -26,6 +26,7 @@ AudioConf AudioConverter<int16_t,float>::process(const AudioConf& conf, AudioBuf
     char* to = buffer.acquire(buffer.size()*2);
     char* from = buffer.data();
 
+    // @TODO(mawe): remove memcpy, since memory alignment is now done in AudioBuffer.
     for (size_t i = 0; i < buffer.size()/size(conf.codec); ++i) {
         int16_t tmp;
         std::memcpy(&tmp, from+(i*2), 2);
@@ -46,6 +47,7 @@ AudioConf AudioConverter<float,int16_t>::process(const AudioConf& conf, AudioBuf
     char* to = buffer.acquire(buffer.size()/2);
     char* from = buffer.data();
 
+    // @TODO(mawe): remove memcpy, since memory alignment is now done in AudioBuffer.
     for (size_t i = 0; i < buffer.size()/size(conf.codec); ++i) {
         float f;
         std::memcpy(&f, from+(i*4), 4);

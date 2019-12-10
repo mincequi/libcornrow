@@ -21,6 +21,7 @@ public:
     Buffer(Buffer&&) = default;
 
     char* data();
+    const char* data() const;
     uint32_t size() const;
 
     char* acquire(size_t size);
@@ -30,6 +31,8 @@ public:
 
     template <class T>
     std::list<T> split(size_t size) const;
+
+    void trimFront(size_t size);
 
 protected:
     std::vector<int32_t> m_buffer; // use int32_t internally to align to 4 byte borders

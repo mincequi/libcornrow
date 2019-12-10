@@ -27,7 +27,9 @@ add_library(${PROJECT_NAME} STATIC
     src/audio/AudioBuffer.cpp
     src/audio/AudioConf.cpp
     src/audio/AudioConverter.cpp
+    src/audio/AudioEncoderFfmpeg.cpp
     src/audio/AudioTypes.cpp
+    src/audio/FileSink.cpp
     src/audio/Loudness.cpp
     src/audio/Node.cpp
     src/audio/Peq.cpp
@@ -59,10 +61,11 @@ target_link_libraries(${PROJECT_NAME}
     ${GSTMM_LIBRARIES}
     ${ALSA_LIBRARIES}
     pthread
-    #xxhash
     dl
     sbc
     ao
+    avutil
+    avcodec
 )
 
 target_compile_options(${PROJECT_NAME} PUBLIC ${GSTMM_CFLAGS_OTHER})

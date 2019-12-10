@@ -12,6 +12,7 @@ coro_tests(
     convertertest
     corotest
     crossovertest
+    encodertest
     loudnesstest
     passthroughtest
 )

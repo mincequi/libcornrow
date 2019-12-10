@@ -33,6 +33,11 @@ char* Buffer::data()
     return (char*)(m_buffer.data())+m_offset;
 }
 
+const char* Buffer::data() const
+{
+    return (const char*)(m_buffer.data())+m_offset;
+}
+
 uint32_t Buffer::size() const
 {
     return m_size;
@@ -47,7 +52,7 @@ char* Buffer::acquire(size_t size)
     }
     // If we have space at back
     const auto sizeAtBack = m_buffer.size()*4-m_offset-m_size;
-    if (sizeAtBack >= size+4) {
+    if (sizeAtBack >= size) {
         m_acquiredOffset = m_offset+m_size;
         m_acquiredOffset += m_acquiredOffset%4;
         return (char*)m_buffer.data()+m_acquiredOffset;
@@ -80,6 +85,15 @@ std::list<T> Buffer::split(size_t size) const
         buffers.emplace_back((char*)m_buffer.data()+m_offset+i, size);
     }
     return buffers;
+}
+
+void Buffer::trimFront(size_t size)
+{
+    if (size > m_size) {
+        return;
+    }
+    m_offset += size;
+    m_size -= size;
 }
 
 } // namespace core

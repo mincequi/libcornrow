@@ -12,7 +12,6 @@ public:
     AudioBuffer(const AudioBuffer&) = delete;
     AudioBuffer(AudioBuffer&&) = default;
 
-
     std::list<AudioBuffer> split(size_t size, size_t reservedSize = 0) const;
 };
 
