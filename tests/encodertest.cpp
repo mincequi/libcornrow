@@ -53,6 +53,7 @@ void runTest(std::string filename, std::uint16_t seconds = 100, int cycles = 1)
     // Process
     audio::AudioEncoderFfmpeg encoder;
     audio::AlsaSink sink;
+    sink.setDevice("iec958:CARD=sndrpihifiberry,DEV=0");
     //sink.setFileName(filename);
     //sink.start();
     audio::Node::link(encoder, sink);

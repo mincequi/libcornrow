@@ -9,8 +9,6 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-#include <aften/aften.h>
-
 namespace coro {
 namespace audio {
 
