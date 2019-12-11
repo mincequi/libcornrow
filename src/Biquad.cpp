@@ -109,6 +109,8 @@ bool Biquad::update()
         m_coeffs.a2 =      ( (A+1) - (A-1)*cosW0 - sqrtAalpha2) / a0;
         break;
     }
+    case FilterType::AllPass:
+    case FilterType::Crossover:
     case FilterType::Invalid:
         return false;
     }

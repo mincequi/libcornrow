@@ -1,18 +1,12 @@
 #include "audio/Crossover.h"
 
-#include <cmath>
-#include <iostream>
-//#include <gstreamermm/private/basetransform_p.h>
-
-#include "Util.h"
-
 namespace coro
 {
 namespace audio
 {
 
 Crossover::Crossover()
-    : m_frequency(3000.0),
+    : m_filter( { FilterType::Crossover, 3000.0f, 0.0f, 0.5f } ),
       m_lfe(false),
       m_lp(2, 2),
       m_hp(2, 2),
@@ -109,14 +103,21 @@ void Crossover::class_init(Gst::ElementClass<Crossover> *klass)
 }
 */
 
-void Crossover::setFrequency(float f)
+void Crossover::setFilter(const Filter& f)
 {
+    if (m_filter == f) {
+        return;
+    }
+
     m_mutex.lock();
-    m_frequency = f;
-    updateCrossover();
+    m_filter = f;
+    if (m_filter.isValid()) {
+        updateCrossover();
+    }
     m_mutex.unlock();
 }
 
+/*
 float Crossover::frequency()
 {
     m_mutex.lock();
@@ -125,6 +126,7 @@ float Crossover::frequency()
 
     return freq;
 }
+*/
 
 void Crossover::setLfe(bool enable)
 {
@@ -145,14 +147,38 @@ bool Crossover::lfe()
 
 AudioConf Crossover::process(const AudioConf& conf, AudioBuffer& buffer)
 {
+    if (!m_filter.isValid()) {
+        return conf;
+    }
+
     auto outData = buffer.acquire(buffer.size()*2);
     auto inData = buffer.data();
     const auto frameCount = buffer.size()/conf.frameSize();
 
     // Front channels
     m_lp.process((float*)inData, (float*)outData, frameCount, 2, 4);
+    float* out = (float*)outData;
+    if (m_lowGain < 1.0f) {
+        for (uint i = 0; i < frameCount; ++i) {
+            for (uint c = 0; c < 2; ++c) {
+                *out *= m_lowGain;
+                ++out;
+            }
+            out += 4-2;
+        }
+    }
     // Rear channels
     m_hp.process((float*)inData, (float*)outData+2, frameCount, 2, 4);
+    out = (float*)outData+2;
+    if (m_highGain < 1.0f) {
+        for (uint i = 0; i < frameCount; ++i) {
+            for (uint c = 0; c < 2; ++c) {
+                *out *= m_highGain;
+                ++out;
+            }
+            out += 4-2;
+        }
+    }
 
     buffer.commit(buffer.size()*2);
 
@@ -161,15 +187,22 @@ AudioConf Crossover::process(const AudioConf& conf, AudioBuffer& buffer)
     return _conf;
 }
 
+/*
 bool Crossover::isFrequencyValid() const
 {
-    return (m_frequency >= 20.0 && m_frequency <= 20000.0);
+    return (m_filter >= 20.0 && m_filter <= 20000.0);
 }
+*/
 
 void Crossover::updateCrossover()
 {
-    m_lp.setFilter({ FilterType::LowPass, m_frequency, 0.0, M_SQRT1_2 });
-    m_hp.setFilter({ FilterType::HighPass, m_frequency, 0.0, M_SQRT1_2 });
+    m_lowGain = m_filter.g > 0.0 ? pow(10, (-m_filter.g/20.0)) : 1.0;
+    m_highGain = m_filter.g < 0.0 ? pow(10, (m_filter.g/20.0)) : 1.0;
+
+    m_lp.setCascadeCount(m_filter.q <= 0.5f ? 1 : 2);
+    m_lp.setFilter({ FilterType::LowPass, m_filter.f, 0.0, m_filter.q });
+    m_hp.setCascadeCount(m_filter.q <= 0.5f ? 1 : 2);
+    m_hp.setFilter({ FilterType::HighPass, m_filter.f, 0.0, m_filter.q });
 }
 
 void Crossover::updateLfe()

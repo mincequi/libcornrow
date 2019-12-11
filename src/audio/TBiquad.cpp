@@ -7,9 +7,16 @@ namespace coro
 
 template <typename T, typename U>
 TBiquad<T,U>::TBiquad(std::uint8_t channelCount, std::uint8_t cascadeCount, std::uint32_t rate)
-    : m_rate(rate),
+    : m_channelCount(channelCount),
+      m_rate(rate),
       m_history(cascadeCount, std::vector<History>(channelCount))
 {
+}
+
+template <typename T, typename U>
+void TBiquad<T,U>::setCascadeCount(std::uint8_t count)
+{
+    m_history.resize(count, std::vector<History>(m_channelCount));
 }
 
 template <typename T, typename U>
@@ -168,6 +175,8 @@ bool TBiquad<T,U>::update()
         break;
     }
     case FilterType::Invalid:
+    case FilterType::AllPass:
+    case FilterType::Crossover:
         return false;
     }
 

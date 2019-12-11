@@ -15,8 +15,7 @@ class Buffer
 public:
     Buffer(size_t reservedSize = 0);
     /**
-     * Construct new buffer with given data, which gets deep copied.
-     * above (GATT Server) and/or GATT profiles (GATT Client).
+     * Construct new buffer with given data, which gets deeply copied.
      *
      * @param data data to be deeply copied
      * @param size size of data to be deeply copied
@@ -31,7 +30,7 @@ public:
 
     char* data();
     const char* data() const;
-    uint32_t size() const;
+    size_t size() const;
 
     char* acquire(size_t size);
     void commit(size_t newSize);
@@ -46,7 +45,7 @@ public:
     /**
      * @brief grow
      */
-    void grow(uint32_t size);
+    void grow(size_t size);
 
     void clear();
 

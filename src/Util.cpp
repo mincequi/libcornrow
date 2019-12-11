@@ -83,6 +83,8 @@ bool computeBiQuad(int r, const Filter& f, T* biquad)
         break;
     }
     case FilterType::Invalid:
+    case FilterType::AllPass:
+    case FilterType::Crossover:
         return false;
     }
 

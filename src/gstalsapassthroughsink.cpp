@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <errno.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <string.h>
 #include <alsa/asoundlib.h>

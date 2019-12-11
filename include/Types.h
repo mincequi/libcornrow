@@ -19,7 +19,9 @@ enum class FilterType : uint8_t
     HighPass,
     LowShelf,
     HighShelf,
-    //AllPass
+    AllPass,
+
+    Crossover
 };
 
 struct Filter

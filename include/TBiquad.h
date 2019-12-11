@@ -9,13 +9,22 @@ template <typename InT, typename AccT>
 class TBiquad
 {
 public:
-    TBiquad(std::uint8_t channelCount = 1, std::uint8_t cascadeCount = 1, std::uint32_t rate = 44100);
+    TBiquad(uint8_t channelCount = 1, uint8_t cascadeCount = 1, uint32_t rate = 44100);
 
-    void setRate(std::uint32_t rate);
+    /**
+     * @brief Set number of cascades/passes.
+     *
+     * A biquad can have multiple cascades/passes to be applied to sample data.
+     *
+     * @param count
+     */
+    void setCascadeCount(uint8_t count);
+
+    void setRate(uint32_t rate);
 
     void setFilter(const Filter& filter);
 
-    void process(InT* const _in, InT* const _out, std::uint32_t frameCount, std::uint8_t inSpacing, std::uint8_t outSpacing);
+    void process(InT* const _in, InT* const _out, uint32_t frameCount, uint8_t inSpacing, uint8_t outSpacing);
 
 public:
     bool isValid() const;
@@ -26,7 +35,8 @@ public:
     static AccT convert(InT& in);
 
     // The properties of a biquad
-    std::uint32_t m_rate = 44100;
+    uint8_t m_channelCount = 1;
+    uint32_t m_rate = 44100;
     Filter        m_filter;
 
     struct Coeffs {

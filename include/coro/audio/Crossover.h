@@ -27,8 +27,8 @@ public:
                     audio::Channels::Quad } }};
     }
 
-    void setFrequency(float f);
-    float frequency();
+    void setFilter(const Filter& f);
+    //float frequency();
 
     void setLfe(bool enable);
     bool lfe();
@@ -36,7 +36,7 @@ public:
 private:
     AudioConf process(const AudioConf& conf, AudioBuffer& buffer) override;
 
-    bool isFrequencyValid() const;
+    //bool isFrequencyValid() const;
     void updateCrossover();
     void updateLfe();
 
@@ -48,13 +48,16 @@ private:
         }
     }
 
-    float  m_frequency;
-    bool   m_lfe;
+    Filter  m_filter;
+    bool    m_lfe;
 
     TBiquad<float, float> m_lp;
     TBiquad<float, float> m_hp;
     TBiquad<float, float> m_lfeLp;
     TBiquad<float, float> m_lfeHp;
+
+    float m_lowGain = 1.0f;
+    float m_highGain = 1.0f;
 
     std::mutex m_mutex;
 };

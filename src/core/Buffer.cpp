@@ -39,7 +39,7 @@ const char* Buffer::data() const
     return (const char*)(m_buffer.data())+m_offset;
 }
 
-uint32_t Buffer::size() const
+size_t Buffer::size() const
 {
     return m_size;
 }
@@ -86,7 +86,7 @@ void Buffer::prepend(const char* data, uint32_t size)
     }
 }
 
-void Buffer::grow(uint32_t size)
+void Buffer::grow(size_t size)
 {
     m_size = std::min(m_buffer.size()*4, size);
 }
