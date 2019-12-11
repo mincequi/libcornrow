@@ -6,13 +6,13 @@ macro(coro_tests)
 endmacro()
 
 coro_tests(
-    alsautiltest
-    biquadtest
-    buffertest
-    convertertest
-    corotest
-    crossovertest
+    #alsautiltest
+    #biquadtest
+    #buffertest
+    #convertertest
+    #corotest
+    #crossovertest
     encodertest
-    loudnesstest
+    #loudnesstest
     passthroughtest
 )

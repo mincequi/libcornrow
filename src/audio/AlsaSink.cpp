@@ -45,7 +45,7 @@ AudioConf AlsaSink::process(const AudioConf& conf, AudioBuffer& buffer)
         m_conf = conf;
     }
 
-    if (conf.codec == Codec::Ac3) {
+    if (conf.codec == AudioCodec::Ac3) {
         doAc3Payload(buffer);
     }
     write(buffer.data(), buffer.size());
@@ -275,31 +275,19 @@ void AlsaSink::doAc3Payload(AudioBuffer& buffer)
         return;
     }
 
-    auto ac3Data = buffer.acquire(spdif::ac3FrameSize);
     spdif::SpdifAc3Header ac3Header(buffer.data(), buffer.size());
-
-    std::memcpy(ac3Data, &ac3Header, ac3Header.size());
-    ac3Data += ac3Header.size();
+    buffer.prepend((char*)&ac3Header, 8);
 
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-    for (uint32_t i = 1; i < buffer.size(); i += 2) {
-        ac3Data[i-1] = buffer.data()[i];
-        ac3Data[i] = buffer.data()[i-1];
+    auto ac3Data = buffer.data() + ac3Header.size();
+    const auto size = buffer.size() - ac3Header.size();
+
+    for (uint32_t i = 0; i < size; i += 2) {
+        *(uint16_t*)(ac3Data+i) = __bswap_16(*(uint16_t*)(ac3Data+i));
     }
-    // Check for remaining (single) byte
-    if (buffer.size() % 2) {
-        ac3Data[buffer.size()-1] = 0;
-        ac3Data[buffer.size()] = buffer.data()[buffer.size()-1];
-        ac3Data += 1;
-    }
-#else
-    // If we are on big endian, we can just copy
-    std::memcpy(ac3Data, buffer.data(), buffer.size());
 #endif
 
-    // Zero remaining
-    memset(ac3Data, 0, spdif::ac3FrameSize - buffer.size() - (buffer.size()%2));
-    buffer.commit(spdif::ac3FrameSize);
+    buffer.grow(spdif::ac3FrameSize);
 }
 
 } // namespace audio

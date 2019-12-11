@@ -18,13 +18,13 @@ public:
     Peq();
 
     static constexpr std::array<audio::AudioCaps,1> inCaps() {
-        return {{ { Codec::RawFloat32,
+        return {{ { AudioCodec::RawFloat32,
                     SampleRate::Rate44100 | audio::SampleRate::Rate48000,
                     Channels::Stereo } }};
     }
 
     static constexpr std::array<audio::AudioCaps,1> outCaps() {
-        return {{ { Codec::RawFloat32,
+        return {{ { AudioCodec::RawFloat32,
                     SampleRate::Rate44100 | audio::SampleRate::Rate48000,
                     Channels::Stereo } }};
     }

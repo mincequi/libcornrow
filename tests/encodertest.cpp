@@ -51,17 +51,16 @@ void runTest(std::string filename, std::uint16_t seconds = 100, int cycles = 1)
     std::cout << "Init time: " << diff.count() << std::endl;
 
     // Process
-    audio::AudioEncoderFfmpeg encoder;
+    audio::AudioEncoderFfmpeg encoder(AudioCodec::Ac3);
     audio::AlsaSink sink;
     sink.setDevice("iec958:CARD=sndrpihifiberry,DEV=0");
     //sink.setFileName(filename);
     //sink.start();
     audio::Node::link(encoder, sink);
-    encoder.start({ Codec::RawFloat32, SampleRate::Rate44100, Channels::Stereo });
 
     for (int i = 0; i < cycles; ++i) {
         AudioBuffer buffer((char*)samples.data(), samples.size()*4);
-        encoder.process({ Codec::RawFloat32, SampleRate::Rate44100, Channels::Stereo }, buffer);
+        encoder.process({ AudioCodec::RawFloat32, SampleRate::Rate44100, Channels::Stereo }, buffer);
     }
 
     sink.stop();

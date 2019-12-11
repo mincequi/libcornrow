@@ -23,8 +23,8 @@ public:
 constexpr AudioCaps AudioCaps::intersect(const AudioCaps& in, const AudioCaps& out)
 {
     // If in is RTP payloaded, but out does not accept it, we fail
-    if (in.codecs.testFlag(Codec::RtpPayload) && !out.codecs.testFlag(Codec::RtpPayload)) {
-        return AudioCaps { Codec::Invalid };
+    if (in.codecs.testFlag(AudioCodec::RtpPayload) && !out.codecs.testFlag(AudioCodec::RtpPayload)) {
+        return AudioCaps { AudioCodec::Invalid };
     }
     return { (in.codecs & out.codecs), (in.rates & out.rates), (in.channels & out.channels) };
 }

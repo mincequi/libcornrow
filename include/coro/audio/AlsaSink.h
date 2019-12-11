@@ -11,7 +11,7 @@ class AlsaSink : public core::Sink
 {
 public:
     static constexpr std::array<AudioCaps,1> inCaps() {
-        return {{ { Codec::RawInt16 | Codec::Ac3 } }};
+        return {{ { AudioCodec::RawInt16 | AudioCodec::Ac3 } }};
     }
 
     AlsaSink();
@@ -32,7 +32,7 @@ private:
     bool write(const char* samples, uint32_t bytesCount);
     bool recover(int err);
     //
-    void doAc3Payload(AudioBuffer& buffer);
+    static void doAc3Payload(AudioBuffer& buffer);
 
     snd_pcm_t* m_pcm = nullptr;
     AudioConf  m_conf;

@@ -42,7 +42,7 @@ int main(int argc, char** argv)
 
     // alsasink
     auto sink = Gst::ElementFactory::create_element("alsapassthroughsink");
-    sink->set_property("device", Glib::ustring("iec958:CARD=MID,DEV=0"));
+    sink->set_property("device", Glib::ustring("iec958:CARD=sndrpihifiberry,DEV=0"));
 
     // Link elements
     pipeline->add(src)->add(enc)->add(sink);

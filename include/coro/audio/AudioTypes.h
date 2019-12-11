@@ -6,7 +6,7 @@
 namespace coro {
 namespace audio {
 
-enum class Codec : uint16_t
+enum class AudioCodec : uint16_t
 {
     Invalid     = 0x0000,
 
@@ -21,9 +21,9 @@ enum class Codec : uint16_t
 
     RtpPayload = 0x8000
 };
-using Codecs = core::Flags<Codec>;
+using Codecs = core::Flags<AudioCodec>;
 DECLARE_OPERATORS_FOR_FLAGS(Codecs)
-int size(Codec codec);
+int size(AudioCodec codec);
 
 enum class SampleRate : uint8_t
 {

@@ -2,7 +2,6 @@
 
 #include <gstreamermm.h>
 
-#include "Crossover.h"
 #include <core/AppSource.h>
 #include <core/FdSource.h>
 #include "rtp/RtpSbcDepay.h"

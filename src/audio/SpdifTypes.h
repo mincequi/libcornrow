@@ -13,7 +13,9 @@ const uint16_t ac3FrameSize = 6144;
 class SpdifAc3Header {
 public:
     SpdifAc3Header(const char* ac3Data, uint32_t size) {
+
         uint32_t sizeInBits = size*8;
+
 #if __BYTE_ORDER == __LITTLE_ENDIAN
         preamble[5] = ac3Data[5] & 0x7;
         preamble[6] = sizeInBits & 0xFF;
@@ -23,7 +25,9 @@ public:
         preamble[7] = size & 0xFF;
         preamble[6] = size >> 8;
 #endif
+
     }
+
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     uint8_t preamble[8] = { 0x72, 0xF8, 0x1F, 0x4E, 0x1, 0x0, 0x0, 0x0 };
 #else

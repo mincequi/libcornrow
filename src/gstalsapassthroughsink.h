@@ -64,7 +64,6 @@ struct _GstAlsaPassthroughSink {
   guint rate;
   guint channels;
   gint bpf;
-  gboolean passthrough;
   gboolean need_swap;
 
   guint buffer_time;

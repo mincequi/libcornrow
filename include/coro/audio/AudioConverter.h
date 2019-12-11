@@ -14,18 +14,18 @@ public:
 
     static constexpr std::array<audio::AudioCaps,1> inCaps() {
         if (std::is_same<InT, int16_t>::value) {
-            return {{ { Codec::RawInt16 } }};
+            return {{ { AudioCodec::RawInt16 } }};
         } else if (std::is_same<InT, float>::value) {
-            return {{ { Codec::RawFloat32 } }};
+            return {{ { AudioCodec::RawFloat32 } }};
         }
         return {{ { } }};
     }
 
     static constexpr std::array<audio::AudioCaps,1> outCaps() {
         if (std::is_same<OutT, int16_t>::value) {
-            return {{ { Codec::RawInt16 } }};
+            return {{ { AudioCodec::RawInt16 } }};
         } else if (std::is_same<OutT, float>::value) {
-            return {{ { Codec::RawFloat32 } }};
+            return {{ { AudioCodec::RawFloat32 } }};
         }
         return {{ { } }};
     }

@@ -2,13 +2,13 @@
 
 #include <sys/ioctl.h>
 #include <fcntl.h>
+#include <getopt.h>
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
-#include <getopt.h>
 #include <alsa/asoundlib.h>
 
-//#include <gst/audio/gstaudioiec61937.h>
+#include <gst/audio/gstaudioiec61937.h>
 #define _
 
 #ifndef ESTRPIPE
@@ -51,9 +51,6 @@ static guint gst_alsapassthroughsink_delay (GstAudioSink * asink);
 static void gst_alsapassthroughsink_reset (GstAudioSink * asink);
 static gboolean gst_alsapassthroughsink_acceptcaps (GstAlsaPassthroughSink * alsa, GstCaps * caps);
 static GstBuffer* gst_alsapassthroughsink_payload (GstAudioBaseSink * sink, GstBuffer * buf);
-static snd_pcm_t* gst_alsapassthroughsink_open_spdif (GstObject * obj, gchar * device, GstAudioRingBufferSpec * spec);
-
-static gboolean coro_audio_spdif_ac3_payload (const guint8 * src, guint src_n, guint8 * dst, guint dst_n);
 
 static gint output_ref;         /* 0    */
 static snd_output_t *output;    /* NULL */
@@ -142,10 +139,10 @@ gst_alsapassthroughsink_class_init (GstAlsaPassthroughSinkClass * klass)
   gstaudiosink_class->delay = GST_DEBUG_FUNCPTR (gst_alsapassthroughsink_delay);
   gstaudiosink_class->reset = GST_DEBUG_FUNCPTR (gst_alsapassthroughsink_reset);
 
-  g_object_class_install_property (gobject_class, PROP_DEVICE,
+  g_object_class_install_property(gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
           "ALSA device, as defined in an asound configuration file",
-          DEFAULT_DEVICE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_DEVICE, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 }
 
 static void
@@ -213,12 +210,10 @@ G_STMT_START {             \
   }                        \
 } G_STMT_END;
 
-static gboolean
-gst_alsapassthroughsink_acceptcaps (GstAlsaPassthroughSink * alsa, GstCaps * caps)
+static gboolean gst_alsapassthroughsink_acceptcaps (GstAlsaPassthroughSink * alsa, GstCaps * caps)
 {
   GstPad *pad = GST_BASE_SINK (alsa)->sinkpad;
   GstCaps *pad_caps;
-  GstStructure *st;
   gboolean ret = FALSE;
   GstAudioRingBufferSpec spec = { 0 };
 
@@ -243,23 +238,6 @@ gst_alsapassthroughsink_acceptcaps (GstAlsaPassthroughSink * alsa, GstCaps * cap
     goto done;
 
   /* Make sure input is framed (one frame per buffer) and can be payloaded */
-  switch (spec.type) {
-    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_AC3:
-    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_EAC3:
-    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DTS:
-    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG:
-    {
-      gboolean framed = FALSE, parsed = FALSE;
-      st = gst_caps_get_structure (caps, 0);
-
-      gst_structure_get_boolean (st, "framed", &framed);
-      gst_structure_get_boolean (st, "parsed", &parsed);
-      if ((!framed && !parsed) || gst_audio_iec61937_frame_size (&spec) <= 0)
-        goto done;
-    }
-    default:{
-    }
-  }
   ret = TRUE;
 
 done:
@@ -297,30 +275,23 @@ set_hwparams (GstAlsaPassthroughSink * self)
   guint rrate;
   gint err;
   snd_pcm_hw_params_t *params;
-  guint period_time, buffer_time;
-
   snd_pcm_hw_params_malloc (&params);
+  snd_pcm_uframes_t buffer_size = SPDIF_BUFFER_SIZE;
+  snd_pcm_uframes_t period_size = SPDIF_PERIOD_SIZE;
 
-  /* start with requested values, if we cannot configure alsa for those values,
-   * we set these values to -1, which will leave the default alsa values */
-  buffer_time = self->buffer_time;
-  period_time = self->period_time;
-
-retry:
   /* choose all parameters */
   CHECK (snd_pcm_hw_params_any (self->handle, params), no_config);
   /* set the interleaved read/write format */
   CHECK (snd_pcm_hw_params_set_access (self->handle, params, self->access), wrong_access);
   /* set the sample format */
-  if (self->passthrough) {
-      /* Try to use big endian first else fallback to le and swap bytes */
-      if (snd_pcm_hw_params_set_format (self->handle, params, self->format) < 0) {
-          self->format = SND_PCM_FORMAT_S16_LE;
-          self->need_swap = TRUE;
-      } else {
-          self->need_swap = FALSE;
-      }
+  /* Try to use big endian first else fallback to le and swap bytes */
+  if (snd_pcm_hw_params_set_format (self->handle, params, self->format) < 0) {
+      self->format = SND_PCM_FORMAT_S16_LE;
+      self->need_swap = TRUE;
+  } else {
+      self->need_swap = FALSE;
   }
+
   CHECK (snd_pcm_hw_params_set_format (self->handle, params, self->format), no_sample_format);
   /* set the count of channels */
   CHECK (snd_pcm_hw_params_set_channels (self->handle, params, self->channels), no_channels);
@@ -329,13 +300,8 @@ retry:
   CHECK (snd_pcm_hw_params_set_rate_near (self->handle, params, &rrate, NULL), no_rate);
 
   /* Set buffer size and period size manually for SPDIF */
-  if (self->passthrough) {
-      snd_pcm_uframes_t buffer_size = SPDIF_BUFFER_SIZE;
-      snd_pcm_uframes_t period_size = SPDIF_PERIOD_SIZE;
-
-      CHECK(snd_pcm_hw_params_set_buffer_size_near(self->handle, params, &buffer_size), buffer_size);
-      CHECK(snd_pcm_hw_params_set_period_size_near(self->handle, params, &period_size, NULL), period_size);
-  }
+  CHECK(snd_pcm_hw_params_set_buffer_size_near(self->handle, params, &buffer_size), buffer_size);
+  CHECK(snd_pcm_hw_params_set_period_size_near(self->handle, params, &period_size, NULL), period_size);
 
   /* write the parameters to device */
   CHECK (snd_pcm_hw_params (self->handle, params), set_hw_params);
@@ -346,68 +312,67 @@ retry:
   /* ERRORS */
 no_config:
   {
-    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS, (NULL),
-        ("Broken configuration for playback: no configurations available: %s",
-            snd_strerror (err)));
-    snd_pcm_hw_params_free (params);
-    return err;
+      GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS, (NULL),
+                         ("Broken configuration for playback: no configurations available: %s",
+                          snd_strerror (err)));
+      snd_pcm_hw_params_free (params);
+      return err;
   }
 wrong_access:
   {
-    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS, (NULL),
-        ("Access type not available for playback: %s", snd_strerror (err)));
-    snd_pcm_hw_params_free (params);
-    return err;
+      GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS, (NULL),
+                         ("Access type not available for playback: %s", snd_strerror (err)));
+      snd_pcm_hw_params_free (params);
+      return err;
   }
 no_sample_format:
   {
-    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS, (NULL),
-        ("Sample format not available for playback: %s", snd_strerror (err)));
-    snd_pcm_hw_params_free (params);
-    return err;
+      GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS, (NULL),
+                         ("Sample format not available for playback: %s", snd_strerror (err)));
+      snd_pcm_hw_params_free (params);
+      return err;
   }
 no_channels:
   {
-    gchar *msg = g_strdup_printf (_("Could not open device for playback in %d-channel mode."), self->channels);
+      gchar *msg = g_strdup_printf (_("Could not open device for playback in %d-channel mode."), self->channels);
 
-    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS, ("%s", msg),
-        ("%s", snd_strerror (err)));
-    g_free (msg);
-    snd_pcm_hw_params_free (params);
-    return err;
+      GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS, ("%s", msg),
+                         ("%s", snd_strerror (err)));
+      g_free (msg);
+      snd_pcm_hw_params_free (params);
+      return err;
   }
 no_rate:
   {
-    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS, (NULL),
-        ("Rate %iHz not available for playback: %s",
-            self->rate, snd_strerror (err)));
-    return err;
+      GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS, (NULL),
+                         ("Rate %iHz not available for playback: %s",
+                          self->rate, snd_strerror (err)));
+      return err;
   }
 buffer_size:
   {
-    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS, (NULL),
-        ("Unable to get buffer size for playback: %s", snd_strerror (err)));
-    snd_pcm_hw_params_free (params);
-    return err;
+      GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS, (NULL),
+                         ("Unable to get buffer size for playback: %s", snd_strerror (err)));
+      snd_pcm_hw_params_free (params);
+      return err;
   }
 period_size:
   {
-    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS, (NULL),
-        ("Unable to get period size for playback: %s", snd_strerror (err)));
-    snd_pcm_hw_params_free (params);
-    return err;
+      GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS, (NULL),
+                         ("Unable to get period size for playback: %s", snd_strerror (err)));
+      snd_pcm_hw_params_free (params);
+      return err;
   }
 set_hw_params:
   {
-    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS, (NULL),
-        ("Unable to set hw params for playback: %s", snd_strerror (err)));
-    snd_pcm_hw_params_free (params);
-    return err;
+      GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS, (NULL),
+                         ("Unable to set hw params for playback: %s", snd_strerror (err)));
+      snd_pcm_hw_params_free (params);
+      return err;
   }
 }
 
-static int
-set_swparams (GstAlsaPassthroughSink * self)
+static int set_swparams (GstAlsaPassthroughSink * self)
 {
   int err;
   snd_pcm_sw_params_t *params;
@@ -418,13 +383,10 @@ set_swparams (GstAlsaPassthroughSink * self)
   CHECK (snd_pcm_sw_params_current (self->handle, params), no_config);
   /* start the transfer when the buffer is almost full: */
   /* (buffer_size / avail_min) * avail_min */
-  CHECK (snd_pcm_sw_params_set_start_threshold (self->handle, params,
-          (self->buffer_size / self->period_size) * self->period_size),
-      start_threshold);
+  CHECK (snd_pcm_sw_params_set_start_threshold (self->handle, params, SPDIF_BUFFER_SIZE), start_threshold);
 
   /* allow the transfer when at least period_size samples can be processed */
-  CHECK (snd_pcm_sw_params_set_avail_min (self->handle, params,
-          self->period_size), set_avail);
+  CHECK (snd_pcm_sw_params_set_avail_min (self->handle, params, SPDIF_PERIOD_SIZE), set_avail);
 
   /* write the parameters to the playback device */
   CHECK (snd_pcm_sw_params (self->handle, params), set_sw_params);
@@ -466,35 +428,7 @@ set_sw_params:
   }
 }
 
-static gboolean
-alsasink_parse_spec (GstAlsaPassthroughSink * self, GstAudioRingBufferSpec * spec)
-{
-  /* Initialize our boolean */
-  self->passthrough = FALSE;
-
-  switch (spec->type) {
-    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_AC3:
-    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_EAC3:
-    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DTS:
-    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG:
-      self->format = SND_PCM_FORMAT_S16_BE;
-      self->passthrough = TRUE;
-      break;
-    default:
-      return FALSE;
-  }
-
-  self->rate = GST_AUDIO_INFO_RATE (&spec->info);
-  self->channels = 2;   /* always 2 channels for passthrough */
-  //self->buffer_time = spec->buffer_time;
-  //self->period_time = spec->latency_time;
-  self->access = SND_PCM_ACCESS_RW_INTERLEAVED;
-
-  return TRUE;
-}
-
-static gboolean
-gst_alsapassthroughsink_open (GstAudioSink * asink)
+static gboolean gst_alsapassthroughsink_open (GstAudioSink * asink)
 {
   GstAlsaPassthroughSink *self = GST_ALSA_PASSTHROUGH_SINK (asink);
   gint err;
@@ -523,69 +457,28 @@ open_error:
   }
 }
 
-static snd_pcm_t *
-gst_alsapassthroughsink_open_spdif (GstObject * obj, gchar * device, GstAudioRingBufferSpec * spec)
+static gboolean gst_alsapassthroughsink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 {
-  char *iec958_pcm_name = NULL;
-  snd_pcm_t *pcm = NULL;
-  int res;
-  char devstr[256];             /* Storage for local 'default' device string */
+    GstAlsaPassthroughSink *self = GST_ALSA_PASSTHROUGH_SINK (asink);
+    gint err;
 
-  int aes3 = IEC958_AES3_CON_FS_NOTID;
-  switch (spec->info.rate) {
-  case 44100:
-      aes3 = IEC958_AES3_CON_FS_44100;
-      break;
-  case 48000:
-      aes3 = IEC958_AES3_CON_FS_48000;
-      break;
-  default:
-      break;
-  }
-
-  sprintf (devstr,
-      "%s,AES0=0x%02x,AES1=0x%02x,AES2=0x%02x,AES3=0x%02x",
-      device,
-      IEC958_AES0_NONAUDIO,                                 /* AES0 */
-      IEC958_AES1_CON_ORIGINAL | IEC958_AES1_CON_PCM_CODER, /* AES1 */
-      0,                                                    /* AES2 */
-      aes3);                                                /* AES3 */
-
-  GST_DEBUG_OBJECT (obj, "Generated device string \"%s\"", devstr);
-  iec958_pcm_name = devstr;
-
-  res = snd_pcm_open (&pcm, iec958_pcm_name, SND_PCM_STREAM_PLAYBACK, 0);
-  if (G_UNLIKELY (res < 0)) {
-    GST_DEBUG_OBJECT (obj, "failed opening IEC958 device: %s", snd_strerror (res));
-    pcm = NULL;
-  }
-
-  return pcm;
-}
-
-static gboolean
-gst_alsapassthroughsink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
-{
-  GstAlsaPassthroughSink *self = GST_ALSA_PASSTHROUGH_SINK (asink);
-  gint err;
-
-  if (self->passthrough) {
-    snd_pcm_close (self->handle);
-    self->handle = gst_alsapassthroughsink_open_spdif (GST_OBJECT (self), self->device, spec);
+    snd_pcm_close(self->handle);
+    snd_pcm_open(&self->handle, self->device, SND_PCM_STREAM_PLAYBACK, 0);
     if (G_UNLIKELY (!self->handle)) {
-      goto no_iec958;
+        goto no_iec958;
     }
-  }
 
-  if (!alsasink_parse_spec (self, spec))
-    goto spec_parse;
+    self->format = SND_PCM_FORMAT_S16_BE;
+    self->rate = GST_AUDIO_INFO_RATE (&spec->info);
+    self->channels = 2;   /* always 2 channels for passthrough */
+    self->access = SND_PCM_ACCESS_RW_INTERLEAVED;
 
-  CHECK (set_hwparams (self), hw_params_failed);
-  CHECK (set_swparams (self), sw_params_failed);
+    CHECK (set_hwparams (self), hw_params_failed);
+    CHECK (set_swparams (self), sw_params_failed);
 
-  self->bpf = GST_AUDIO_INFO_BPF (&spec->info);
-  spec->segsize = self->period_size * self->bpf;
-  spec->segtotal = self->buffer_size / self->period_size;
+    self->bpf = GST_AUDIO_INFO_BPF (&spec->info);
+    spec->segsize = SPDIF_PERIOD_SIZE * self->bpf;
+    spec->segtotal = SPDIF_BUFFER_SIZE / SPDIF_PERIOD_SIZE;
 
   {
     snd_output_t *out_buf = NULL;
@@ -612,17 +505,11 @@ no_iec958:
         ("Could not open IEC958 (SPDIF) device for playback"));
     return FALSE;
   }
-spec_parse:
-  {
-    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS, (NULL),
-        ("Error parsing spec"));
-    return FALSE;
-  }
 hw_params_failed:
   {
-    GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS, (NULL),
-        ("Setting of hwparams failed: %s", snd_strerror (err)));
-    return FALSE;
+     GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS, (NULL),
+         ("Setting of hwparams failed: %s", snd_strerror (err)));
+     return FALSE;
   }
 sw_params_failed:
   {
@@ -643,27 +530,25 @@ gst_alsapassthroughsink_unprepare (GstAudioSink * asink)
   return TRUE;
 }
 
-static gboolean
-gst_alsapassthroughsink_close (GstAudioSink * asink)
+static gboolean gst_alsapassthroughsink_close (GstAudioSink * asink)
 {
-  GstAlsaPassthroughSink *self = GST_ALSA_PASSTHROUGH_SINK (asink);
+    GstAlsaPassthroughSink *self = GST_ALSA_PASSTHROUGH_SINK (asink);
 
-  GST_OBJECT_LOCK (asink);
-  if (self->handle) {
-    snd_pcm_close (self->handle);
-    self->handle = NULL;
-  }
-  GST_OBJECT_UNLOCK (asink);
+    GST_OBJECT_LOCK (asink);
+    if (self->handle) {
+        snd_pcm_close (self->handle);
+        self->handle = NULL;
+    }
+    GST_OBJECT_UNLOCK (asink);
 
-  return TRUE;
+    return TRUE;
 }
 
 
 /*
  *   Underrun and suspend recovery
  */
-static gint
-xrun_recovery (GstAlsaPassthroughSink * alsa, snd_pcm_t * handle, gint err)
+static gint xrun_recovery (GstAlsaPassthroughSink * alsa, snd_pcm_t * handle, gint err)
 {
   GST_WARNING_OBJECT (alsa, "xrun recovery %d: %s", err, g_strerror (-err));
 
@@ -699,7 +584,7 @@ gst_alsapassthroughsink_write (GstAudioSink * asink, gpointer data, guint length
   GstAlsaPassthroughSink *self = GST_ALSA_PASSTHROUGH_SINK (asink);
   gint err;
   gint cptr;
-  guint8 *ptr = data;
+  uint8_t* ptr = (uint8_t*)data;
 
   GST_LOG_OBJECT (asink, "received audio samples buffer of %u bytes", length);
 
@@ -809,38 +694,43 @@ prepare_error:
   }
 }
 
-static GstBuffer *
-gst_alsapassthroughsink_payload (GstAudioBaseSink * sink, GstBuffer * buf)
+//#define private public
+//#include <audio/AlsaSink.h>
+//#undef public
+//#include <audio/AudioBuffer.h>
+//using namespace coro::audio;
+
+static gboolean coro_audio_spdif_ac3_payload (const guint8 * src, guint src_n, guint8 * dst, guint dst_n);
+
+static GstBuffer* gst_alsapassthroughsink_payload(GstAudioBaseSink* sink, GstBuffer* buf)
 {
-  GstAlsaPassthroughSink *self = GST_ALSA_PASSTHROUGH_SINK (sink);
+    GstBuffer* out = gst_buffer_new_and_alloc(SPDIF_PAYLOAD_SIZE_AC3);
 
-  if (self->passthrough) {
-    GstBuffer *out;
     GstMapInfo iinfo, oinfo;
+    gst_buffer_map(buf, &iinfo, GST_MAP_READ);
+    gst_buffer_map(out, &oinfo, GST_MAP_WRITE);
 
-    out = gst_buffer_new_and_alloc (SPDIF_PAYLOAD_SIZE_AC3);
-
-    gst_buffer_map (buf, &iinfo, GST_MAP_READ);
-    gst_buffer_map (out, &oinfo, GST_MAP_WRITE);
+    //AudioBuffer buffer((char*)iinfo.data, iinfo.size, SPDIF_PAYLOAD_SIZE_AC3, 8);
+    //AlsaSink::doAc3Payload(buffer);
+    //memcpy(oinfo.data, buffer.data(), buffer.size());
 
     if (!coro_audio_spdif_ac3_payload(iinfo.data, iinfo.size, oinfo.data, oinfo.size)) {
-      gst_buffer_unmap (buf, &iinfo);
-      gst_buffer_unmap (out, &oinfo);
-      gst_buffer_unref (out);
-      return NULL;
+        gst_buffer_unmap (buf, &iinfo);
+        gst_buffer_unmap (out, &oinfo);
+        gst_buffer_unref (out);
+        return NULL;
     }
+
+    //volatile AudioBuffer buffer2((char*)oinfo.data, oinfo.size);
+    //(void)buffer2;
 
     gst_buffer_unmap (buf, &iinfo);
     gst_buffer_unmap (out, &oinfo);
 
-    gst_buffer_copy_into (out, buf, GST_BUFFER_COPY_METADATA, 0, -1);
     return out;
-  }
-
-  return gst_buffer_ref (buf);
 }
 
-static gboolean coro_audio_spdif_ac3_payload (const guint8 * src, guint src_n, guint8 * dst, guint dst_n)
+static gboolean coro_audio_spdif_ac3_payload(const guint8 * src, guint src_n, guint8 * dst, guint dst_n)
 {
     guint i;
 #if G_BYTE_ORDER == G_BIG_ENDIAN

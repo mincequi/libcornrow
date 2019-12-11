@@ -10,7 +10,7 @@ class FileSink : public core::Sink
 {
 public:
     static constexpr std::array<AudioCaps,1> inCaps() {
-        return {{ { Codec::RawInt16 | Codec::Ac3 } }};
+        return {{ { AudioCodec::RawInt16 | AudioCodec::Ac3 } }};
     }
 
     FileSink();

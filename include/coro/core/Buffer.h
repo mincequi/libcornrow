@@ -14,7 +14,16 @@ class Buffer
 {
 public:
     Buffer(size_t reservedSize = 0);
-    Buffer(const char* data, size_t size, size_t reservedSize = 0);
+    /**
+     * Construct new buffer with given data, which gets deep copied.
+     * above (GATT Server) and/or GATT profiles (GATT Client).
+     *
+     * @param data data to be deeply copied
+     * @param size size of data to be deeply copied
+     * @param reservedSize overall reserved size to prevent reallocs
+     * @param offset offset to prepend to buffer (to later add headers, etc)
+     */
+    Buffer(const char* data, uint32_t size, uint32_t reservedSize = 0, uint32_t offset = 0);
     virtual ~Buffer();
 
     Buffer(const Buffer&) = delete;
@@ -26,6 +35,18 @@ public:
 
     char* acquire(size_t size);
     void commit(size_t newSize);
+
+    /**
+     * @brief prepend
+     * @param data
+     * @param size
+     */
+    void prepend(const char* data, uint32_t size);
+
+    /**
+     * @brief grow
+     */
+    void grow(uint32_t size);
 
     void clear();
 

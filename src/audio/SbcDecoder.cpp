@@ -40,7 +40,7 @@ AudioConf SbcDecoder::process(const AudioConf& conf, AudioBuffer& buffer)
         coro::rtp::RtpHeader* rtpHeader = (coro::rtp::RtpHeader*)(buffer.data());
         if (!rtpHeader->isValidSbc()) {
             LOG_F(WARNING, "RTP header invalid");
-            m_conf.codec = Codec::Invalid;
+            m_conf.codec = AudioCodec::Invalid;
             goto end;
         }
         //LOG_F(INFO, "seq: %i, csrcCount: %i, extension: %i", rtpHeader->sequenceNumber, rtpHeader->csrcCount, rtpHeader->extension);
@@ -49,7 +49,7 @@ AudioConf SbcDecoder::process(const AudioConf& conf, AudioBuffer& buffer)
         coro::rtp::RtpSbcHeader* rtpSbcHeader = (coro::rtp::RtpSbcHeader*)(buffer.data()+rtpHeader->size());
         if (!rtpSbcHeader->isValid()) {
             LOG_F(WARNING, "RTP SBC header invalid");
-            m_conf.codec = Codec::Invalid;
+            m_conf.codec = AudioCodec::Invalid;
             goto end;
         }
         if (rtpSbcHeader->isFragmented) {
@@ -84,7 +84,7 @@ AudioConf SbcDecoder::process(const AudioConf& conf, AudioBuffer& buffer)
         buffer.commit(writtenBytes);
         if (res >= 0) {
             m_conf.channels = m_sbc->mode == SBC_MODE_MONO ? Channels::Mono : Channels::Stereo;
-            m_conf.codec = Codec::RawInt16;
+            m_conf.codec = AudioCodec::RawInt16;
             m_conf.rate = toCoroFrequency(m_sbc->frequency);
             m_conf.isRtpPayloaded = false;
         }

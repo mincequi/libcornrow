@@ -3,11 +3,11 @@
 namespace coro {
 namespace audio {
 
-int size(Codec codec)
+int size(AudioCodec codec)
 {
     switch (codec) {
-    case Codec::Invalid: return 0;
-    case Codec::RawFloat32: return 4;
+    case AudioCodec::Invalid: return 0;
+    case AudioCodec::RawFloat32: return 4;
     default: return 2;
     }
     return 0;

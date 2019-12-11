@@ -17,11 +17,12 @@ Buffer::Buffer(size_t size)
     m_size = 0;
 }
 
-Buffer::Buffer(const char* data, size_t size, size_t reservedSize)
+Buffer::Buffer(const char* data, uint32_t size, uint32_t reservedSize, uint32_t offset)
 {
-    m_buffer.resize(std::max(size, reservedSize)/4+1);
+    m_buffer.resize(std::max(size+offset, reservedSize)/4+1);
     m_size = size;
-    std::memcpy(m_buffer.data(), data, size);
+    m_offset = offset;
+    std::memcpy(this->data(), data, size);
 }
 
 Buffer::~Buffer()
@@ -69,6 +70,25 @@ void Buffer::commit(size_t size)
 {
     m_offset = m_acquiredOffset;
     m_size = size;
+}
+
+void Buffer::prepend(const char* data, uint32_t size)
+{
+    if (m_offset >= size) {
+        m_offset -= size;
+        m_size += size;
+        std::memcpy(this->data(), data, size);
+    } else {
+        auto dest = acquire(m_size+size);
+        std::memcpy(dest, data, size);
+        std::memcpy(dest+size, this->data(), m_size);
+        commit(m_size+size);
+    }
+}
+
+void Buffer::grow(uint32_t size)
+{
+    m_size = std::min(m_buffer.size()*4, size);
 }
 
 void Buffer::clear()

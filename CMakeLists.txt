@@ -3,7 +3,8 @@ cmake_minimum_required(VERSION 3.7)
 project(gstreamermm-dsp)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -DG_DISABLE_ASSERT")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall -Werror -Wno-old-style-cast")
+set(CMAKE_CXX_STANDARD 17)
 
 find_package(PkgConfig REQUIRED)
 find_package(ALSA REQUIRED)
@@ -14,11 +15,10 @@ add_library(${PROJECT_NAME} STATIC
     src/gstreamermm-dsp.cpp
     src/AlsaUtil.cpp
     src/Biquad.cpp
-    src/Crossover.cpp
     src/Types.cpp
     src/Util.cpp
 
-    src/gstalsapassthroughsink.c
+    src/gstalsapassthroughsink.cpp
     src/gstavdtpsrc.cpp
     src/gstfdsrc.cpp
 
@@ -29,6 +29,7 @@ add_library(${PROJECT_NAME} STATIC
     src/audio/AudioConverter.cpp
     src/audio/AudioEncoderFfmpeg.cpp
     src/audio/AudioTypes.cpp
+    src/audio/Crossover.cpp
     src/audio/FileSink.cpp
     src/audio/Loudness.cpp
     src/audio/Node.cpp

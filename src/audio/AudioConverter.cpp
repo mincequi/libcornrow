@@ -37,7 +37,7 @@ AudioConf AudioConverter<int16_t,float>::process(const AudioConf& conf, AudioBuf
     buffer.commit(buffer.size()*2);
 
     auto _conf = conf;
-    _conf.codec = Codec::RawFloat32;
+    _conf.codec = AudioCodec::RawFloat32;
     return _conf;
 }
 
@@ -67,7 +67,7 @@ AudioConf AudioConverter<float,int16_t>::process(const AudioConf& conf, AudioBuf
     buffer.commit(buffer.size()/2);
 
     auto _conf = conf;
-    _conf.codec = Codec::RawInt16;
+    _conf.codec = AudioCodec::RawInt16;
     return _conf;
 }
 
