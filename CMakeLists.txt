@@ -64,7 +64,7 @@ target_link_libraries(${PROJECT_NAME}
     pthread
     dl
     sbc
-    ao
+    #ao
     avutil
     avcodec
 )

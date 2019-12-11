@@ -199,6 +199,11 @@ void Crossover::updateCrossover()
     m_lowGain = m_filter.g > 0.0 ? pow(10, (-m_filter.g/20.0)) : 1.0;
     m_highGain = m_filter.g < 0.0 ? pow(10, (m_filter.g/20.0)) : 1.0;
 
+    // If we are a LR2 crossover, we invert the high signal
+    if (m_filter.q <= 0.5) {
+        m_highGain *= -1.0;
+    }
+
     m_lp.setCascadeCount(m_filter.q <= 0.5f ? 1 : 2);
     m_lp.setFilter({ FilterType::LowPass, m_filter.f, 0.0, m_filter.q });
     m_hp.setCascadeCount(m_filter.q <= 0.5f ? 1 : 2);
