@@ -1,6 +1,6 @@
-#define protected public
+#define private public
 #include "../include/coro/audio/AudioConverter.h"
-#undef protected
+#undef private
 
 #include <assert.h>
 #include <cstring>
@@ -25,7 +25,7 @@ int main()
     buffer.commit(5*sizeof(int16_t));
 
     // Process buffer
-    m_intToFloat.process(AudioConf{ Codec::RawInt16 }, buffer);
+    m_intToFloat.process(AudioConf{ AudioCodec::RawInt16 }, buffer);
 
     // Test buffer after conversion to float
     assert(buffer.size() == 5*sizeof(float));
@@ -36,7 +36,7 @@ int main()
     }
 
     // Process float buffer
-    m_floatToInt.process(AudioConf{ Codec::RawFloat32 }, buffer);
+    m_floatToInt.process(AudioConf{ AudioCodec::RawFloat32 }, buffer);
 
     // Test buffer after conversion to int16
     assert(buffer.size() == 5*sizeof(int16_t));
@@ -57,7 +57,7 @@ int main()
     buffer.commit(5*sizeof(float));
 
     // Process float buffer
-    m_floatToInt.process(AudioConf{ Codec::RawFloat32 }, buffer);
+    m_floatToInt.process(AudioConf{ AudioCodec::RawFloat32 }, buffer);
 
     std::vector<int16_t> overShoots;
     // Test buffer after conversion to int16
