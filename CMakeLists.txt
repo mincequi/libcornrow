@@ -9,7 +9,6 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(PkgConfig REQUIRED)
 find_package(ALSA REQUIRED)
 
-# gstreamermm-dsp
 add_library(${PROJECT_NAME} STATIC
     src/AlsaUtil.cpp
     src/Types.cpp
