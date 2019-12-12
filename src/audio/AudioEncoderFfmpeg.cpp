@@ -183,7 +183,7 @@ void AudioEncoderFfmpeg::pushFrame(AVFrame* frame)
     LOG_IF_F(WARNING, ret == AVERROR_EOF, "Encoder flushed, no new frames can be sent to it");
     LOG_IF_F(WARNING, ret == AVERROR(EINVAL), "Codec not opened, refcounted_frames not set");
     LOG_IF_F(WARNING, ret == AVERROR(ENOMEM), "Failed to add packet to internal queue");
-    av_frame_unref(frame);
+    av_frame_free(&frame);
 
     ret = avcodec_receive_packet(m_context, m_packet);
     LOG_IF_F(WARNING, ret == AVERROR(EAGAIN), "No output available in current state");
