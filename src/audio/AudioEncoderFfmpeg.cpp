@@ -21,15 +21,22 @@ static AVCodecID toFfmpegCodecId(AudioCodec codec)
 }
 
 AudioEncoderFfmpeg::AudioEncoderFfmpeg(AudioCodec codec)
+    : m_codec(codec)
 {
-    m_encoder = avcodec_find_encoder(toFfmpegCodecId(codec));
-    m_context = avcodec_alloc_context3(m_encoder);
-    m_packet = av_packet_alloc();
 }
 
 AudioEncoderFfmpeg::~AudioEncoderFfmpeg()
 {
-    avcodec_free_context(&m_context);
+    if (m_context) {
+        // This will also free the encoder.
+        avcodec_free_context(&m_context);
+    }
+    if (m_packet) {
+        av_packet_free(&m_packet);
+    }
+    if (m_partialFrame) {
+        av_frame_free(&m_partialFrame);
+    }
 }
 
 void AudioEncoderFfmpeg::setBitrate(uint16_t kbps)
@@ -70,16 +77,31 @@ AudioConf AudioEncoderFfmpeg::process(const AudioConf& conf, AudioBuffer& _buffe
 
 void AudioEncoderFfmpeg::updateConf()
 {
+    if (m_context) {
+        // This will also free the encoder.
+        avcodec_free_context(&m_context);
+    }
+    if (m_packet) {
+        av_packet_free(&m_packet);
+    }
+    if (m_partialFrame) {
+        av_frame_free(&m_partialFrame);
+    }
+
+    auto encoder = avcodec_find_encoder(toFfmpegCodecId(m_codec));
+    m_packet = av_packet_alloc();
+    m_context = avcodec_alloc_context3(encoder);
+
     m_context->channel_layout |= (m_conf.channels & Channels::Stereo) ? (AV_CH_FRONT_LEFT | AV_CH_FRONT_RIGHT) : 0;
     m_context->channel_layout |= (m_conf.channels & Channels::RearStereo) ? (AV_CH_BACK_LEFT | AV_CH_BACK_RIGHT) : 0;
     m_context->channel_layout |= (m_conf.channels & Channels::Center) ? (AV_CH_FRONT_CENTER) : 0;
     m_context->channel_layout |= (m_conf.channels & Channels::Lfe) ? (AV_CH_LOW_FREQUENCY) : 0;
     m_context->channels = av_get_channel_layout_nb_channels(m_context->channel_layout);
-    m_context->sample_fmt = AV_SAMPLE_FMT_FLTP; // We only support planar formats for now
+    m_context->sample_fmt = AV_SAMPLE_FMT_FLTP; // Most codecs only support planar formats
     m_context->sample_rate = toInt(m_conf.rate);
     m_context->bit_rate = 640000;
 
-    int ret = avcodec_open2(m_context, m_encoder, NULL);
+    int ret = avcodec_open2(m_context, encoder, NULL);
     LOG_IF_F(ERROR, ret < 0, "Error opening codec: %d", ret);
 }
 
@@ -173,14 +195,20 @@ void AudioEncoderFfmpeg::pushFrame(AVFrame* frame)
     buffer.commit(m_packet->size);
     av_packet_unref(m_packet);
 
-    if (!next()) {
+    // Search for next node, that is not bypassed.
+    auto _next = next();
+    while (_next && _next->isBypassed()) {
+        _next = _next->next();
+    }
+
+    if (!_next) {
         LOG_F(ERROR, "No further element after encoder");
         return;
     }
 
     auto _conf = m_conf;
     _conf.codec = AudioCodec::Ac3;
-    next()->process(_conf, buffer);
+    _next->process(_conf, buffer);
 }
 
 } // namespace audio

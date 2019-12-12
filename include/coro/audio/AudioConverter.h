@@ -30,11 +30,8 @@ public:
         return {{ { } }};
     }
 
-protected:
-    AudioConf process(const AudioConf& conf, AudioBuffer& buffer) override;
-
 private:
-
+    AudioConf process(const AudioConf& conf, AudioBuffer& buffer) override;
 };
 
 } // namespace audio

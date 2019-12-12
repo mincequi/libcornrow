@@ -1,8 +1,10 @@
 #define protected public
+#define private public
 #include <coro/audio/AlsaSink.h>
 #include <coro/audio/AudioEncoderFfmpeg.h>
 #include <coro/audio/FileSink.h>
 #undef protected
+#undef private
 #include <coro/audio/AudioTypes.h>
 
 #include <chrono>
@@ -54,8 +56,6 @@ void runTest(std::string filename, std::uint16_t seconds = 100, int cycles = 1)
     audio::AudioEncoderFfmpeg encoder(AudioCodec::Ac3);
     audio::AlsaSink sink;
     sink.setDevice("iec958:CARD=sndrpihifiberry,DEV=0");
-    //sink.setFileName(filename);
-    //sink.start();
     audio::Node::link(encoder, sink);
 
     for (int i = 0; i < cycles; ++i) {
@@ -71,10 +71,7 @@ void runTest(std::string filename, std::uint16_t seconds = 100, int cycles = 1)
 
 int main()
 {
-    // Init
     std::cout << std::endl << "#### AC3 test ####" << std::endl;
     runTest<float>("testFloatFloat.ac3", 1, 10);
-    //runTest<int32_t,int64_t>("testInt32Int64.raw", 100);
-
     return 0;
 }

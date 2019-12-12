@@ -5,7 +5,6 @@
 typedef struct AVCodecContext AVCodecContext;
 typedef struct AVFrame AVFrame;
 typedef struct AVPacket AVPacket;
-typedef struct AVCodec AVCodec;
 
 namespace coro {
 namespace audio {
@@ -22,10 +21,14 @@ public:
                     ChannelFlags::Any } }};
     }
 
-    static constexpr std::array<audio::AudioCaps,1> outCaps() {
+    static constexpr std::array<audio::AudioCaps,2> outCaps() {
         return {{ { AudioCodec::Ac3,
                     SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000,
-                    Channels::Mono | Channels::Stereo } }};
+                    Channels::Mono | Channels::Stereo },
+                  // We can be bypassed, so also accept inCaps as OutCaps
+                  { AudioCodec::RawFloat32,
+                    SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000,
+                    ChannelFlags::Any } }};
     }
 
     /**
@@ -34,23 +37,23 @@ public:
      */
     void setBitrate(uint16_t kbps);
 
-protected:
+private:
     AudioConf process(const AudioConf& conf, AudioBuffer& buffer) override;
 
-private:
     void updateConf();
 
     static void freeBuffer(void *opaque, uint8_t *data);
+
     AVFrame* createFrame() const;
     AVFrame* fillFrame(AVFrame* frame, AudioBuffer& buffer);
     void     pushFrame(AVFrame* frame);
 
+    AudioCodec m_codec = AudioCodec::Invalid;
     AudioConf m_conf;
 
-    AVCodec*        m_encoder = nullptr;
     AVCodecContext* m_context = nullptr;
     AVFrame* m_partialFrame = nullptr;
-    AVPacket* m_packet;
+    AVPacket* m_packet      = nullptr;
 };
 
 } // namespace audio

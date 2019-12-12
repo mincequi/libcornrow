@@ -34,7 +34,13 @@ void AlsaSink::stop()
 
 void AlsaSink::setDevice(const std::string& device)
 {
+    if (device == m_device) {
+        return;
+    }
+
     m_device = device;
+    stop();
+    start(m_conf);
 }
 
 AudioConf AlsaSink::process(const AudioConf& conf, AudioBuffer& buffer)

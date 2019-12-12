@@ -59,7 +59,7 @@ char* Buffer::acquire(size_t size)
         return (char*)m_buffer.data()+m_acquiredOffset;
     }
     // Create space
-    LOG_F(INFO, "Buffer reallocated");
+    LOG_F(1, "Buffer reallocated");
     m_buffer.resize(m_buffer.size()+(size-sizeAtBack)/4+1);
     m_acquiredOffset = m_offset+m_size;
     m_acquiredOffset += m_acquiredOffset%4;

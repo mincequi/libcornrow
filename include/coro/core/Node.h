@@ -11,8 +11,8 @@ namespace core {
 class Node
 {
 public:
-    template<class T>
-    static constexpr bool canIntersect(const T& in, const T& out);
+    template<class InCaps, class OutCaps>
+    static constexpr bool canIntersect(const InCaps& in, const OutCaps& out);
 
     template<class Node1, class Node2>
     static std::enable_if_t<
@@ -31,12 +31,18 @@ public:
 
     virtual audio::AudioConf process(const audio::AudioConf& conf, audio::AudioBuffer& buffer) { return audio::AudioConf(); }
 
+    bool isBypassed() const;
+    void setIsBypassed(bool);
+
 protected:
     Node* m_next = nullptr;
+
+private:
+    bool m_isBypassed = false;
 };
 
-template<class T>
-constexpr bool Node::canIntersect(const T& in, const T& out)
+template<class InCaps, class OutCaps>
+constexpr bool Node::canIntersect(const InCaps& in, const OutCaps& out)
 {
     for (const auto& i : in) {
         for (const auto& o : out) {
