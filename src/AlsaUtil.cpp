@@ -1,4 +1,4 @@
-#include "gstdsp/AlsaUtil.h"
+#include "audio/AlsaUtil.h"
 
 #include <alsa/asoundlib.h>
 

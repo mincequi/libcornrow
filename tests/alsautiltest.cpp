@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <gstdsp/AlsaUtil.h>
+#include <coro/audio/AlsaUtil.h>
 
 int main(void)
 {
