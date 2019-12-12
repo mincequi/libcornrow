@@ -55,6 +55,4 @@ target_link_libraries(${PROJECT_NAME}
     avcodec
 )
 
-target_compile_options(${PROJECT_NAME} PUBLIC ${GSTMM_CFLAGS_OTHER})
-
 add_subdirectory(tests)
