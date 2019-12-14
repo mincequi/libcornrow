@@ -19,9 +19,6 @@ public:
     template<class InCaps, class OutCaps>
     static constexpr InCaps intersect(const InCaps& in, const OutCaps& out);
 
-    virtual void start(const AudioConf& conf) {}
-    void stop() override {}
-
 protected:
     friend class core::Node;
 };

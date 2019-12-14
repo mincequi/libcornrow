@@ -44,12 +44,12 @@ size_t Buffer::size() const
     return m_size;
 }
 
-char* Buffer::acquire(size_t size)
+char* Buffer::acquire(size_t size, size_t prepadding)
 {
     // If we have space in front
-    if (m_offset >= size) {
-        m_acquiredOffset = 0;
-        return (char*)m_buffer.data();
+    if (m_offset >= (size+prepadding)) {
+        m_acquiredOffset = prepadding;
+        return (char*)m_buffer.data()+m_acquiredOffset;
     }
     // If we have space at back
     const auto sizeAtBack = m_buffer.size()*4-m_offset-m_size;

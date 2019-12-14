@@ -11,6 +11,11 @@ AppSource::~AppSource()
 {
 }
 
+std::string AppSource::name() const
+{
+    return "AppSource";
+}
+
 AudioConf AppSource::process(const AudioConf& _conf, AudioBuffer& buffer)
 {
     auto conf = _conf;

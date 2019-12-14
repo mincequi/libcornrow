@@ -32,7 +32,7 @@ public:
     const char* data() const;
     size_t size() const;
 
-    char* acquire(size_t size);
+    char* acquire(size_t size, size_t prepadding = 0);
     void commit(size_t newSize);
 
     /**

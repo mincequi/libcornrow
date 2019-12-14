@@ -8,19 +8,24 @@
 namespace coro {
 namespace audio {
 
-class AppSource : public Source
+class UdpWorker;
+
+class ScreamSource : public Source
 {
 public:
     static constexpr std::array<audio::AudioCaps,1> outCaps() {
-        return {{ { } }};
+        return {{ { audio::AudioCodec::RawInt16,
+                    audio::SampleRate::Rate44100 | audio::SampleRate::Rate48000,
+                    audio::Channels::Stereo } }};
     }
 
-    AppSource();
-    virtual ~AppSource();
+    ScreamSource();
+    virtual ~ScreamSource();
 
     std::string name() const override;
 
-    AudioConf process(const AudioConf& conf, AudioBuffer& buffer) override;
+private:
+    UdpWorker* m_udpWorker;
 };
 
 } // namespace audio

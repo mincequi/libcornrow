@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(PkgConfig REQUIRED)
 find_package(ALSA REQUIRED)
+find_package(Boost COMPONENTS system REQUIRED)
 
 add_library(${PROJECT_NAME} STATIC
     src/AlsaUtil.cpp
@@ -25,6 +26,7 @@ add_library(${PROJECT_NAME} STATIC
     src/audio/Loudness.cpp
     src/audio/Node.cpp
     src/audio/Peq.cpp
+    src/audio/ScreamSource.cpp
     src/audio/SbcDecoder.cpp
     src/audio/Source.cpp
     src/audio/TBiquad.cpp
@@ -47,6 +49,7 @@ PRIVATE
 
 target_link_libraries(${PROJECT_NAME}
     ${ALSA_LIBRARIES}
+    ${Boost_LIBRARIES}
     pthread
     dl
     sbc

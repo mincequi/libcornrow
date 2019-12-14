@@ -24,6 +24,8 @@ public:
         prev.m_next = &next;
     }
 
+    // @TODO(mawe): make this pure virtual to enforce nodes to give a name.
+    virtual std::string name() const { return ""; }
     Node* next() const;
 
     virtual void start() {}

@@ -51,6 +51,10 @@ AudioConf AlsaSink::process(const AudioConf& conf, AudioBuffer& buffer)
         m_conf = conf;
     }
 
+    if (!m_pcm) {
+        start(conf);
+    }
+
     if (conf.codec == AudioCodec::Ac3) {
         doAc3Payload(buffer);
     }
