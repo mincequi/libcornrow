@@ -103,7 +103,7 @@ private:
         }
 
         if (error) {
-            LOG_F(ERROR, "error receiving data: %s", error.message());
+            LOG_F(ERROR, "error receiving data: %s", error.message().c_str());
             goto end;
         } else if (bytesTransferred != (5+1152)) {
             LOG_F(ERROR, "invalid bytes count: %d", bytesTransferred);
