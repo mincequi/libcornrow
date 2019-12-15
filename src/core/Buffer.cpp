@@ -17,7 +17,7 @@ Buffer::Buffer(size_t size)
     m_size = 0;
 }
 
-Buffer::Buffer(const char* data, uint32_t size, uint32_t reservedSize, uint32_t offset)
+Buffer::Buffer(const char* data, size_t size, size_t reservedSize, size_t offset)
 {
     m_buffer.resize(std::max(size+offset, reservedSize)/4+1);
     m_size = size;
@@ -44,12 +44,12 @@ size_t Buffer::size() const
     return m_size;
 }
 
-char* Buffer::acquire(size_t size, size_t prepadding)
+char* Buffer::acquire(size_t size)
 {
     // If we have space in front
-    if (m_offset >= (size+prepadding)) {
-        m_acquiredOffset = prepadding;
-        return (char*)m_buffer.data()+m_acquiredOffset;
+    if (m_offset >= size) {
+        m_acquiredOffset = 0;
+        return (char*)m_buffer.data();
     }
     // If we have space at back
     const auto sizeAtBack = m_buffer.size()*4-m_offset-m_size;

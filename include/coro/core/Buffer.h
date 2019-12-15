@@ -22,7 +22,7 @@ public:
      * @param reservedSize overall reserved size to prevent reallocs
      * @param offset offset to prepend to buffer (to later add headers, etc)
      */
-    Buffer(const char* data, uint32_t size, uint32_t reservedSize = 0, uint32_t offset = 0);
+    Buffer(const char* data, size_t size, size_t reservedSize = 0, size_t offset = 0);
     virtual ~Buffer();
 
     Buffer(const Buffer&) = delete;
@@ -32,7 +32,7 @@ public:
     const char* data() const;
     size_t size() const;
 
-    char* acquire(size_t size, size_t prepadding = 0);
+    char* acquire(size_t size);
     void commit(size_t newSize);
 
     /**

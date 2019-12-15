@@ -1,4 +1,4 @@
-#include "audio/ScreamSource.h"
+#include <coro/audio/ScreamSource.h>
 
 #include <thread>
 #include <asio/io_service.hpp>
@@ -70,19 +70,20 @@ public:
 
     ~UdpWorker()
     {
-        //m_thread->join();
         m_ioService.stop();
-        delete m_thread;
         m_source.stop();
+
+        m_thread->join();
+        delete m_thread;
     }
 
 private:
     void doReceive()
     {
-        m_buffer.acquire(5+1152, 3);
-        m_buffer.commit(5+1152);
+        m_buffer.acquire(3+5+1152);
+        m_buffer.commit(3+5+1152);
         m_socket.async_receive_from(
-                    asio::buffer(m_buffer.data(), m_buffer.size()),
+                    asio::buffer(m_buffer.data()+3, m_buffer.size()-3),
                     m_remoteEndpoint,
                     boost::bind(&UdpWorker::onReceive, this, ph::error, ph::bytes_transferred));
     }
@@ -110,14 +111,14 @@ private:
             goto end;
         }
 
-        header = (ScreamHeader*)(m_buffer.data());
+        header = (ScreamHeader*)(m_buffer.data()+3);
         if (!header->isValid()) {
             LOG_F(ERROR, "invalid scream header: we only support 44.1/48 khz, S16, Stereo");
             goto end;
         }
 
         ++m_bufferCount;
-        m_buffer.trimFront(header->size());
+        m_buffer.trimFront(header->size()+3);
         m_source.pushBuffer( { audio::AudioCodec::RawInt16,
                                header->baseRate ? SampleRate::Rate44100 : SampleRate::Rate48000,
                                audio::Channels::Stereo },

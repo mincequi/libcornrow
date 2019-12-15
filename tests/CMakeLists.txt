@@ -12,4 +12,5 @@ coro_tests(
     convertertest
     corotest
     encodertest
+    screamtest
 )
