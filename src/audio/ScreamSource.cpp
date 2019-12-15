@@ -1,8 +1,6 @@
 #include "audio/ScreamSource.h"
 
 #include <thread>
-#include <asio/buffer.hpp>
-#include <asio/deadline_timer.hpp>
 #include <asio/io_service.hpp>
 #include <asio/placeholders.hpp>
 #include <asio/steady_timer.hpp>
@@ -178,7 +176,7 @@ ScreamSource::~ScreamSource()
     delete m_udpWorker;
 }
 
-std::string ScreamSource::name() const
+const char* ScreamSource::name() const
 {
     return "ScreamSource";
 }

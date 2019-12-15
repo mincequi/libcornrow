@@ -22,7 +22,7 @@ public:
     ScreamSource();
     virtual ~ScreamSource();
 
-    std::string name() const override;
+    const char* name() const override;
 
 private:
     UdpWorker* m_udpWorker;

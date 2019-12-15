@@ -18,7 +18,7 @@ public:
     AppSource();
     virtual ~AppSource();
 
-    std::string name() const override;
+    const char* name() const override;
 
     AudioConf process(const AudioConf& conf, AudioBuffer& buffer) override;
 };

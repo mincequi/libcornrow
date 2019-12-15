@@ -11,7 +11,7 @@ AppSource::~AppSource()
 {
 }
 
-std::string AppSource::name() const
+const char* AppSource::name() const
 {
     return "AppSource";
 }

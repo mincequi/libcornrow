@@ -25,7 +25,7 @@ public:
     }
 
     // @TODO(mawe): make this pure virtual to enforce nodes to give a name.
-    virtual std::string name() const { return ""; }
+    virtual const char* name() const { return ""; }
     Node* next() const;
 
     virtual void start() {}
