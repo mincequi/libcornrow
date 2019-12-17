@@ -77,11 +77,11 @@ void Buffer::prepend(const char* data, uint32_t size)
     if (m_offset >= size) {
         m_offset -= size;
         m_size += size;
-        std::memcpy(this->data(), data, size);
+        std::memcpy(m_buffer.data()+m_offset, data, size);
     } else {
         auto dest = acquire(m_size+size);
         std::memcpy(dest, data, size);
-        std::memcpy(dest+size, this->data(), m_size);
+        std::memcpy(dest+size, m_buffer.data()+m_offset, m_size);
         commit(m_size+size);
     }
 }

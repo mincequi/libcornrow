@@ -58,7 +58,10 @@ AudioConf AlsaSink::process(const AudioConf& conf, AudioBuffer& buffer)
     if (conf.codec == AudioCodec::Ac3) {
         doAc3Payload(buffer);
     }
-    write(buffer.data(), buffer.size());
+    if (!write(buffer.data(), buffer.size())) {
+        stop();
+        start(conf);
+    }
     buffer.clear();
     return conf;
 }
@@ -236,6 +239,7 @@ bool AlsaSink::write(const char* samples, uint32_t bytesCount)
         }
 
         if (ret < 0) {
+            return false; // Currently we do not recover. We simply close and reopen the device.
             if (!recover(ret)) {
                 return false;
             }
@@ -253,12 +257,16 @@ bool AlsaSink::recover(int err)
 {
     // underrun
     if (err == -EPIPE) {
+        LOG_F(WARNING, "AlsaSink underrun");
         err = snd_pcm_prepare(m_pcm);
         if (err < 0) {
+             LOG_F(ERROR, "AlsaSink cannot be recovered from underrun");
             // Cannot recover from underrun
             return false;
         }
+        return true;
     } else if (err == -ESTRPIPE) {
+        LOG_F(WARNING, "AlsaSink suspended");
         // wait until suspend flag clears
         while ((err = snd_pcm_resume(m_pcm)) == -EAGAIN)
             sleep(1);
@@ -266,6 +274,7 @@ bool AlsaSink::recover(int err)
         if (err < 0) {
             err = snd_pcm_prepare(m_pcm);
             if (err < 0) {
+                LOG_F(ERROR, "AlsaSink cannot be recovered from suspend");
                 // Cannot recover from suspend
                 return false;
             }
@@ -273,6 +282,7 @@ bool AlsaSink::recover(int err)
         return true;
     }
 
+    LOG_F(WARNING, "AlsaSink unrecoverable");
     // unrecoverable
     return false;
 }

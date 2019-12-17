@@ -1,7 +1,6 @@
 #pragma once
 
 #include <coro/audio/AudioCaps.h>
-#include <coro/audio/AudioBuffer.h>
 #include <coro/audio/AudioConf.h>
 #include <coro/audio/Source.h>
 

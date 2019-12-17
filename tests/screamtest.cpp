@@ -2,7 +2,7 @@
 #include <cstring>
 #include <iostream>
 
-#include <coro/core/Sink.h>
+#include <coro/audio/AlsaSink.h>
 
 #include <asio/steady_timer.hpp>
 
@@ -36,28 +36,12 @@ public:
 
 int main()
 {
-    //    ScreamSource source;
-    //    source.start();
-    //    source.m_udpWorker->m_ioService.stop();
-    //    TestSink    sink;
+    ScreamSource source;
+    source.setReadyCallback([&](Source* const, bool ready) {
+        if (ready) source.start();
+    });
+    AlsaSink     sink;
+    Node::link(source, sink);
 
-    //    Node::link(source, sink);
-
-    //    assert(source.m_udpWorker->m_buffer.size() == 5+1152);
-
-    //    auto data = source.m_udpWorker->m_buffer.data();
-
-    for (int i = 0; i < 1000; ++i) {
-        testSize = rand() % 2000 + 1;
-        padding = rand() % 8;
-
-        auto data = (unsigned char*)testBuffer.acquire(testSize);
-        testBuffer.commit(testSize);
-        for (size_t j = 0; j < testSize; ++j) {
-            data[j] = rand() % 256;
-        }
-
-        assert(testBuffer.size() == testSize);
-        assert(!memcmp(testBuffer.data(), data, testSize));
-    }
+    source.m_udpWorker->m_ioService.run();
 }

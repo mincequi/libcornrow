@@ -14,13 +14,15 @@ Source::~Source()
 void Source::start()
 {
     m_isStarted = true;
-    // Start timer to watch
+    doStart();
 }
 
 void Source::stop()
 {
     m_isStarted = false;
-    m_wantsToStart = false;
+    doStop();
+
+    setReady(false);
 }
 
 bool Source::isStarted() const
@@ -28,25 +30,25 @@ bool Source::isStarted() const
     return m_isStarted;
 }
 
-bool Source::wantsToStart() const
+bool Source::isReady() const
 {
-    return m_wantsToStart;
+    return m_isReady;
 }
 
-void Source::setWantsToStart(bool wts)
+void Source::setReady(bool ready)
 {
-    m_wantsToStart = wts;
+    m_isReady = ready;
     m_mutex.lock();
-    if (m_wantsToStartCallback) {
-        m_wantsToStartCallback(this, wts);
+    if (m_isReadyCallback) {
+        m_isReadyCallback(this, ready);
     }
     m_mutex.unlock();
 }
 
-void Source::setWantsToStartCallback(WantsToStartCallback callback)
+void Source::setReadyCallback(ReadyCallback callback)
 {
     m_mutex.lock();
-    m_wantsToStartCallback = callback;
+    m_isReadyCallback = callback;
     m_mutex.unlock();
 }
 
@@ -61,6 +63,14 @@ void Source::pushBuffer(const AudioConf& _conf, AudioBuffer& buffer)
         }
         next = next->next();
     }
+}
+
+void Source::doStart()
+{
+}
+
+void Source::doStop()
+{
 }
 
 } // namespace audio

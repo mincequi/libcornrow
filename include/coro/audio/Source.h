@@ -23,25 +23,27 @@ public:
 
     Source(const Source&) = delete;
 
-    virtual void start();
-    virtual void stop();
+    void start();
+    void stop();
     virtual bool isStarted() const;
-    virtual bool wantsToStart() const;
-    virtual void setWantsToStart(bool wts);
+    virtual bool isReady() const;
+    virtual void setReady(bool wts);
 
-    using WantsToStartCallback = std::function<void(Source* const, bool)>;
-    void setWantsToStartCallback(WantsToStartCallback callback);
+    using ReadyCallback = std::function<void(Source* const, bool)>;
+    void setReadyCallback(ReadyCallback callback);
 
     void pushBuffer(const AudioConf& conf, AudioBuffer& buffer);
 
 protected:
+    virtual void doStart();
+    virtual void doStop();
+
     std::mutex  m_mutex;
-    WantsToStartCallback m_wantsToStartCallback;
+    ReadyCallback m_isReadyCallback;
 
 private:
-    bool m_isStarted = false;
-    bool m_wantsToStart = false;
-
+    std::atomic_bool m_isStarted = false;
+    std::atomic_bool m_isReady = false;
     std::atomic_uint m_bufferCount = 0;
 };
 
