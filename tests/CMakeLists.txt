@@ -14,3 +14,13 @@ coro_tests(
     encodertest
     screamtest
 )
+
+find_package(Qt5 COMPONENTS Multimedia Network)
+if(Qt5_FOUND)
+add_executable(sqreamtest sqreamtest.cpp)
+target_link_libraries(sqreamtest
+    ${PROJECT_NAME}
+    Qt5::Multimedia
+    Qt5::Network
+)
+endif(Qt5_FOUND)
