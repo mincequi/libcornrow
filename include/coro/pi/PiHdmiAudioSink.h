@@ -2,6 +2,8 @@
 
 #include <coro/core/Sink.h>
 
+struct AUDIOPLAY_STATE_T;
+
 namespace coro {
 namespace pi {
 
@@ -9,23 +11,20 @@ class PiHdmiAudioSink : public core::Sink
 {
 public:
     static constexpr std::array<audio::AudioCaps,1> inCaps() {
-        return {{ { audio::AudioCodec::RawInt16 } }};
+        return {{ { audio::AudioCodec::RawInt16,
+                    audio::SampleRate::Rate44100 | audio::SampleRate::Rate48000,
+                    audio::Channels::Quad } }};
     }
 
     PiHdmiAudioSink();
     virtual ~PiHdmiAudioSink();
 
-    void start(const audio::AudioConf& conf);
+private:
+    const char* name() const override;
     void stop() override;
-
-    void setDevice(const std::string& device);
-
     audio::AudioConf process(const audio::AudioConf& conf, audio::AudioBuffer& buffer) override;
 
-private:
-    bool open(const audio::AudioConf& conf);
-    bool write(const char* samples, uint32_t bytesCount);
-
+    AUDIOPLAY_STATE_T*  m_handle = nullptr;
     audio::AudioConf  m_conf;
 };
 

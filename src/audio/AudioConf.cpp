@@ -3,7 +3,7 @@
 namespace coro {
 namespace audio {
 
-int AudioConf::frameSize() const
+uint32_t AudioConf::frameSize() const
 {
     return toInt(channels)*size(codec);
 }

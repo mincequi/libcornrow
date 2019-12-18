@@ -42,12 +42,12 @@ audio::AudioConf Loudness::process(const audio::AudioConf& conf, audio::AudioBuf
         return conf;
     }
 
-    int channelCount = audio::toInt(conf.channels);
-    int frameCount = buffer.size()/conf.frameSize();
+    auto channelCount = audio::toInt(conf.channels);
+    auto frameCount = buffer.size()/conf.frameSize();
     float* data = (float*)buffer.data();
 
     // Apply volume
-    for (int i = 0; i < frameCount*audio::toInt(conf.channels); ++i) {
+    for (uint32_t i = 0; i < frameCount*audio::toInt(conf.channels); ++i) {
         data[i] *= volume;
     }
 

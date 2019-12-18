@@ -23,7 +23,7 @@ enum class AudioCodec : uint16_t
 };
 using Codecs = core::Flags<AudioCodec>;
 DECLARE_OPERATORS_FOR_FLAGS(Codecs)
-int size(AudioCodec codec);
+uint8_t size(AudioCodec codec);
 
 enum class SampleRate : uint8_t
 {
@@ -39,7 +39,7 @@ enum class SampleRate : uint8_t
 };
 using SampleRates = core::Flags<SampleRate>;
 DECLARE_OPERATORS_FOR_FLAGS(SampleRates)
-int toInt(SampleRate rate);
+uint32_t toInt(SampleRate rate);
 
 enum class Channels : uint8_t
 {
@@ -57,7 +57,7 @@ enum class Channels : uint8_t
 };
 using ChannelFlags = core::Flags<Channels>;
 DECLARE_OPERATORS_FOR_FLAGS(ChannelFlags)
-int toInt(ChannelFlags channels);
+uint8_t toInt(ChannelFlags channels);
 
 } // namespace audio
 } // namespace coro

@@ -35,7 +35,6 @@ add_library(${PROJECT_NAME} STATIC
     src/core/Node.cpp
     src/core/Sink.cpp
     src/loguru/loguru.cpp
-    src/pi/PiHdmiAudioSink.cpp
     src/rtp/RtpTypes.cpp
 )
 
@@ -49,6 +48,7 @@ PRIVATE
 )
 
 target_link_libraries(${PROJECT_NAME}
+PUBLIC
     ${ALSA_LIBRARIES}
     ${Boost_LIBRARIES}
     pthread
@@ -57,5 +57,7 @@ target_link_libraries(${PROJECT_NAME}
     avutil
     avcodec
 )
+
+#add_subdirectory(src/pi)
 
 add_subdirectory(tests)

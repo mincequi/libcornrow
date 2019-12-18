@@ -95,6 +95,7 @@ VCHPRE_ int32_t VCHPOST_ audioplay_create(AUDIOPLAY_STATE_T **handle,
                                           uint32_t num_buffers,
                                           uint32_t buffer_size);
 
+VCHPRE_ int32_t audioplay_set_dest(AUDIOPLAY_STATE_T *st, const char *name);
 /**
  * The <DFN>audioplay_delete()</DFN> function deletes the audioplay object.
  * 

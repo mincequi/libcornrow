@@ -153,6 +153,7 @@ int32_t audioplay_create(AUDIOPLAY_STATE_T **handle,
          pcm.ePCMMode = OMX_AUDIO_PCMModeLinear;
 
          switch(num_channels) {
+         /*
          case 1:
             pcm.eChannelMapping[0] = OMX_AUDIO_ChannelCF;
             break;
@@ -172,6 +173,10 @@ int32_t audioplay_create(AUDIOPLAY_STATE_T **handle,
          case 4:
             pcm.eChannelMapping[3] = OMX_AUDIO_ChannelLFE;
             pcm.eChannelMapping[2] = OMX_AUDIO_ChannelCF;
+            */
+         case 4:
+            pcm.eChannelMapping[3] = OMX_AUDIO_ChannelRR;
+            pcm.eChannelMapping[2] = OMX_AUDIO_ChannelLR;
          case 2:
             pcm.eChannelMapping[1] = OMX_AUDIO_ChannelRF;
             pcm.eChannelMapping[0] = OMX_AUDIO_ChannelLF;
@@ -334,6 +339,7 @@ uint32_t audioplay_get_latency(AUDIOPLAY_STATE_T *st)
    return param.nU32;
 }
 
+/*
 #define CTTW_SLEEP_TIME 10
 #define MIN_LATENCY_TIME 20
 
@@ -423,4 +429,4 @@ int main (int argc, char **argv)
    play_api_test(samplerate, bitdepth, channels, audio_dest);
    return 0;
 }
-
+*/

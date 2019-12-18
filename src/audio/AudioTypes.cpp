@@ -3,7 +3,7 @@
 namespace coro {
 namespace audio {
 
-int size(AudioCodec codec)
+uint8_t size(AudioCodec codec)
 {
     switch (codec) {
     case AudioCodec::Invalid: return 0;
@@ -13,7 +13,7 @@ int size(AudioCodec codec)
     return 0;
 }
 
-int toInt(SampleRate rate)
+uint32_t toInt(SampleRate rate)
 {
     switch (rate) {
     case SampleRate::Invalid: return -1;
@@ -29,7 +29,7 @@ int toInt(SampleRate rate)
     return -1;
 }
 
-int toInt(ChannelFlags channels)
+uint8_t toInt(ChannelFlags channels)
 {
     int i = 0;
     if (channels.testFlag(Channels::Mono))      i+=1;

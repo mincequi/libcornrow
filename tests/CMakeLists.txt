@@ -24,3 +24,8 @@ target_link_libraries(sqreamtest
     Qt5::Network
 )
 endif(Qt5_FOUND)
+
+#add_executable(pihdmitest pihdmitest.cpp)
+#target_link_libraries(pihdmitest
+#    ${PROJECT_NAME}
+#)

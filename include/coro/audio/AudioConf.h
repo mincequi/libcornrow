@@ -13,7 +13,7 @@ public:
     ChannelFlags channels = Channels::Invalid;
     bool        isRtpPayloaded = false;
 
-    int frameSize() const;
+    uint32_t frameSize() const;
 
     bool operator==(const AudioConf& other) const;
     bool operator!=(const AudioConf& other) const;
