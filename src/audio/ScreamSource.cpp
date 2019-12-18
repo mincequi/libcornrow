@@ -57,7 +57,12 @@ public:
         m_socket.open(m_localEndpoint.protocol());
         m_socket.set_option(ip::udp::socket::reuse_address(true));
         m_socket.bind(m_localEndpoint);
-        m_socket.set_option(asio::ip::multicast::join_group(ip::address::from_string("239.255.77.77")));
+        asio::error_code ec;
+        m_socket.set_option(ip::multicast::join_group(ip::address::from_string("239.255.77.77")), ec);
+        if (ec) {
+            LOG_F(ERROR, "Unable to join multicast group");
+            return;
+        }
         doReceive();
         startTimer();
         start();

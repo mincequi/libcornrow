@@ -35,6 +35,7 @@ add_library(${PROJECT_NAME} STATIC
     src/core/Node.cpp
     src/core/Sink.cpp
     src/loguru/loguru.cpp
+    src/pi/PiHdmiAudioSink.cpp
     src/rtp/RtpTypes.cpp
 )
 
