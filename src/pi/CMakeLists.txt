@@ -12,13 +12,12 @@ add_library(${PROJECT_NAME} STATIC
 target_include_directories(${PROJECT_NAME}
 PRIVATE
     coro
-    /opt/vc/include
+    ${BCM_HOST_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME}
 PUBLIC
     cornrow
-    /opt/vc/lib/libbcm_host.so
+    ${BCM_HOST_LINK_LIBRARIES}
     /opt/vc/lib/libopenmaxil.so
-    /opt/vc/lib/libvcos.so
 )

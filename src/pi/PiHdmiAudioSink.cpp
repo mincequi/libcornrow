@@ -1,4 +1,4 @@
-#include "pi/PiHdmiAudioSink.h"
+#include <coro/pi/PiHdmiAudioSink.h>
 
 extern "C" {
 #include <bcm_host.h>
