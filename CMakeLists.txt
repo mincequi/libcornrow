@@ -48,14 +48,14 @@ PRIVATE
 )
 
 # Raspbery Pi specific libs
-set(ENV{PKG_CONFIG_PATH} "/opt/vc/lib/pkgconfig")
-pkg_check_modules(BCM_HOST bcm_host)
-if(BCM_HOST_FOUND AND ENABLE_RPI)
-    #add_definitions(-DTARGET_PI) # this is very old cmake
-    target_compile_definitions(cornrow PUBLIC TARGET_PI)
-    add_subdirectory(src/pi)
-    set(CORO_LIBRARIES "cornrow-pi")
-endif()
+#set(ENV{PKG_CONFIG_PATH} "/opt/vc/lib/pkgconfig")
+#pkg_check_modules(BCM_HOST bcm_host)
+#if(BCM_HOST_FOUND AND ENABLE_RPI)
+#    #add_definitions(-DTARGET_PI) # this is very old cmake
+#    target_compile_definitions(cornrow PUBLIC TARGET_PI)
+#    add_subdirectory(src/pi)
+#    set(CORO_LIBRARIES "cornrow-pi")
+#endif()
 
 target_link_libraries(${PROJECT_NAME}
 PUBLIC

@@ -103,7 +103,7 @@ public:
         }
 
         if (bytesTransferred != (5+1152)) {
-            LOG_F(ERROR, "invalid bytes count: %d", bytesTransferred);
+            LOG_F(ERROR, "invalid bytes count: %zu", bytesTransferred);
             m_buffer.clear();
             goto end;
         }
