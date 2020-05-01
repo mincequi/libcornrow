@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.7)
 
 project(cornrow)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -DG_DISABLE_ASSERT")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall -Werror -Wno-old-style-cast")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -DG_DISABLE_ASSERT -DUSE_KISS_FFT")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -Wall -Werror -Wno-old-style-cast -DUSE_KISS_FFT")
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(PkgConfig REQUIRED)
@@ -16,10 +16,13 @@ add_library(${PROJECT_NAME} STATIC
 
     src/audio/AlsaSink.cpp
     src/audio/AppSource.cpp
+    src/audio/AudioAppSink.cpp
     src/audio/AudioBuffer.cpp
     src/audio/AudioConf.cpp
     src/audio/AudioConverter.cpp
+    src/audio/AudioDecoderFfmpeg.cpp
     src/audio/AudioEncoderFfmpeg.cpp
+    src/audio/AudioTestSource.cpp
     src/audio/AudioTypes.cpp
     src/audio/Crossover.cpp
     src/audio/FileSink.cpp
@@ -34,14 +37,28 @@ add_library(${PROJECT_NAME} STATIC
     src/core/Buffer.cpp
     src/core/Node.cpp
     src/core/Sink.cpp
+    src/core/UdpSource.cpp
     src/loguru/loguru.cpp
+    src/rtp/RtpDecoder.cpp
     src/rtp/RtpTypes.cpp
+
+    thirdparty/Gist/src/Gist.cpp
+    thirdparty/Gist/src/core/CoreFrequencyDomainFeatures.cpp
+    thirdparty/Gist/src/core/CoreTimeDomainFeatures.cpp
+    thirdparty/Gist/src/fft/WindowFunctions.cpp
+    thirdparty/Gist/src/onset-detection-functions/OnsetDetectionFunction.cpp
+    thirdparty/Gist/src/mfcc/MFCC.cpp
+    thirdparty/Gist/src/pitch/Yin.cpp
+    thirdparty/Gist/libs/kiss_fft130/kiss_fft.c
 )
 
 target_include_directories(${PROJECT_NAME}
 PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
+    thirdparty/Gist/src
+    thirdparty/Gist/libs/kiss_fft130
+
 PRIVATE
     src
     include/coro

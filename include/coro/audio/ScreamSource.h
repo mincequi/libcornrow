@@ -3,13 +3,12 @@
 #include <coro/audio/AudioCaps.h>
 #include <coro/audio/AudioConf.h>
 #include <coro/audio/Source.h>
+#include <coro/core/UdpSource.h>
 
 namespace coro {
 namespace audio {
 
-class UdpWorker;
-
-class ScreamSource : public Source
+class ScreamSource : public core::UdpSource
 {
 public:
     static constexpr std::array<audio::AudioCaps,1> outCaps() {
@@ -21,10 +20,10 @@ public:
     ScreamSource();
     virtual ~ScreamSource();
 
-    const char* name() const override;
-
 private:
-    UdpWorker* m_udpWorker;
+    AudioConf doProcess(const AudioConf& conf, AudioBuffer& buffer) override;
+
+    const char* name() const override;
 };
 
 } // namespace audio

@@ -31,12 +31,14 @@ public:
     virtual void start() {}
     virtual void stop() {}
 
-    virtual audio::AudioConf process(const audio::AudioConf& conf, audio::AudioBuffer& buffer) { return audio::AudioConf(); }
+    audio::AudioConf process(const audio::AudioConf& conf, audio::AudioBuffer& buffer);
 
     bool isBypassed() const;
     void setIsBypassed(bool);
 
 protected:
+    virtual audio::AudioConf doProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer);
+
     Node* m_next = nullptr;
 
 private:

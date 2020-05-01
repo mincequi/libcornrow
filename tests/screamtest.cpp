@@ -3,6 +3,9 @@
 #include <iostream>
 
 #include <coro/audio/AlsaSink.h>
+#include <coro/audio/AudioConverter.h>
+#include <coro/audio/AudioDecoderFfmpeg.h>
+#include <rtp/RtpDecoder.h>
 
 #include <asio/steady_timer.hpp>
 
@@ -17,31 +20,24 @@ AudioBuffer testBuffer;
 volatile size_t testSize;
 volatile size_t padding;
 
-class TestSink : public core::Sink
-{
-public:
-    static constexpr std::array<AudioCaps,1> inCaps() {
-        return {{ { AudioCodec::RawInt16 | AudioCodec::Ac3 } }};
-    }
-
-    AudioConf process(const AudioConf& conf, AudioBuffer& buffer) override
-    {
-        //assert(buffer.size() == testData.size());
-        //assert(!memcmp(testData.data(), buffer.data(), buffer.size()));
-
-        buffer.clear();
-        return conf;
-    }
-};
 
 int main()
 {
-    ScreamSource source;
+    core::UdpSource::Config config;
+    config.mtu = 3000;
+    core::UdpSource source(config);
     source.setReadyCallback([&](Source* const, bool ready) {
         if (ready) source.start();
     });
+    rtp::RtpDecoder rtpDecoder;
+    AudioDecoderFfmpeg ac3Decoder;
     AlsaSink     sink;
-    Node::link(source, sink);
+    audio::AudioConverter<float, int16_t> converter;
+    audio::Node::link(source, rtpDecoder);
+    audio::Node::link(rtpDecoder, ac3Decoder);
+    audio::Node::link(ac3Decoder, converter);
+    audio::Node::link(converter, sink);
 
-    source.m_udpWorker->m_ioService.run();
+    // If we start mainloop here, we have to disable it in UdpSource
+    source.m_ioService.run();
 }

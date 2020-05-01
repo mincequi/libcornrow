@@ -20,7 +20,7 @@ public:
 
     const char* name() const override;
 
-    AudioConf process(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf doProcess(const AudioConf& conf, AudioBuffer& buffer) override;
 };
 
 } // namespace audio

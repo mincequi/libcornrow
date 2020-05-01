@@ -47,12 +47,28 @@ public:
      */
     void grow(size_t size);
 
+    /**
+     * @brief shrink
+     */
+    void shrink(size_t size);
+
+    /**
+     * @brief clear
+     */
     void clear();
 
     template <class T>
     std::list<T> split(size_t size) const;
 
+    /**
+     * @brief trimFront
+     */
     void trimFront(size_t size);
+
+    /**
+     * @brief trimBack
+     */
+    void trimBack(size_t size);
 
 protected:
     std::vector<int32_t> m_buffer; // use int32_t internally to align to 4 byte borders

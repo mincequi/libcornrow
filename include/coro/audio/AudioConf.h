@@ -8,7 +8,7 @@ namespace audio {
 class AudioConf
 {
 public:
-    AudioCodec       codec = AudioCodec::Invalid;
+    AudioCodec  codec = AudioCodec::Invalid;
     SampleRate  rate = SampleRate::Invalid;
     ChannelFlags channels = Channels::Invalid;
     bool        isRtpPayloaded = false;

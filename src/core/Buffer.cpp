@@ -91,6 +91,11 @@ void Buffer::grow(size_t size)
     m_size = std::min(m_buffer.size()*4, size);
 }
 
+void Buffer::shrink(size_t size)
+{
+    m_size = std::min(m_size, size);
+}
+
 void Buffer::clear()
 {
     m_offset = 0;
@@ -113,6 +118,14 @@ void Buffer::trimFront(size_t size)
         return;
     }
     m_offset += size;
+    m_size -= size;
+}
+
+void Buffer::trimBack(size_t size)
+{
+    if (size > m_size) {
+        return;
+    }
     m_size -= size;
 }
 

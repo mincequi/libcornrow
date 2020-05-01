@@ -16,6 +16,7 @@ static AVCodecID toFfmpegCodecId(AudioCodec codec)
 {
     switch(codec) {
     case AudioCodec::Ac3: return AV_CODEC_ID_AC3;
+    case AudioCodec::Eac3: return AV_CODEC_ID_EAC3;
     default: return AV_CODEC_ID_NONE;
     }
 }
@@ -23,6 +24,7 @@ static AVCodecID toFfmpegCodecId(AudioCodec codec)
 AudioEncoderFfmpeg::AudioEncoderFfmpeg(AudioCodec codec)
     : m_codec(codec)
 {
+    //avcodec_register_all();
 }
 
 AudioEncoderFfmpeg::~AudioEncoderFfmpeg()
@@ -41,14 +43,29 @@ AudioEncoderFfmpeg::~AudioEncoderFfmpeg()
 
 void AudioEncoderFfmpeg::setBitrate(uint16_t kbps)
 {
-    m_context->bit_rate = kbps*1000;
+    m_bitrateKbps = kbps;
 }
 
-AudioConf AudioEncoderFfmpeg::process(const AudioConf& conf, AudioBuffer& _buffer)
+void AudioEncoderFfmpeg::stop()
+{
+    AudioBuffer buffer;
+    process(m_conf, buffer);
+}
+
+AudioConf AudioEncoderFfmpeg::doProcess(const AudioConf& conf, AudioBuffer& _buffer)
 {
     if (m_conf != conf) {
         m_conf = conf;
         updateConf();
+    }
+
+    // 0. If buffer is empty, flush encoder
+    if (_buffer.size() == 0) {
+        if (m_partialFrame) {
+            pushFrame(m_partialFrame);
+            m_partialFrame = nullptr;
+        }
+        avcodec_send_frame(m_context, nullptr);
     }
 
     // 1. fill partial frame and push if it is completed now
@@ -88,10 +105,10 @@ void AudioEncoderFfmpeg::updateConf()
         av_frame_free(&m_partialFrame);
     }
 
-    auto encoder = avcodec_find_encoder(toFfmpegCodecId(m_codec));
+    auto ffCodecId = toFfmpegCodecId(m_codec);
+    auto encoder = avcodec_find_encoder(ffCodecId);
     m_packet = av_packet_alloc();
     m_context = avcodec_alloc_context3(encoder);
-
     m_context->channel_layout |= (m_conf.channels & Channels::Stereo) ? (AV_CH_FRONT_LEFT | AV_CH_FRONT_RIGHT) : 0;
     m_context->channel_layout |= (m_conf.channels & Channels::RearStereo) ? (AV_CH_BACK_LEFT | AV_CH_BACK_RIGHT) : 0;
     m_context->channel_layout |= (m_conf.channels & Channels::Center) ? (AV_CH_FRONT_CENTER) : 0;
@@ -99,7 +116,7 @@ void AudioEncoderFfmpeg::updateConf()
     m_context->channels = av_get_channel_layout_nb_channels(m_context->channel_layout);
     m_context->sample_fmt = AV_SAMPLE_FMT_FLTP; // Most codecs only support planar formats
     m_context->sample_rate = toInt(m_conf.rate);
-    m_context->bit_rate = 640000;
+    m_context->bit_rate = m_bitrateKbps*1000;
 
     int ret = avcodec_open2(m_context, encoder, NULL);
     LOG_IF_F(ERROR, ret < 0, "Error opening codec: %d", ret);

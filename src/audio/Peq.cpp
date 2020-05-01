@@ -39,7 +39,7 @@ std::vector<Filter> Peq::filters()
     return filters;
 }
 
-audio::AudioConf Peq::process(const audio::AudioConf& conf, audio::AudioBuffer& buffer)
+audio::AudioConf Peq::doProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer)
 {
     uint frameCount = buffer.size()/conf.frameSize();
     m_mutex.lock();

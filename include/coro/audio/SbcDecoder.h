@@ -19,12 +19,12 @@ public:
 
     static constexpr std::array<audio::AudioCaps,1> outCaps() {
         return {{ { AudioCodec::RawInt16,
-                    SampleRate::Rate16000 | SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000,
+                    SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000,
                     Channels::Mono | Channels::Stereo } }};
     }
 
 protected:
-    AudioConf process(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf doProcess(const AudioConf& conf, AudioBuffer& buffer) override;
 
 private:
     AudioConf m_conf;

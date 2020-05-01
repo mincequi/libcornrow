@@ -34,7 +34,7 @@ public:
     void setVolume(float volume);
 
 private:
-    AudioConf process(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf doProcess(const AudioConf& conf, AudioBuffer& buffer) override;
 
     float   m_headroom = 1.0;
     float   m_volume = 1.0;

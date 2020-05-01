@@ -12,7 +12,7 @@ namespace audio {
 static SampleRate toCoroFrequency(int i)
 {
     switch (i) {
-    case SBC_FREQ_16000: return SampleRate::Rate16000;
+    //case SBC_FREQ_16000: return SampleRate::Rate16000;
     case SBC_FREQ_32000: return SampleRate::Rate32000;
     case SBC_FREQ_44100: return SampleRate::Rate44100;
     case SBC_FREQ_48000: return SampleRate::Rate48000;
@@ -32,7 +32,7 @@ SbcDecoder::~SbcDecoder()
     sbc_finish(m_sbc);
 }
 
-AudioConf SbcDecoder::process(const AudioConf& conf, AudioBuffer& buffer)
+AudioConf SbcDecoder::doProcess(const AudioConf& conf, AudioBuffer& buffer)
 {
     auto payloadOffset = 0;
 

@@ -59,7 +59,6 @@ void Source::pushBuffer(const AudioConf& _conf, AudioBuffer& buffer)
     while (next && (conf.codec != AudioCodec::Invalid) && buffer.size()) {
         if (!next->isBypassed()) {
             conf = next->process(conf, buffer);
-            ++m_bufferCount;
         }
         next = next->next();
     }

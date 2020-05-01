@@ -10,7 +10,7 @@ class FileSink : public core::Sink
 {
 public:
     static constexpr std::array<AudioCaps,1> inCaps() {
-        return {{ { AudioCodec::RawInt16 | AudioCodec::Ac3 } }};
+        return {{ { AudioCodec::RawInt16 | AudioCodec::RawFloat32 | AudioCodec::Ac3 } }};
     }
 
     FileSink();
@@ -21,7 +21,7 @@ public:
 
     void setFileName(const std::string& fileName);
 
-    AudioConf process(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf doProcess(const AudioConf& conf, AudioBuffer& buffer) override;
 
 private:
     std::string m_fileName;

@@ -22,7 +22,7 @@ public:
 
     void setDevice(const std::string& device);
 
-    AudioConf process(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf doProcess(const AudioConf& conf, AudioBuffer& buffer) override;
 
 private:
     // alsa members

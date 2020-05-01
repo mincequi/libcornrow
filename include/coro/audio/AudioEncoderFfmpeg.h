@@ -22,7 +22,7 @@ public:
     }
 
     static constexpr std::array<audio::AudioCaps,2> outCaps() {
-        return {{ { AudioCodec::Ac3,
+        return {{ { AudioCodec::Ac3 | AudioCodec::Eac3,
                     SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000,
                     Channels::Mono | Channels::Stereo },
                   // We can be bypassed, so also accept inCaps as OutCaps
@@ -38,7 +38,9 @@ public:
     void setBitrate(uint16_t kbps);
 
 private:
-    AudioConf process(const AudioConf& conf, AudioBuffer& buffer) override;
+    void stop() override;
+
+    AudioConf doProcess(const AudioConf& conf, AudioBuffer& buffer) override;
 
     void updateConf();
 
@@ -50,6 +52,7 @@ private:
 
     AudioCodec m_codec = AudioCodec::Invalid;
     AudioConf m_conf;
+    uint16_t m_bitrateKbps = 320;
 
     AVCodecContext* m_context = nullptr;
     AVFrame* m_partialFrame = nullptr;

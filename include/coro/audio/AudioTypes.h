@@ -17,24 +17,28 @@ enum class AudioCodec : uint16_t
     Aac = 0x0008,
     Mp3 = 0x0010,
     Ac3 = 0x0020,
-    Aptx = 0x0040,
+    Eac3 = 0x0040,
+    Aptx = 0x0080,
 
-    RtpPayload = 0x8000
+    RtpPayload = 0x8000,
+
+    Unknown = 0x4000
 };
-using Codecs = core::Flags<AudioCodec>;
-DECLARE_OPERATORS_FOR_FLAGS(Codecs)
+using AudioCodecs = core::Flags<AudioCodec>;
+DECLARE_OPERATORS_FOR_FLAGS(AudioCodecs)
 uint8_t size(AudioCodec codec);
 
 enum class SampleRate : uint8_t
 {
     Invalid = 0,
-    Rate16000 = 0x01,
+    //Rate16000 = 0x01,
+    RateUnknown = 0x01,
     Rate32000 = 0x02,
     Rate44100 = 0x04,
     Rate48000 = 0x08,
-    Rate88200 = 0x10,
+    //Rate88200 = 0x10,
     Rate96000 = 0x20,
-    Rate176400 = 0x40,
+    //Rate176400 = 0x40,
     Rate192000 = 0x80
 };
 using SampleRates = core::Flags<SampleRate>;

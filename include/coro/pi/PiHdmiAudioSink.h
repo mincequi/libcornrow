@@ -22,7 +22,7 @@ public:
 private:
     const char* name() const override;
     void stop() override;
-    audio::AudioConf process(const audio::AudioConf& conf, audio::AudioBuffer& buffer) override;
+    audio::AudioConf doProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer) override;
 
     AUDIOPLAY_STATE_T*  m_handle = nullptr;
     audio::AudioConf  m_conf;

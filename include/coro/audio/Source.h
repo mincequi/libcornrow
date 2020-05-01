@@ -44,7 +44,6 @@ protected:
 private:
     std::atomic_bool m_isStarted = false;
     std::atomic_bool m_isReady = false;
-    std::atomic_uint m_bufferCount = 0;
 };
 
 } // namespace audio

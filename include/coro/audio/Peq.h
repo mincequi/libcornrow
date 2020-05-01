@@ -35,7 +35,7 @@ public:
     std::vector<Filter> filters();
 
 private:
-    AudioConf process(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf doProcess(const AudioConf& conf, AudioBuffer& buffer) override;
 
     float               m_volume = 1.0;
     std::deque<TBiquad<float, float>> m_tBiquads;

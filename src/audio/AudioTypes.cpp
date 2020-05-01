@@ -16,17 +16,18 @@ uint8_t size(AudioCodec codec)
 uint32_t toInt(SampleRate rate)
 {
     switch (rate) {
-    case SampleRate::Invalid: return -1;
-    case SampleRate::Rate16000: return 16000;
+    case SampleRate::Invalid: return 0;
+    case SampleRate::RateUnknown: return 0;
+    //case SampleRate::Rate16000: return 16000;
     case SampleRate::Rate32000: return 32000;
     case SampleRate::Rate44100: return 44100;
     case SampleRate::Rate48000: return 48000;
-    case SampleRate::Rate88200: return 88200;
+    //case SampleRate::Rate88200: return 88200;
     case SampleRate::Rate96000: return 96000;
-    case SampleRate::Rate176400: return 176400;
+    //case SampleRate::Rate176400: return 176400;
     case SampleRate::Rate192000: return 192000;
     }
-    return -1;
+    return 0;
 }
 
 uint8_t toInt(ChannelFlags channels)

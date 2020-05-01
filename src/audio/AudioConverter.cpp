@@ -21,7 +21,7 @@ AudioConverter<InT,OutT>::~AudioConverter()
 }
 
 template<>
-AudioConf AudioConverter<int16_t,float>::process(const AudioConf& conf, AudioBuffer& buffer)
+AudioConf AudioConverter<int16_t,float>::doProcess(const AudioConf& conf, AudioBuffer& buffer)
 {
     char* to = buffer.acquire(buffer.size()*2);
     char* from = buffer.data();
@@ -42,7 +42,7 @@ AudioConf AudioConverter<int16_t,float>::process(const AudioConf& conf, AudioBuf
 }
 
 template<>
-AudioConf AudioConverter<float,int16_t>::process(const AudioConf& conf, AudioBuffer& buffer)
+AudioConf AudioConverter<float,int16_t>::doProcess(const AudioConf& conf, AudioBuffer& buffer)
 {
     char* to = buffer.acquire(buffer.size()/2);
     char* from = buffer.data();
@@ -72,7 +72,7 @@ AudioConf AudioConverter<float,int16_t>::process(const AudioConf& conf, AudioBuf
 }
 
 template <typename T, typename U>
-AudioConf AudioConverter<T,U>::process(const AudioConf& conf, AudioBuffer& buffer)
+AudioConf AudioConverter<T,U>::doProcess(const AudioConf& conf, AudioBuffer& buffer)
 {
     U* to = (U*)buffer.acquire(buffer.size()*sizeof(U)/sizeof(T));
     T* from = (T*)buffer.data();

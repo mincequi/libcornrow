@@ -11,7 +11,7 @@ class AudioCaps
 public:
     static constexpr AudioCaps intersect(const AudioCaps& in, const AudioCaps& out);
 
-    Codecs      codecs = Codecs::Any;
+    AudioCodecs      codecs = AudioCodecs::Any;
     SampleRates rates = SampleRates::Any;
     ChannelFlags channels = ChannelFlags::Any;
 
