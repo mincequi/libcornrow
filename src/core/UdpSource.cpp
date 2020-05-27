@@ -74,7 +74,7 @@ void UdpSource::doReceive()
 void UdpSource::onReceive(std::size_t bytesTransferred)
 {
     if (m_previousBytesTransferred != bytesTransferred) {
-        LOG_F(INFO, "Transfer size changed: %d", bytesTransferred);
+        LOG_F(INFO, "Transfer size changed: %lu", bytesTransferred);
         m_previousBytesTransferred = bytesTransferred;
     }
     m_isReceiving = false;

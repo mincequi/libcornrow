@@ -22,7 +22,7 @@ audio::AudioConf RtpDecoder::doProcess(const audio::AudioConf& conf, audio::Audi
 {
     if (buffer.size() < 14) { // RtpHeader 12 bytes + Ac3Header 2 bytes
         buffer.clear();
-        LOG_F(WARNING, "RTP header invalid");
+        LOG_F(WARNING, "Header invalid");
         return {};
     }
 
@@ -31,18 +31,18 @@ audio::AudioConf RtpDecoder::doProcess(const audio::AudioConf& conf, audio::Audi
     rtpHeader->timestamp = boost::endian::big_to_native(rtpHeader->timestamp);
     if (!rtpHeader->marker || rtpHeader->payloadType < 96) {
         buffer.clear();
-        LOG_F(WARNING, "RTP header invalid");
+        LOG_F(WARNING, "Header invalid");
         return {};
     }
     if (m_lastSequenceNumber+1 != rtpHeader->sequenceNumber) {
-        LOG_F(WARNING, "RTP sequence discontinuity: %d, %d", m_lastSequenceNumber, rtpHeader->sequenceNumber);
+        LOG_F(WARNING, "Sequence discontinuity: %d, %d", m_lastSequenceNumber, rtpHeader->sequenceNumber);
     }
     m_lastSequenceNumber = rtpHeader->sequenceNumber;
 
     auto payloadOffset = rtpHeader->size();
     if ((buffer.data()+payloadOffset)[0] != 0 || (buffer.data()+payloadOffset)[1] != 1) {
         buffer.clear();
-        LOG_F(WARNING, "RTP AC3 header invalid");
+        LOG_F(WARNING, "AC3 header invalid");
         return {};
     }
 
