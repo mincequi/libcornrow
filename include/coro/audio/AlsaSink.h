@@ -2,6 +2,8 @@
 
 #include <coro/core/Sink.h>
 
+#include <string>
+
 typedef struct _snd_pcm snd_pcm_t;
 
 namespace coro {
