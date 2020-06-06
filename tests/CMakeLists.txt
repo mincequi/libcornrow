@@ -6,6 +6,8 @@ macro(coro_tests)
 endmacro()
 
 coro_tests(
+    airplaytest
+    airplay2test
     alsautiltest
     biquadtest
     buffertest

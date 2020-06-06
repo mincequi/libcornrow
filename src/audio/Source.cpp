@@ -11,6 +11,11 @@ Source::~Source()
 {
 }
 
+void Source::poll()
+{
+    doPoll();
+}
+
 void Source::start()
 {
     m_isStarted = true;
@@ -62,6 +67,10 @@ void Source::pushBuffer(const AudioConf& _conf, AudioBuffer& buffer)
         }
         next = next->next();
     }
+}
+
+void Source::doPoll()
+{
 }
 
 void Source::doStart()

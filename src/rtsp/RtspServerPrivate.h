@@ -17,31 +17,37 @@
 
 #pragma once
 
-#include <coro/core/Sink.h>
-
 #include <functional>
+#include <map>
+
+#include <boost/array.hpp>
+#include <boost/asio/buffer.hpp>
+#include <boost/asio/ip/tcp.hpp>
 
 namespace coro {
-namespace audio {
+namespace rtsp {
 
-class AudioAppSink : public core::Sink
+class RtspMessage;
+class RtspMessageHandler;
+
+class RtspServerPrivate
 {
 public:
-    static constexpr std::array<AudioCaps,1> inCaps() {
-        return {{ { AudioCodec::RawInt16 | AudioCodec::RawFloat32 } }};
-    }
+    RtspServerPrivate(RtspMessageHandler& _handler, uint16_t port);
 
-    AudioAppSink();
-    virtual ~AudioAppSink();
+    void doAccept();
+    void onAccepted(const boost::system::error_code& error);
+    void doReceive();
+    void onReceived(const boost::system::error_code& error, size_t bytes);
+    void doSend(const RtspMessage& response);
+    void onSent(const boost::system::error_code& error, size_t bytes);
 
-    using ProcessCallback = std::function<void(const AudioConf&, const AudioBuffer&)>;
-    void setProcessCallback(ProcessCallback callback);
-
-private:
-    AudioConf doProcess(const AudioConf& conf, AudioBuffer& buffer) override;
-
-    ProcessCallback m_callback;
+    RtspMessageHandler& handler;
+    boost::asio::io_context& ioContext;
+    boost::asio::ip::tcp::acceptor acceptor;
+    boost::asio::ip::tcp::socket socket;
+    boost::array<char, 2048> buffer;
 };
 
-} // namespace audio
+} // namespace rtsp
 } // namespace coro

@@ -17,20 +17,36 @@
 
 #pragma once
 
-#include "Types.h"
+#include <map>
+#include <string>
 
-namespace coro
-{
+namespace coro {
+namespace rtsp {
 
-class AlsaUtil
+using RtspHeaders = std::map<std::string, std::string>;
+
+class RtspMessage
 {
 public:
-    AlsaUtil();
+    static RtspMessage createRequest(const std::string& buffer);
+    static RtspMessage createResponse(const std::string& CSeq);
 
-    std::list<AudioDeviceInfo> outputDevices();
+    const std::string& method() const;
+    std::string& header(const std::string& key);
+    std::string header(const std::string& key) const;
+    const std::string& body() const;
+
+    std::string serialize() const;
 
 private:
-    std::list<AudioDeviceInfo> m_outputDevices;
+    RtspMessage();
+
+    void parse(const std::string& buffer);
+
+    std::string m_method;
+    RtspHeaders m_headers;
+    std::string m_body;
 };
 
+} // namespace rtsp
 } // namespace coro

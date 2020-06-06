@@ -15,22 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <coro/airplay/AirPlaySource.h>
+#include <coro/audio/AlsaSink.h>
+#include <coro/core/Mainloop.h>
 
-#include "Types.h"
+#include <unistd.h>
 
-namespace coro
+using namespace coro;
+
+int main()
 {
+    airplay::AirPlaySource::Config config { "myAirplay" };
+    airplay::AirPlaySource source(config);
+    audio::AlsaSink      sink;
+    audio::Node::link(source, sink);
+    core::Mainloop& mainloop = core::Mainloop::instance();
 
-class AlsaUtil
-{
-public:
-    AlsaUtil();
-
-    std::list<AudioDeviceInfo> outputDevices();
-
-private:
-    std::list<AudioDeviceInfo> m_outputDevices;
-};
-
-} // namespace coro
+    while (true) {
+        usleep(1000);
+        mainloop.poll();
+    }
+}

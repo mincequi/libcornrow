@@ -17,20 +17,25 @@
 
 #pragma once
 
-#include "Types.h"
+#include <cstdint>
 
-namespace coro
-{
+namespace coro {
+namespace rtsp {
 
-class AlsaUtil
+class RtspMessageHandler;
+
+class RtspServer
 {
 public:
-    AlsaUtil();
+    RtspServer(RtspMessageHandler& handler,
+               uint16_t port = 0);
+    virtual ~RtspServer();
 
-    std::list<AudioDeviceInfo> outputDevices();
+    uint16_t port() const;
 
 private:
-    std::list<AudioDeviceInfo> m_outputDevices;
+    class RtspServerPrivate* const d;
 };
 
+} // namespace rtsp
 } // namespace coro

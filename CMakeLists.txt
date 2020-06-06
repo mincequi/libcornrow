@@ -9,11 +9,15 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(PkgConfig REQUIRED)
 find_package(ALSA REQUIRED)
 find_package(Boost COMPONENTS system REQUIRED)
+find_package (OpenSSL REQUIRED)
 
 add_library(${PROJECT_NAME} STATIC
     src/AlsaUtil.cpp
     src/Types.cpp
 
+    src/airplay/AirPlaySource.cpp
+    src/airplay/AirPlay2Source.cpp
+    src/airplay/AirplayRtspMessageHandler.cpp
     src/audio/AlsaSink.cpp
     src/audio/AppSource.cpp
     src/audio/AudioAppSink.cpp
@@ -35,12 +39,20 @@ add_library(${PROJECT_NAME} STATIC
     src/audio/TBiquad.cpp
     src/core/AppSink.cpp
     src/core/Buffer.cpp
+    src/core/Mainloop.cpp
+    src/core/MainloopPrivate.cpp
     src/core/Node.cpp
     src/core/Sink.cpp
     src/core/UdpSource.cpp
+    src/core/Util.cpp
     src/loguru/loguru.cpp
     src/rtp/RtpDecoder.cpp
     src/rtp/RtpTypes.cpp
+    src/rtsp/RtspServer.cpp
+    src/rtsp/RtspServerPrivate.cpp
+    src/rtsp/RtspMessage.cpp
+    src/rtsp/RtspMessageHandler.cpp
+    src/zeroconf/ZeroConfServer.cpp
 
     thirdparty/Gist/src/Gist.cpp
     thirdparty/Gist/src/core/CoreFrequencyDomainFeatures.cpp
@@ -65,25 +77,27 @@ PRIVATE
 )
 
 # Raspbery Pi specific libs
-#set(ENV{PKG_CONFIG_PATH} "/opt/vc/lib/pkgconfig")
-#pkg_check_modules(BCM_HOST bcm_host)
-#if(BCM_HOST_FOUND AND ENABLE_RPI)
-#    #add_definitions(-DTARGET_PI) # this is very old cmake
-#    target_compile_definitions(cornrow PUBLIC TARGET_PI)
-#    add_subdirectory(src/pi)
-#    set(CORO_LIBRARIES "cornrow-pi")
-#endif()
+set(ENV{PKG_CONFIG_PATH} "/opt/vc/lib/pkgconfig")
+pkg_check_modules(BCM_HOST bcm_host)
+if(BCM_HOST_FOUND AND ENABLE_RPI)
+    #add_definitions(-DTARGET_PI) # this is very old cmake
+    target_compile_definitions(cornrow PUBLIC TARGET_PI)
+    add_subdirectory(src/pi)
+    set(CORO_LIBRARIES "cornrow-pi")
+endif()
 
 target_link_libraries(${PROJECT_NAME}
 PUBLIC
     ${ALSA_LIBRARIES}
     ${Boost_LIBRARIES}
+    ${OPENSSL_LIBRARIES}
     ${CORO_LIBRARIES}
     pthread
     dl
     sbc
     avutil
     avcodec
+    dns_sd
 )
 
 add_subdirectory(tests)

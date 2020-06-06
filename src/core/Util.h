@@ -17,20 +17,19 @@
 
 #pragma once
 
-#include "Types.h"
+#include <cstddef>
+#include <string>
+#include <vector>
 
-namespace coro
-{
+namespace coro {
+namespace core {
+namespace util {
 
-class AlsaUtil
-{
-public:
-    AlsaUtil();
+std::string base64Decode(const std::string& in);
 
-    std::list<AudioDeviceInfo> outputDevices();
+std::string base64Encode(const char* data, size_t size, bool padding = true);
 
-private:
-    std::list<AudioDeviceInfo> m_outputDevices;
-};
 
+} // namespace util
+} // namespace core
 } // namespace coro

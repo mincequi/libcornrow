@@ -15,22 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <coro/rtsp/RtspServer.h>
 
-#include "Types.h"
+#include "RtspServerPrivate.h"
 
-namespace coro
+namespace coro {
+namespace rtsp {
+
+RtspServer::RtspServer(RtspMessageHandler& handler, uint16_t port) :
+    d(new RtspServerPrivate(handler, port))
 {
+}
 
-class AlsaUtil
+RtspServer::~RtspServer()
 {
-public:
-    AlsaUtil();
+    delete d;
+}
 
-    std::list<AudioDeviceInfo> outputDevices();
+uint16_t RtspServer::port() const
+{
+    return d->acceptor.local_endpoint().port();
+}
 
-private:
-    std::list<AudioDeviceInfo> m_outputDevices;
-};
-
+} // namespace rtsp
 } // namespace coro

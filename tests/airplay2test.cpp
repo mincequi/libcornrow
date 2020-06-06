@@ -15,22 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <coro/airplay/AirPlay2Source.h>
+#include <coro/audio/AlsaSink.h>
 
-#include "Types.h"
+#include <unistd.h>
 
-namespace coro
+using namespace coro;
+
+int main()
 {
+    airplay::AirPlay2Source source;
+    audio::AlsaSink      sink;
+    audio::Node::link(source, sink);
 
-class AlsaUtil
-{
-public:
-    AlsaUtil();
-
-    std::list<AudioDeviceInfo> outputDevices();
-
-private:
-    std::list<AudioDeviceInfo> m_outputDevices;
-};
-
-} // namespace coro
+    while (true) {
+        usleep(1000);
+        source.poll();
+    }
+}

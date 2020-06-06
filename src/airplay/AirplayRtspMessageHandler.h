@@ -17,35 +17,29 @@
 
 #pragma once
 
-#include <coro/core/Node.h>
-#include <coro/audio/AudioCaps.h>
+#include <coro/rtsp/RtspMessage.h>
+#include <coro/rtsp/RtspMessageHandler.h>
+
+#include <array>
+#include <cstddef>
 
 namespace coro {
-namespace rtp {
+namespace airplay {
 
-class RtpDecoder : public core::Node
+class AirplayRtspMessageHandler : public rtsp::RtspMessageHandler
 {
 public:
-    RtpDecoder();
-    ~RtpDecoder();
-
-    static constexpr std::array<audio::AudioCaps,1> inCaps() {
-        return {{ { audio::AudioCodecs::Any,
-                    audio::SampleRates::Any,
-                    audio::ChannelFlags::Any } }};
-    }
-
-    static constexpr std::array<audio::AudioCaps,1> outCaps() {
-        return {{ { audio::AudioCodec::Ac3,
-                    audio::SampleRate::Rate48000 | audio::SampleRate::Rate44100,
-                    audio::Channels::Stereo } }};
-    }
+    AirplayRtspMessageHandler(uint16_t rtpReceiverPort);
 
 private:
-    audio::AudioConf doProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer) override;
+    void onOptions(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const override;
+    void onAnnounce(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const override;
+    void onSetup(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const override;
 
-    uint16_t m_lastSequenceNumber = 0;
+    void onAppleChallenge(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const;
+
+    uint16_t m_rtpReceiverPort = 0;
 };
 
-} // namespace rtp
+} // namespace airplay
 } // namespace coro

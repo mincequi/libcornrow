@@ -17,20 +17,34 @@
 
 #pragma once
 
-#include "Types.h"
+#include <coro/audio/Source.h>
 
-namespace coro
-{
+namespace coro {
+namespace airplay {
 
-class AlsaUtil
+class AirPlaySource : public audio::Source
 {
 public:
-    AlsaUtil();
+    static constexpr std::array<audio::AudioCaps,1> outCaps() {
+        return {{ { audio::AudioCodec::RawInt16,
+                    audio::SampleRate::Rate44100,
+                    audio::Channels::Stereo } }};
+    }
 
-    std::list<AudioDeviceInfo> outputDevices();
+    struct Config {
+        std::string name;
+        uint16_t port = 0;
+        uint16_t bufferTimeMs = 2000;
+    };
+    AirPlaySource(const Config& config);
+    virtual ~AirPlaySource();
 
 private:
-    std::list<AudioDeviceInfo> m_outputDevices;
+    const char* name() const override;
+    void doPoll() override;
+
+    class AirPlaySourcePrivate* const d;
 };
 
+} // namespace airplay
 } // namespace coro

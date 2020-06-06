@@ -17,20 +17,29 @@
 
 #pragma once
 
-#include "Types.h"
+#include <dns_sd.h>
+#include <map>
+#include <string>
 
-namespace coro
-{
+namespace coro {
+namespace zeroconf {
 
-class AlsaUtil
+struct ZeroConfService;
+
+class ZeroConfServer
 {
 public:
-    AlsaUtil();
+    ZeroConfServer();
+    ~ZeroConfServer();
 
-    std::list<AudioDeviceInfo> outputDevices();
+    bool registerService(const ZeroConfService& service);
+    void unregisterService(const std::string& name);
 
 private:
-    std::list<AudioDeviceInfo> m_outputDevices;
+    void unregisterServices();
+
+    std::map<std::string, DNSServiceRef>  m_services;
 };
 
+} // namespace zeroconf
 } // namespace coro

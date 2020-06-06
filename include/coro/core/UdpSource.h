@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2020 Manuel Weichselbaumer <mincequi@web.de>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <thread>
 #include <asio/io_service.hpp>
 #include <asio/placeholders.hpp>
@@ -17,7 +34,14 @@ namespace core {
 class UdpSource : public audio::Source
 {
 public:
+    static constexpr std::array<audio::AudioCaps,1> outCaps() {
+        return {{ { audio::AudioCodecs::Any,
+                    audio::SampleRates::Any,
+                    audio::ChannelFlags::Any } }};
+    }
+
     struct Config {
+        uint16_t port = 0;
         uint8_t prePadding = 0;
         uint16_t mtu = 1492;
     };
@@ -26,11 +50,7 @@ public:
     explicit UdpSource(const Config& config);
     ~UdpSource();
 
-    static constexpr std::array<audio::AudioCaps,1> outCaps() {
-        return {{ { audio::AudioCodecs::Any,
-                    audio::SampleRates::Any,
-                    audio::ChannelFlags::Any } }};
-    }
+    uint16_t port() const;
 
 private:
     void _start();

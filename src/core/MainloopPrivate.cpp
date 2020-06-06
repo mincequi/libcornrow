@@ -15,22 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "MainloopPrivate.h"
 
-#include "Types.h"
+namespace coro {
+namespace core {
 
-namespace coro
+MainloopPrivate::MainloopPrivate()
 {
+}
 
-class AlsaUtil
+MainloopPrivate& MainloopPrivate::instance()
 {
-public:
-    AlsaUtil();
-
-    std::list<AudioDeviceInfo> outputDevices();
-
-private:
-    std::list<AudioDeviceInfo> m_outputDevices;
-};
+    static MainloopPrivate mainloop;
+    return mainloop;
+}
 
 } // namespace coro
+} // namespace core

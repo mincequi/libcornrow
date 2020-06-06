@@ -17,20 +17,23 @@
 
 #pragma once
 
-#include "Types.h"
+#include <bitset>
+#include <map>
+#include <string>
+#include <variant>
 
-namespace coro
+namespace coro {
+namespace zeroconf {
+
+struct ZeroConfService
 {
+    //using txtRecord = std::variant<bool,std::string,int>;
 
-class AlsaUtil
-{
-public:
-    AlsaUtil();
-
-    std::list<AudioDeviceInfo> outputDevices();
-
-private:
-    std::list<AudioDeviceInfo> m_outputDevices;
+    std::string name;
+    std::string type;
+    uint16_t    port = 0;
+    std::map<std::string, std::string> txtRecords;
 };
 
+} // namespace zeroconf
 } // namespace coro

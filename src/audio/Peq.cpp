@@ -2,10 +2,8 @@
 
 #include <iostream>
 
-namespace coro
-{
-namespace audio
-{
+namespace coro {
+namespace audio {
 
 Peq::Peq()
 {

@@ -17,20 +17,21 @@
 
 #pragma once
 
-#include "Types.h"
+#include <boost/asio/io_context.hpp>
 
-namespace coro
-{
+namespace coro {
+namespace core {
 
-class AlsaUtil
+class MainloopPrivate
 {
 public:
-    AlsaUtil();
+    static MainloopPrivate& instance();
 
-    std::list<AudioDeviceInfo> outputDevices();
+    boost::asio::io_context ioContext;
 
 private:
-    std::list<AudioDeviceInfo> m_outputDevices;
+    MainloopPrivate();
 };
 
+} // namespace core
 } // namespace coro

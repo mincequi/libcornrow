@@ -17,20 +17,22 @@
 
 #pragma once
 
-#include "Types.h"
+namespace coro {
+namespace core {
 
-namespace coro
-{
-
-class AlsaUtil
+class Mainloop
 {
 public:
-    AlsaUtil();
+    static Mainloop& instance();
 
-    std::list<AudioDeviceInfo> outputDevices();
+    void poll();
 
 private:
-    std::list<AudioDeviceInfo> m_outputDevices;
+    Mainloop();
+    ~Mainloop();
+
+    class MainloopPrivate& d;
 };
 
+} // namespace core
 } // namespace coro
