@@ -17,19 +17,19 @@
 
 #pragma once
 
-#include <coro/rtsp/RtspMessage.h>
 #include <coro/rtsp/RtspMessageHandler.h>
 
-#include <array>
 #include <cstddef>
 
 namespace coro {
 namespace airplay {
 
+class AirplayDecryptor;
+
 class AirplayRtspMessageHandler : public rtsp::RtspMessageHandler
 {
 public:
-    AirplayRtspMessageHandler(uint16_t rtpReceiverPort);
+    AirplayRtspMessageHandler(uint16_t audioPort, uint16_t controlPort, AirplayDecryptor& decryptor);
 
 private:
     void onOptions(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const override;
@@ -38,7 +38,9 @@ private:
 
     void onAppleChallenge(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const;
 
-    uint16_t m_rtpReceiverPort = 0;
+    uint16_t m_audioPort = 0;
+    uint16_t m_controlPort = 0;
+    AirplayDecryptor& m_decryptor;
 };
 
 } // namespace airplay

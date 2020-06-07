@@ -29,8 +29,8 @@ int main()
     airplay::AirPlaySource source(config);
     audio::AlsaSink      sink;
     audio::Node::link(source, sink);
-    core::Mainloop& mainloop = core::Mainloop::instance();
 
+    core::Mainloop& mainloop = core::Mainloop::instance();
     while (true) {
         usleep(1000);
         mainloop.poll();

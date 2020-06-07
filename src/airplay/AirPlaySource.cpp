@@ -22,6 +22,7 @@
 #include <zeroconf/ZeroConfServer.h>
 #include <zeroconf/ZeroConfService.h>
 
+#include "airplay/AirplayDecryptor.h"
 #include "airplay/AirplayRtspMessageHandler.h"
 
 namespace coro {
@@ -31,7 +32,7 @@ class AirPlaySourcePrivate
 {
 public:
     AirPlaySourcePrivate(const AirPlaySource::Config& config) :
-        rtspMessageHandler(udpReceiver.port()),
+        rtspMessageHandler(audioReceiver.port(), controlReceiver.port(), decryptor),
         rtspServer(rtspMessageHandler)
     {
         std::map<std::string, std::string> txtRecords;
@@ -53,8 +54,10 @@ public:
                                           txtRecords } );
     }
 
-    core::UdpSource udpReceiver;
-    airplay::AirplayRtspMessageHandler rtspMessageHandler;
+    core::UdpSource audioReceiver;
+    core::UdpSource controlReceiver;
+    AirplayDecryptor decryptor;
+    AirplayRtspMessageHandler rtspMessageHandler;
     rtsp::RtspServer rtspServer;
     zeroconf::ZeroConfServer zeroConfServer;
 };

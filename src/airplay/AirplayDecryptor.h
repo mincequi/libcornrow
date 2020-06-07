@@ -17,28 +17,22 @@
 
 #pragma once
 
-#include <cstdint>
-#include <functional>
+#include <string>
 
 namespace coro {
-namespace rtsp {
+namespace airplay {
 
-class RtspMessageHandler;
-
-class RtspServer
+class AirplayDecryptor
 {
 public:
-    RtspServer(RtspMessageHandler& handler,
-               uint16_t port = 0);
-    virtual ~RtspServer();
+    AirplayDecryptor();
 
-    uint16_t port() const;
-
-    //void setRequestHandlerFactory(std::function<RtspMessageHandler()>);
+    void init(const std::string& key, const std::string& iv);
 
 private:
-    class RtspServerPrivate* const d;
+    std::string m_key;
+    std::string m_iv;
 };
 
-} // namespace rtsp
-} // namespace coro
+} // namespace airplay
+} // namespace core

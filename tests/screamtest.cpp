@@ -22,27 +22,20 @@
 #include <coro/audio/AlsaSink.h>
 #include <coro/audio/AudioConverter.h>
 #include <coro/audio/AudioDecoderFfmpeg.h>
-#include <rtp/RtpDecoder.h>
+#include <coro/core/Mainloop.h>
+#include <coro/core/UdpSource.h>
 
-#include <asio/steady_timer.hpp>
-
-#define private public
-#define protected public
-#include "../src/audio/ScreamSource.cpp"
+#include "rtp/RtpDecoder.h"
 
 using namespace coro;
 using namespace coro::audio;
-
-AudioBuffer testBuffer;
-volatile size_t testSize;
-volatile size_t padding;
-
 
 int main()
 {
     core::UdpSource::Config config;
     config.port = 4010;
     config.mtu = 3000;
+    config.multicastGroup = boost::asio::ip::address_v4::from_string("239.255.77.77").to_uint();
     core::UdpSource source(config);
     source.setReadyCallback([&](Source* const, bool ready) {
         if (ready) source.start();
@@ -56,6 +49,9 @@ int main()
     audio::Node::link(ac3Decoder, converter);
     audio::Node::link(converter, sink);
 
-    // If we start mainloop here, we have to disable it in UdpSource
-    source.m_ioService.run();
+    core::Mainloop& mainloop = core::Mainloop::instance();
+    while (true) {
+        usleep(1000);
+        mainloop.poll();
+    }
 }

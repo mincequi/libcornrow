@@ -43,27 +43,40 @@ RtspServerPrivate::RtspServerPrivate(RtspMessageHandler& _handler, uint16_t port
 
 void RtspServerPrivate::doAccept()
 {
-    acceptor.async_accept(socket, std::bind(&RtspServerPrivate::doReceive, this));
+    socket.close();
+    acceptor.async_accept(socket, std::bind(&RtspServerPrivate::onAccepted, this, _1));
+}
+
+void RtspServerPrivate::onAccepted(const boost::system::error_code& error)
+{
+    if (error) {
+        LOG_F(ERROR, "error: %s", error.message().c_str());
+        doAccept();
+        return;
+    }
+
+    doReceive();
 }
 
 void RtspServerPrivate::doReceive()
 {
-    socket.async_receive(boost::asio::buffer(buffer), std::bind(&RtspServerPrivate::onReceived, this, _1, _2));
+    socket.async_receive(boost::asio::buffer(receiveBuffer), std::bind(&RtspServerPrivate::onReceived, this, _1, _2));
 }
 
 void RtspServerPrivate::onReceived(const boost::system::error_code& error, size_t bytes)
 {
     if (error) {
-        LOG_F(ERROR, "error: %s", error.message().c_str());
+        LOG_F(WARNING, "error: %s", error.message().c_str());
+        doAccept();
         return;
     }
 
-    std::string _buffer(buffer.data(), bytes);
-    auto address = socket.local_endpoint().address();
-    LOG_F(INFO, "buffer received: %s, at: %s", _buffer.c_str(), address.to_string().c_str());
+    //auto address = socket.local_endpoint().address();
+    //LOG_F(INFO, "buffer received: %s, at: %s", _buffer.c_str(), address.to_string().c_str());
 
     // Prepare response
-    auto request = RtspMessage::createRequest(_buffer);
+    std::string _buffer(receiveBuffer.data(), bytes);
+    auto request = RtspMessage::deserializeRequest(_buffer);
     auto response = RtspMessage::createResponse(request.header("CSeq"));
     handler.onMessage(request, &response, socket.local_endpoint().address().to_v4().to_uint());
 
@@ -72,16 +85,16 @@ void RtspServerPrivate::onReceived(const boost::system::error_code& error, size_
 
 void RtspServerPrivate::doSend(const RtspMessage& response)
 {
-    auto _buffer = response.serialize();
-    socket.async_send(boost::asio::buffer(_buffer), std::bind(&RtspServerPrivate::onSent, this, _1, _2));
+    sendBuffer = response.serialize();
+    socket.async_send(boost::asio::buffer(sendBuffer), std::bind(&RtspServerPrivate::onSent, this, _1, _2));
 
-    LOG_F(INFO, "send buffer: %s", _buffer.c_str());
+    //LOG_F(INFO, "send buffer: %s", _buffer.c_str());
 }
 
 void RtspServerPrivate::onSent(const boost::system::error_code& error, size_t bytes)
 {
     if (error) {
-        LOG_F(ERROR, "error: %s", error.message().c_str());
+        LOG_F(WARNING, "error: %s", error.message().c_str());
         return;
     }
 

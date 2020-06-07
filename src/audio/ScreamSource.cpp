@@ -59,7 +59,10 @@ public:
 };
 
 ScreamSource::ScreamSource()
-    : core::UdpSource( { 4010, 3, 5+(1152*7) } )  // 3 padding, 5 header, 1152 payload, +2*payload (int to float), +2*2*payload (float to crossover)} )
+    : core::UdpSource( { 4010,
+                       3, // 3 padding,
+                       5+(1152*7), // 5 header, 1152 payload, +2*payload (int to float), +2*2*payload (float to crossover
+                       boost::asio::ip::address_v4::from_string("239.255.77.77").to_uint() } )
 {
 }
 

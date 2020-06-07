@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2020 Manuel Weichselbaumer <mincequi@web.de>
  *
@@ -46,7 +47,8 @@ public:
     boost::asio::io_context& ioContext;
     boost::asio::ip::tcp::acceptor acceptor;
     boost::asio::ip::tcp::socket socket;
-    boost::array<char, 2048> buffer;
+    boost::array<char, 2048> receiveBuffer;
+    std::string sendBuffer;
 };
 
 } // namespace rtsp

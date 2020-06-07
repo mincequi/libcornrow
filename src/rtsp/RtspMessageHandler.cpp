@@ -54,6 +54,7 @@ RtspMessageHandler::RtspMessageHandler() :
 
 RtspMessageHandler::~RtspMessageHandler()
 {
+    delete d;
 }
 
 void RtspMessageHandler::onMessage(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const

@@ -17,9 +17,12 @@
 
 #include "AirplayRtspMessageHandler.h"
 
+#include "AirplayDecryptor.h"
+
 #include <coro/rtsp/RtspMessage.h>
 #include "core/MainloopPrivate.h"
 #include "core/Util.h"
+#include "sdp/Sdp.h"
 
 #include <boost/asio/ip/host_name.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -58,8 +61,10 @@ static char airportRsaPrivateKey[] = "-----BEGIN RSA PRIVATE KEY-----\n"
 "2gG0N5hvJpzwwhbhXqFKA4zaaSrw622wDniAK5MlIE0tIAKKP4yxNGjoD2QYjhBGuhvkWKY=\n"
 "-----END RSA PRIVATE KEY-----";
 
-AirplayRtspMessageHandler::AirplayRtspMessageHandler(uint16_t rtpReceiverPort)
-    : m_rtpReceiverPort(rtpReceiverPort)
+AirplayRtspMessageHandler::AirplayRtspMessageHandler(uint16_t audioPort, uint16_t controlPort, AirplayDecryptor& decryptor)
+    : m_audioPort(audioPort),
+      m_controlPort(controlPort),
+      m_decryptor(decryptor)
 {
 }
 
@@ -67,6 +72,7 @@ void AirplayRtspMessageHandler::onOptions(const RtspMessage& request, RtspMessag
 {
     RtspMessageHandler::onOptions(request, response, ipAddress);
 
+    //response->header("Audio-Jack-Status") = "connected; type=analog"; // not needed
     if (request.header("Apple-Challenge").size()) {
         onAppleChallenge(request, response, ipAddress);
     }
@@ -74,18 +80,48 @@ void AirplayRtspMessageHandler::onOptions(const RtspMessage& request, RtspMessag
 
 void AirplayRtspMessageHandler::onAnnounce(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
 {
-    std::stringstream ss;
-    ss << "RTP/AVP/UDP;unicast;mode=record;server_port=" << m_rtpReceiverPort;
-    ss << ";control_port=" << m_rtpReceiverPort;
-    ss << ";timing_port=" << m_rtpReceiverPort;
-    ss.flush();
+    if (!request.sdp().ms.size()) {
+        return;
+    }
 
-    response->header("Session") = "1";
-    response->header("Transport") = ss.str();
+    std::string rsaaeskey;
+    std::string aesiv;
+    for (const auto& a : request.sdp().ms.front().as) {
+        if (!a.rfind("rsaaeskey:", 0)) {
+            auto buffer = core::util::base64Decode(a.substr(10));
+
+            // init RSA
+            BIO* bio = BIO_new_mem_buf(airportRsaPrivateKey, -1);
+            RSA* rsa = PEM_read_bio_RSAPrivateKey(bio, NULL, NULL, NULL);
+            BIO_free(bio);
+
+            // need memory for signature
+            rsaaeskey.resize(RSA_size(rsa), 0);
+            int size = RSA_private_decrypt(buffer.size(),
+                                           reinterpret_cast<const unsigned char*>(buffer.data()),
+                                           reinterpret_cast<unsigned char*>(rsaaeskey.data()),
+                                           rsa, RSA_PKCS1_OAEP_PADDING);
+            RSA_free(rsa);
+            rsaaeskey.resize(size);
+        } else if (!a.rfind("aesiv:", 0)) {
+            aesiv = core::util::base64Decode(a.substr(6));
+        }
+    }
+
+    m_decryptor.init(rsaaeskey, aesiv);
 }
 
 void AirplayRtspMessageHandler::onSetup(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
 {
+    std::stringstream ss;
+    ss << "RTP/AVP/UDP;unicast;mode=record";
+    ss << ";server_port=" << m_audioPort;       // server_port and
+    ss << ";control_port=" << m_controlPort;    // control_port are mandatory.
+    //ss << ";timing_port=" << m_timerPort;     // timing_port is optional.
+    ss.flush();
+
+    //response->header("Session") = "1";    // not needed
+    response->header("Transport") = ss.str();
 }
 
 void AirplayRtspMessageHandler::onAppleChallenge(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const
@@ -105,8 +141,6 @@ void AirplayRtspMessageHandler::onAppleChallenge(const rtsp::RtspMessage& reques
 
     // Encrypt the buffer using the RSA private key extracted in shairport.
     // https://www.openssl.org/docs/crypto/RSA_private_encrypt.html
-    //
-    // init RSA
     BIO* bio = BIO_new_mem_buf(airportRsaPrivateKey, -1);
     RSA* rsa = PEM_read_bio_RSAPrivateKey(bio, NULL, NULL, NULL);
     BIO_free(bio);
@@ -121,10 +155,7 @@ void AirplayRtspMessageHandler::onAppleChallenge(const rtsp::RtspMessage& reques
     RSA_free(rsa);
 
     // Base64 encode the ciphertext without padding
-    std::string appleResponse = core::util::base64Encode(to.data(), to.size(), false);
-
-    // write response
-    response->header("Apple-Response") = appleResponse;
+    response->header("Apple-Response") = core::util::base64Encode(to.data(), to.size(), false);;
 }
 
 } // namespace airplay

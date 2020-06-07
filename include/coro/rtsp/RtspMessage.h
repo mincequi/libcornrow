@@ -21,6 +21,9 @@
 #include <string>
 
 namespace coro {
+namespace sdp {
+class Sdp;
+}
 namespace rtsp {
 
 using RtspHeaders = std::map<std::string, std::string>;
@@ -28,7 +31,8 @@ using RtspHeaders = std::map<std::string, std::string>;
 class RtspMessage
 {
 public:
-    static RtspMessage createRequest(const std::string& buffer);
+    ~RtspMessage();
+    static RtspMessage deserializeRequest(const std::string& buffer);
     static RtspMessage createResponse(const std::string& CSeq);
 
     const std::string& method() const;
@@ -36,16 +40,15 @@ public:
     std::string header(const std::string& key) const;
     const std::string& body() const;
 
+    const sdp::Sdp& sdp() const;
+
     std::string serialize() const;
 
 private:
     RtspMessage();
+    class RtspMessagePrivate* const d;
 
     void parse(const std::string& buffer);
-
-    std::string m_method;
-    RtspHeaders m_headers;
-    std::string m_body;
 };
 
 } // namespace rtsp

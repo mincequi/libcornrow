@@ -17,28 +17,42 @@
 
 #pragma once
 
-#include <cstdint>
-#include <functional>
+#include <list>
+#include <string>
 
 namespace coro {
-namespace rtsp {
+namespace sdp {
 
-class RtspMessageHandler;
-
-class RtspServer
+class Media
 {
 public:
-    RtspServer(RtspMessageHandler& handler,
-               uint16_t port = 0);
-    virtual ~RtspServer();
+    Media();
 
-    uint16_t port() const;
+    bool isValid() const;
 
-    //void setRequestHandlerFactory(std::function<RtspMessageHandler()>);
+    std::string type;
+    std::string port;
+    std::string proto;
+    std::string fmt;
 
-private:
-    class RtspServerPrivate* const d;
+    std::list<std::string> as;
 };
 
-} // namespace rtsp
+class Sdp
+{
+public:
+    Sdp();
+    static Sdp deserialize(std::istringstream& stream);
+
+    bool isValid() const;
+
+    std::string v;
+    std::string o;
+    std::string s;
+    std::string t;
+
+    std::list<Media> ms;
+};
+
+} // namespace sdp
 } // namespace coro

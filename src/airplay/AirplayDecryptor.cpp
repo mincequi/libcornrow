@@ -15,30 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <cstdint>
-#include <functional>
+#include "AirplayDecryptor.h"
 
 namespace coro {
-namespace rtsp {
+namespace airplay {
 
-class RtspMessageHandler;
-
-class RtspServer
+AirplayDecryptor::AirplayDecryptor()
 {
-public:
-    RtspServer(RtspMessageHandler& handler,
-               uint16_t port = 0);
-    virtual ~RtspServer();
 
-    uint16_t port() const;
+}
 
-    //void setRequestHandlerFactory(std::function<RtspMessageHandler()>);
+void AirplayDecryptor::init(const std::string& key, const std::string& iv)
+{
+    m_key = key;
+    m_iv = iv;
+}
 
-private:
-    class RtspServerPrivate* const d;
-};
+} // namespace airplay
+} // namespace core
 
-} // namespace rtsp
-} // namespace coro

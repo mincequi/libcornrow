@@ -15,14 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <thread>
-#include <asio/io_service.hpp>
-#include <asio/placeholders.hpp>
-#include <asio/steady_timer.hpp>
-#include <asio/ip/address.hpp>
-#include <asio/ip/multicast.hpp>
-#include <asio/ip/udp.hpp>
+#include <boost/asio/steady_timer.hpp>
+#include <boost/asio/ip/multicast.hpp>
+#include <boost/asio/ip/udp.hpp>
 #include <boost/system/error_code.hpp>
+
 #include <loguru/loguru.hpp>
 
 #include <coro/audio/AudioBuffer.h>
@@ -40,10 +37,12 @@ public:
                     audio::ChannelFlags::Any } }};
     }
 
+    // @TODO(mawe): think about struct vs multiple parameters...
     struct Config {
         uint16_t port = 0;
         uint8_t prePadding = 0;
         uint16_t mtu = 1492;
+        uint32_t multicastGroup = 0;
     };
 
     UdpSource();
@@ -53,20 +52,18 @@ public:
     uint16_t port() const;
 
 private:
-    void _start();
     void startTimer();
     void doReceive();
-    void onReceive(std::size_t bytesTransferred);
+    void onReceived(const boost::system::error_code& ec, std::size_t bytesTransferred);
     void onTimeout();
 
     Config m_config;
 
-    asio::io_service          m_ioService;
-    asio::ip::udp::socket     m_socket;
-    asio::ip::udp::endpoint   m_localEndpoint;
-    asio::ip::udp::endpoint   m_remoteEndpoint;
-    std::thread         m_thread;
-    asio::steady_timer  m_timeout;
+    class UdpSourcePrivate* const d;
+
+    boost::asio::ip::udp::socket     m_socket;
+    boost::asio::ip::udp::endpoint   m_localEndpoint;
+    boost::asio::steady_timer  m_timeout;
     int                 m_bufferCount = 0;
     bool                m_isReceiving = false;
     audio::AudioBuffer  m_buffer;

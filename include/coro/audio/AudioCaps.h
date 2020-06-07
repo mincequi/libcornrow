@@ -19,8 +19,12 @@
 
 #include <coro/audio/AudioTypes.h>
 
+// Cannot include this, yields to cyclic dependency
+//#include <coro/core/Caps.h>
+
 namespace coro {
 namespace audio {
+
 class Node;
 
 class AudioCaps
@@ -28,7 +32,7 @@ class AudioCaps
 public:
     static constexpr AudioCaps intersect(const AudioCaps& in, const AudioCaps& out);
 
-    AudioCodecs      codecs = AudioCodecs::Any;
+    AudioCodecs codecs = AudioCodecs::Any;
     SampleRates rates = SampleRates::Any;
     ChannelFlags channels = ChannelFlags::Any;
 

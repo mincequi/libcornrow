@@ -15,17 +15,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <coro/core/UdpSource.h>
 #include <coro/audio/Source.h>
+#include <coro/core/UdpSource.h>
 
-#include <boost/bind.hpp>
+#include "core/MainloopPrivate.h"
+
+#include <functional>
 
 namespace coro {
 namespace core {
 
-using namespace asio;
-namespace ph = asio::placeholders;
-using namespace coro::audio;
+using namespace boost::asio;
+namespace ph = std::placeholders;
+
+class UdpSourcePrivate
+{
+public:
+    UdpSourcePrivate()
+        : ioContext(MainloopPrivate::instance().ioContext)
+    {
+    }
+
+    boost::asio::io_context& ioContext;
+    boost::asio::ip::udp::endpoint remoteEndpoint;
+};
 
 UdpSource::UdpSource() :
     UdpSource(Config())
@@ -34,42 +47,38 @@ UdpSource::UdpSource() :
 
 UdpSource::UdpSource(const Config& config) :
     m_config(config),
-    m_socket(m_ioService),
-    m_localEndpoint(ip::address::from_string("0.0.0.0"), config.port),
-    m_timeout(m_ioService, asio::chrono::seconds(1)),
+    d(new UdpSourcePrivate),
+    m_socket(d->ioContext),
+    m_localEndpoint(ip::udp::v4(), config.port),
+    m_timeout(d->ioContext, std::chrono::seconds(1)),
     m_buffer(config.prePadding + m_config.mtu * 7)
 {
     m_socket.open(m_localEndpoint.protocol());
     m_socket.set_option(ip::udp::socket::reuse_address(true));
     m_socket.bind(m_localEndpoint);
-    asio::error_code ec;
-    m_socket.set_option(ip::multicast::join_group(ip::address::from_string("239.255.77.77")), ec);
-    if (ec) {
-        LOG_F(ERROR, "Unable to join multicast group");
-        return;
+
+    if (config.multicastGroup) {
+        boost::system::error_code ec;
+        m_socket.set_option(ip::multicast::join_group(ip::address_v4(config.multicastGroup)), ec);
+        if (ec) {
+            LOG_F(ERROR, "Unable to join multicast group");
+            return;
+        }
     }
+
     doReceive();
-    startTimer();
-    _start();
+    //startTimer();
 }
 
 UdpSource::~UdpSource()
 {
-    Source::stop();
-    m_ioService.stop();
-    m_thread.join();
+    delete d;
+    //Source::stop();
 }
 
 uint16_t UdpSource::port() const
 {
-    return m_localEndpoint.port();
-}
-
-void UdpSource::_start()
-{
-    m_thread = std::thread([this]() {
-        m_ioService.run();
-    });
+    return m_socket.local_endpoint().port();
 }
 
 void UdpSource::startTimer()
@@ -88,12 +97,12 @@ void UdpSource::doReceive()
     m_buffer.acquire(m_config.prePadding + m_config.mtu);
     m_buffer.commit(m_config.prePadding + m_config.mtu);
     m_socket.async_receive_from(
-                asio::buffer(m_buffer.data()+m_config.prePadding, m_config.mtu),
-                m_remoteEndpoint,
-                boost::bind(&UdpSource::onReceive, this, ph::bytes_transferred));
+                buffer(m_buffer.data()+m_config.prePadding, m_config.mtu),
+                d->remoteEndpoint,
+                std::bind(&UdpSource::onReceived, this, ph::_1, ph::_2));
 }
 
-void UdpSource::onReceive(std::size_t bytesTransferred)
+void UdpSource::onReceived(const boost::system::error_code& ec, std::size_t bytesTransferred)
 {
     if (m_previousBytesTransferred != bytesTransferred) {
         LOG_F(INFO, "Transfer size changed: %lu", bytesTransferred);
@@ -101,6 +110,7 @@ void UdpSource::onReceive(std::size_t bytesTransferred)
     }
     m_isReceiving = false;
 
+    /*
     if (!Source::isStarted()) {
         Source::setReady(true);
         if (!Source::isStarted()) {
@@ -110,12 +120,15 @@ void UdpSource::onReceive(std::size_t bytesTransferred)
         }
         LOG_F(INFO, "%s restarted", name());
     }
+    */
 
     ++m_bufferCount;
     m_buffer.trimFront(m_config.prePadding);
     m_buffer.shrink(bytesTransferred);
 
-    process( AudioConf { audio::AudioCodec::Unknown, SampleRate::RateUnknown, ChannelFlags::Any }, m_buffer);
+    process(audio::AudioConf { audio::AudioCodec::Unknown,
+                               audio::SampleRate::RateUnknown,
+                               audio::ChannelFlags::Any }, m_buffer);
 
     doReceive();
 }

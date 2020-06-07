@@ -15,6 +15,7 @@ add_library(${PROJECT_NAME} STATIC
     src/AlsaUtil.cpp
     src/Types.cpp
 
+    src/airplay/AirplayDecryptor.cpp
     src/airplay/AirPlaySource.cpp
     src/airplay/AirPlay2Source.cpp
     src/airplay/AirplayRtspMessageHandler.cpp
@@ -52,6 +53,7 @@ add_library(${PROJECT_NAME} STATIC
     src/rtsp/RtspServerPrivate.cpp
     src/rtsp/RtspMessage.cpp
     src/rtsp/RtspMessageHandler.cpp
+    src/sdp/Sdp.cpp
     src/zeroconf/ZeroConfServer.cpp
 
     thirdparty/Gist/src/Gist.cpp
