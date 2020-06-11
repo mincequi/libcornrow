@@ -50,7 +50,7 @@ audio::AudioConf Node::process(const audio::AudioConf& _conf, audio::AudioBuffer
         return {};
     }
 
-    auto conf = doProcess(_conf, buffer);
+    auto conf = onProcess(_conf, buffer);
 
     if (!next()) {
         buffer.clear();
@@ -58,6 +58,17 @@ audio::AudioConf Node::process(const audio::AudioConf& _conf, audio::AudioBuffer
     }
 
     return next()->process(conf, buffer);
+}
+
+void Node::flush()
+{
+    if (!isBypassed()) {
+        onFlush();
+    }
+
+    if (next()) {
+        next()->flush();
+    }
 }
 
 bool Node::isBypassed() const
@@ -70,9 +81,13 @@ void Node::setIsBypassed(bool bypass)
     m_isBypassed = bypass;
 }
 
-audio::AudioConf Node::doProcess(const audio::AudioConf& conf, audio::AudioBuffer&)
+audio::AudioConf Node::onProcess(const audio::AudioConf& conf, audio::AudioBuffer&)
 {
     return conf;
+}
+
+void Node::onFlush()
+{
 }
 
 } // namespace core

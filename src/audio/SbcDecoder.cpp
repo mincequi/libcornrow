@@ -32,7 +32,7 @@ SbcDecoder::~SbcDecoder()
     sbc_finish(m_sbc);
 }
 
-AudioConf SbcDecoder::doProcess(const AudioConf& conf, AudioBuffer& buffer)
+AudioConf SbcDecoder::onProcess(const AudioConf& conf, AudioBuffer& buffer)
 {
     auto payloadOffset = 0;
 

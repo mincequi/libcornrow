@@ -25,19 +25,16 @@
 namespace coro {
 namespace zeroconf {
 
-#define MDNS_RECORD  "tp=UDP", "sm=false", "ek=1", "et=0,1", "cn=0,1", "ch=2", \
-                "ss=16", "sr=44100", "vn=3", "txtvers=1", "pw=false"
-
-ZeroConfServer::ZeroConfServer()
+ZeroconfServer::ZeroconfServer()
 {
 }
 
-ZeroConfServer::~ZeroConfServer()
+ZeroconfServer::~ZeroconfServer()
 {
     unregisterServices();
 }
 
-void ZeroConfServer::unregisterServices()
+void ZeroconfServer::unregisterServices()
 {
     for (auto& kv : m_services) {
         DNSServiceRefDeallocate(kv.second);
@@ -45,7 +42,7 @@ void ZeroConfServer::unregisterServices()
     m_services.clear();
 }
 
-bool ZeroConfServer::registerService(const ZeroConfService& service)
+bool ZeroconfServer::registerService(const ZeroConfService& service)
 {
     std::string txtRecord;
     for (const auto& kv : service.txtRecords) {
@@ -53,43 +50,20 @@ bool ZeroConfServer::registerService(const ZeroConfService& service)
         txtRecord += kv.first + "=" + kv.second;
     }
 
-    std::cerr << txtRecord;
-
-    const char *record[] = { MDNS_RECORD, NULL };
-    uint16_t length = 0;
-    const char **field;
-
-    // Concatenate string contained i record into buf.
-    for (field = record; *field; ++field) {
-        length += strlen(*field) + 1; // One byte for length each time
-    }
-
-    char *buf = new char[length * sizeof(char)];
-    char *p = buf;
-
-    for (field = record; *field; ++field) {
-        char * newp = stpcpy(p + 1, *field);
-        *p = newp - p - 1;
-        p = newp;
-    }
-
     DNSServiceRef dnssref;
-    DNSServiceErrorType error;
-    error = DNSServiceRegister(&dnssref,
-                               0,
-                               kDNSServiceInterfaceIndexAny,
-                               service.name.c_str(),
-                               service.type.c_str(),
-                               "",
-                               NULL,
-                               htobe16(service.port),
-                               txtRecord.size(),
-                               txtRecord.c_str(),
-                               //length,
-                               //buf,
-                               NULL,
-                               NULL);
-    free(buf);
+    DNSServiceErrorType error = DNSServiceRegister(
+                &dnssref,
+                0,
+                kDNSServiceInterfaceIndexAny,
+                service.name.c_str(),
+                service.type.c_str(),
+                "",
+                NULL,
+                htobe16(service.port),
+                txtRecord.size(),
+                txtRecord.c_str(),
+                NULL,
+                NULL);
 
     if (error != kDNSServiceErr_NoError) {
         std::cerr << "dns-sd: DNSServiceRegister error:  " << error;
@@ -100,7 +74,7 @@ bool ZeroConfServer::registerService(const ZeroConfService& service)
     return true;
 }
 
-void ZeroConfServer::unregisterService(const std::string& name)
+void ZeroconfServer::unregisterService(const std::string& name)
 {
     auto it = m_services.find(name);
     if (it != m_services.end()) {

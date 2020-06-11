@@ -30,7 +30,7 @@ void FileSink::setFileName(const std::string& fileName)
     m_fileName = fileName;
 }
 
-AudioConf FileSink::doProcess(const AudioConf& conf, AudioBuffer& buffer)
+AudioConf FileSink::onProcess(const AudioConf& conf, AudioBuffer& buffer)
 {
     m_file.write(buffer.data(), buffer.size());
     buffer.clear();

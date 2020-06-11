@@ -15,24 +15,27 @@ add_library(${PROJECT_NAME} STATIC
     src/AlsaUtil.cpp
     src/Types.cpp
 
-    src/airplay/AirplayDecryptor.cpp
-    src/airplay/AirPlaySource.cpp
-    src/airplay/AirPlay2Source.cpp
+    src/airplay/AirplayDecrypter.cpp
+    src/airplay/AirplaySource.cpp
+    src/airplay/Airplay2Source.cpp
     src/airplay/AirplayRtspMessageHandler.cpp
+    src/airplay/AlacDecoder.cpp
+    src/airplay/alac.c
     src/audio/AlsaSink.cpp
     src/audio/AppSource.cpp
     src/audio/AudioAppSink.cpp
     src/audio/AudioBuffer.cpp
+    src/audio/AudioCaps.cpp
     src/audio/AudioConf.cpp
     src/audio/AudioConverter.cpp
     src/audio/AudioDecoderFfmpeg.cpp
     src/audio/AudioEncoderFfmpeg.cpp
+    src/audio/AudioNode.cpp
     src/audio/AudioTestSource.cpp
     src/audio/AudioTypes.cpp
     src/audio/Crossover.cpp
     src/audio/FileSink.cpp
     src/audio/Loudness.cpp
-    src/audio/Node.cpp
     src/audio/Peq.cpp
     src/audio/ScreamSource.cpp
     src/audio/SbcDecoder.cpp

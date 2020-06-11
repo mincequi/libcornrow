@@ -60,7 +60,7 @@ void AlsaSink::setDevice(const std::string& device)
     start(m_conf);
 }
 
-AudioConf AlsaSink::doProcess(const AudioConf& conf, AudioBuffer& buffer)
+AudioConf AlsaSink::onProcess(const AudioConf& conf, AudioBuffer& buffer)
 {
     if (m_conf != conf) {
         stop();

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <coro/audio/Node.h>
+#include <coro/audio/AudioNode.h>
 
 typedef struct AVCodecContext AVCodecContext;
 typedef struct AVFrame AVFrame;
@@ -9,19 +9,19 @@ typedef struct AVPacket AVPacket;
 namespace coro {
 namespace audio {
 
-class AudioEncoderFfmpeg : public Node
+class AudioEncoderFfmpeg : public AudioNode
 {
 public:
     AudioEncoderFfmpeg(AudioCodec codec);
     ~AudioEncoderFfmpeg();
 
-    static constexpr std::array<audio::AudioCaps,1> inCaps() {
+    static constexpr std::array<audio::AudioCap,1> inCaps() {
         return {{ { AudioCodec::RawFloat32,
                     SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000,
                     ChannelFlags::Any } }};
     }
 
-    static constexpr std::array<audio::AudioCaps,2> outCaps() {
+    static constexpr std::array<audio::AudioCap,2> outCaps() {
         return {{ { AudioCodec::Ac3 | AudioCodec::Eac3,
                     SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000,
                     Channels::Mono | Channels::Stereo },
@@ -40,7 +40,7 @@ public:
 private:
     void stop() override;
 
-    AudioConf doProcess(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
 
     void updateConf();
 

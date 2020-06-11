@@ -18,7 +18,7 @@
 #pragma once
 
 #include <coro/audio/AudioCaps.h>
-#include <coro/audio/Node.h>
+#include <coro/audio/AudioNode.h>
 
 #include <atomic>
 #include <functional>
@@ -30,10 +30,10 @@ namespace audio {
 class AudioBuffer;
 class AudioConf;
 
-class Source : public Node
+class Source : public AudioNode
 {
 public:
-    static constexpr std::array<AudioCaps,0> outCaps() { return {}; }
+    static constexpr std::array<AudioCap,0> outCaps() { return {}; }
 
     Source();
     virtual ~Source();
@@ -50,9 +50,9 @@ public:
     using ReadyCallback = std::function<void(Source* const, bool)>;
     void setReadyCallback(ReadyCallback callback);
 
+protected:
     void pushBuffer(const AudioConf& conf, AudioBuffer& buffer);
 
-protected:
     virtual void doPoll();
     virtual void doStart();
     virtual void doStop();

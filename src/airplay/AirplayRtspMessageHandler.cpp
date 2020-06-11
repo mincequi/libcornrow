@@ -17,12 +17,16 @@
 
 #include "AirplayRtspMessageHandler.h"
 
-#include "AirplayDecryptor.h"
+#include "AlacDecoder.h"
+#include "AirplayDecrypter.h"
 
+#include <coro/audio/AudioDecoderFfmpeg.h>
 #include <coro/rtsp/RtspMessage.h>
 #include "core/MainloopPrivate.h"
 #include "core/Util.h"
 #include "sdp/Sdp.h"
+
+#include <loguru/loguru.hpp>
 
 #include <boost/asio/ip/host_name.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -35,6 +39,7 @@
 namespace coro {
 namespace airplay {
 
+using namespace coro::audio;
 using namespace coro::rtsp;
 
 static char airportRsaPrivateKey[] = "-----BEGIN RSA PRIVATE KEY-----\n"
@@ -61,10 +66,14 @@ static char airportRsaPrivateKey[] = "-----BEGIN RSA PRIVATE KEY-----\n"
 "2gG0N5hvJpzwwhbhXqFKA4zaaSrw622wDniAK5MlIE0tIAKKP4yxNGjoD2QYjhBGuhvkWKY=\n"
 "-----END RSA PRIVATE KEY-----";
 
-AirplayRtspMessageHandler::AirplayRtspMessageHandler(uint16_t audioPort, uint16_t controlPort, AirplayDecryptor& decryptor)
+AirplayRtspMessageHandler::AirplayRtspMessageHandler(uint16_t audioPort,
+                                                     uint16_t controlPort,
+                                                     AirplayDecrypter& decrypter,
+                                                     audio::AudioDecoderFfmpeg<audio::AudioCodec::Alac>& decoder)
     : m_audioPort(audioPort),
       m_controlPort(controlPort),
-      m_decryptor(decryptor)
+      m_decrypter(decrypter),
+      m_decoder(decoder)
 {
 }
 
@@ -80,35 +89,17 @@ void AirplayRtspMessageHandler::onOptions(const RtspMessage& request, RtspMessag
 
 void AirplayRtspMessageHandler::onAnnounce(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
 {
-    if (!request.sdp().ms.size()) {
+    if (!request.sdp().media.size()) {
         return;
     }
 
-    std::string rsaaeskey;
-    std::string aesiv;
-    for (const auto& a : request.sdp().ms.front().as) {
-        if (!a.rfind("rsaaeskey:", 0)) {
-            auto buffer = core::util::base64Decode(a.substr(10));
+    // @TODO(mawe): this might throw. To be fixed.
+    std::string rsaaeskey = request.sdp().media.front().attributes.at("rsaaeskey");
+    std::string aesiv = request.sdp().media.front().attributes.at("aesiv");
+    std::string fmtp = request.sdp().media.front().attributes.at("fmtp");
 
-            // init RSA
-            BIO* bio = BIO_new_mem_buf(airportRsaPrivateKey, -1);
-            RSA* rsa = PEM_read_bio_RSAPrivateKey(bio, NULL, NULL, NULL);
-            BIO_free(bio);
-
-            // need memory for signature
-            rsaaeskey.resize(RSA_size(rsa), 0);
-            int size = RSA_private_decrypt(buffer.size(),
-                                           reinterpret_cast<const unsigned char*>(buffer.data()),
-                                           reinterpret_cast<unsigned char*>(rsaaeskey.data()),
-                                           rsa, RSA_PKCS1_OAEP_PADDING);
-            RSA_free(rsa);
-            rsaaeskey.resize(size);
-        } else if (!a.rfind("aesiv:", 0)) {
-            aesiv = core::util::base64Decode(a.substr(6));
-        }
-    }
-
-    m_decryptor.init(rsaaeskey, aesiv);
+    m_decrypter.init(rsaaeskey, aesiv);
+    m_decoder.init(fmtp);
 }
 
 void AirplayRtspMessageHandler::onSetup(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
@@ -155,7 +146,7 @@ void AirplayRtspMessageHandler::onAppleChallenge(const rtsp::RtspMessage& reques
     RSA_free(rsa);
 
     // Base64 encode the ciphertext without padding
-    response->header("Apple-Response") = core::util::base64Encode(to.data(), to.size(), false);;
+    response->header("Apple-Response") = core::util::base64Encode(to.data(), to.size(), false);
 }
 
 } // namespace airplay

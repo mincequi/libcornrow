@@ -17,22 +17,29 @@
 
 #pragma once
 
-#include <string>
+#include <coro/audio/Source.h>
 
 namespace coro {
 namespace airplay {
 
-class AirplayDecryptor
+class AirPlay2Source : public audio::Source
 {
 public:
-    AirplayDecryptor();
+    static constexpr std::array<audio::AudioCap,1> outCaps() {
+        return {{ { audio::AudioCodec::RawInt16,
+                    audio::SampleRate::Rate44100,
+                    audio::Channels::Stereo } }};
+    }
 
-    void init(const std::string& key, const std::string& iv);
+    AirPlay2Source();
+    virtual ~AirPlay2Source();
 
 private:
-    std::string m_key;
-    std::string m_iv;
+    const char* name() const override;
+    void doPoll() override;
+
+    class Airplay2SourcePrivate* const d;
 };
 
 } // namespace airplay
-} // namespace core
+} // namespace coro

@@ -17,29 +17,45 @@
 
 #pragma once
 
-#include <coro/audio/Source.h>
+#include <string>
+
+#include <openssl/aes.h>
+
+#include <coro/audio/AudioNode.h>
+
+#include "alac.h"
 
 namespace coro {
 namespace airplay {
 
-class AirPlay2Source : public audio::Source
+class AlacDecoder : public audio::AudioNode
 {
 public:
-    static constexpr std::array<audio::AudioCaps,1> outCaps() {
-        return {{ { audio::AudioCodec::RawInt16,
+    //static constexpr std::array<core::Cap,1> inCaps() {
+    static constexpr std::array<audio::AudioCap,1> inCaps() {
+        return {{ audio::AudioCap { audio::AudioCodec::Alac,
+                            audio::SampleRate::Rate44100,
+                            audio::Channels::Stereo,
+                            core::CapFlag::Encrypted } }};
+    }
+
+    //static constexpr std::array<core::Cap,1> inCaps() {
+    static constexpr std::array<audio::AudioCap,1> outCaps() {
+        return {{ audio::AudioCap{ audio::AudioCodec::RawInt16,
                     audio::SampleRate::Rate44100,
                     audio::Channels::Stereo } }};
     }
 
-    AirPlay2Source();
-    virtual ~AirPlay2Source();
+    AlacDecoder();
+    ~AlacDecoder();
+
+    void init(const std::string& fmtp);
 
 private:
-    const char* name() const override;
-    void doPoll() override;
+    audio::AudioConf onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer) override;
 
-    class AirPlay2SourcePrivate* const d;
+    alac_file* m_alac = nullptr;
 };
 
 } // namespace airplay
-} // namespace coro
+} // namespace core

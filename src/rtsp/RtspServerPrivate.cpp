@@ -36,8 +36,6 @@ RtspServerPrivate::RtspServerPrivate(RtspMessageHandler& _handler, uint16_t port
     acceptor(ioContext, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
     socket(ioContext)
 {
-    LOG_F(INFO, "listening on port: %u", acceptor.local_endpoint().port());
-
     doAccept();
 }
 
@@ -88,7 +86,7 @@ void RtspServerPrivate::doSend(const RtspMessage& response)
     sendBuffer = response.serialize();
     socket.async_send(boost::asio::buffer(sendBuffer), std::bind(&RtspServerPrivate::onSent, this, _1, _2));
 
-    //LOG_F(INFO, "send buffer: %s", _buffer.c_str());
+    LOG_F(2, "send buffer: %s", sendBuffer.c_str());
 }
 
 void RtspServerPrivate::onSent(const boost::system::error_code& error, size_t bytes)
@@ -98,7 +96,7 @@ void RtspServerPrivate::onSent(const boost::system::error_code& error, size_t by
         return;
     }
 
-    LOG_F(INFO, "buffer sent: %zu", bytes);
+    LOG_F(1, "buffer sent: %zu", bytes);
 
     doReceive();
 }

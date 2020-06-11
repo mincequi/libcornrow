@@ -17,39 +17,47 @@
 
 #pragma once
 
-#include <coro/core/Node.h>
-#include <coro/audio/AudioCaps.h>
+#include <string>
+#include <openssl/aes.h>
+
+#include <coro/audio/AudioNode.h>
 
 namespace coro {
-namespace rtp {
+namespace airplay {
 
-class RtpHeader;
-
-template<audio::AudioCodec codec>
-class RtpDecoder : public core::Node
+class AirplayDecrypter : public audio::AudioNode
 {
 public:
-    RtpDecoder();
-    ~RtpDecoder();
-
+    //static constexpr std::array<core::Cap,1> inCaps() {
     static constexpr std::array<audio::AudioCap,1> inCaps() {
-        return {{ { audio::AudioCodecs::Any,
-                    audio::SampleRates::Any,
-                    audio::ChannelFlags::Any } }};
+        return {{ audio::AudioCap { audio::AudioCodec::Alac,
+                            audio::SampleRate::Rate44100,
+                            audio::Channels::Stereo,
+                            core::CapFlag::Encrypted } }};
     }
 
+    //static constexpr std::array<core::Cap,1> inCaps() {
     static constexpr std::array<audio::AudioCap,1> outCaps() {
-        return {{ { codec,
-                    audio::SampleRate::Rate48000 | audio::SampleRate::Rate44100,
+        return {{ audio::AudioCap{ audio::AudioCodec::Alac,
+                    audio::SampleRate::Rate44100,
                     audio::Channels::Stereo } }};
     }
 
+    AirplayDecrypter();
+
+    void init(const std::string& key, const std::string& iv);
+
 private:
     audio::AudioConf onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer) override;
-    audio::AudioConf onProcessCodec(const RtpHeader& header, audio::AudioBuffer& buffer);
 
-    uint16_t m_lastSequenceNumber = 0;
+    void initKey(const std::string& key);
+    void initIv(const std::string& iv);
+
+    void decrypt(const char* in, char* out, int length);
+
+    AES_KEY m_aesKey;
+    std::string m_iv;
 };
 
-} // namespace rtp
-} // namespace coro
+} // namespace airplay
+} // namespace core

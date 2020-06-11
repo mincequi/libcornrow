@@ -28,7 +28,7 @@ namespace audio {
 class AppSource : public Source
 {
 public:
-    static constexpr std::array<audio::AudioCaps,1> outCaps() {
+    static constexpr std::array<audio::AudioCap,1> outCaps() {
         return {{ { } }};
     }
 
@@ -37,7 +37,7 @@ public:
 
     const char* name() const override;
 
-    AudioConf doProcess(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
 };
 
 } // namespace audio

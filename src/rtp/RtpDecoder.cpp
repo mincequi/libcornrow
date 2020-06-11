@@ -27,46 +27,77 @@
 namespace coro {
 namespace rtp {
 
-RtpDecoder::RtpDecoder()
+template class RtpDecoder<audio::AudioCodec::Ac3>;
+template class RtpDecoder<audio::AudioCodec::Alac>;
+
+template<audio::AudioCodec codec>
+RtpDecoder<codec>::RtpDecoder()
 {
 }
 
-RtpDecoder::~RtpDecoder()
+template<audio::AudioCodec codec>
+RtpDecoder<codec>::~RtpDecoder()
 {
 }
 
-audio::AudioConf RtpDecoder::doProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer)
+template<audio::AudioCodec codec>
+audio::AudioConf RtpDecoder<codec>::onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer)
 {
-    if (buffer.size() < 14) { // RtpHeader 12 bytes + Ac3Header 2 bytes
+    if (buffer.size() < 12) { // RtpHeader 12 bytes
         buffer.clear();
-        LOG_F(WARNING, "Header invalid");
+        LOG_F(WARNING, "header invalid");
         return {};
     }
 
     coro::rtp::RtpHeader* rtpHeader = (coro::rtp::RtpHeader*)(buffer.data());
     rtpHeader->sequenceNumber = boost::endian::big_to_native(rtpHeader->sequenceNumber);
     rtpHeader->timestamp = boost::endian::big_to_native(rtpHeader->timestamp);
-    if (!rtpHeader->marker || rtpHeader->payloadType < 96) {
+    if (rtpHeader->payloadType < 96) {
         buffer.clear();
-        LOG_F(WARNING, "Header invalid");
+        LOG_F(WARNING, "header invalid");
         return {};
     }
+    // @TODO(mawe): prev(65535), curr(0) triggers discontinuity here. Let's fix it.
     if (m_lastSequenceNumber+1 != rtpHeader->sequenceNumber) {
-        LOG_F(WARNING, "Sequence discontinuity: %d, %d", m_lastSequenceNumber, rtpHeader->sequenceNumber);
+        LOG_F(WARNING, "sequence discontinuous: %d, %d", m_lastSequenceNumber, rtpHeader->sequenceNumber);
     }
     m_lastSequenceNumber = rtpHeader->sequenceNumber;
 
-    auto payloadOffset = rtpHeader->size();
-    if ((buffer.data()+payloadOffset)[0] != 0 || (buffer.data()+payloadOffset)[1] != 1) {
+    return onProcessCodec(*rtpHeader, buffer);
+}
+
+template<>
+audio::AudioConf RtpDecoder<audio::AudioCodec::Ac3>::onProcessCodec(const rtp::RtpHeader& header, audio::AudioBuffer& buffer)
+{
+    if (buffer.size() < header.size() + 2) { // RtpHeader 12 bytes + Ac3Header 2 bytes
         buffer.clear();
         LOG_F(WARNING, "AC3 header invalid");
         return {};
     }
 
-    payloadOffset += 2;
-    buffer.trimFront(payloadOffset);
+    if (!header.marker || header.payloadType < 96) {
+        buffer.clear();
+        LOG_F(WARNING, "AC3 header invalid");
+        return {};
+    }
+
+    if ((buffer.data() + header.size())[0] != 0 || (buffer.data() + header.size())[1] != 1) {
+        buffer.clear();
+        LOG_F(WARNING, "AC3 header invalid");
+        return {};
+    }
+
+    buffer.trimFront(header.size() + 2);
 
     return { audio::AudioCodec::Ac3 };
+}
+
+template<audio::AudioCodec codec>
+audio::AudioConf RtpDecoder<codec>::onProcessCodec(const rtp::RtpHeader& header, audio::AudioBuffer& buffer)
+{
+    buffer.trimFront(header.size());
+
+    return { codec };
 }
 
 } // namespace rtp

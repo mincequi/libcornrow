@@ -1,22 +1,24 @@
-#pragma once
+/*
+ * Copyright (C) 2020 Manuel Weichselbaumer <mincequi@web.de>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-#include <audio/Node.h>
+#include <audio/AudioCaps.h>
 
 namespace coro {
 namespace audio {
-
-/*
-static constexpr bool AudioCaps::canIntersect(const coro::audio::Node& in, const coro::audio::Node& out)
-{
-    // If in is RTP payloaded, but out does not accept it, we fail
-    if (in.codecs.testFlag(Codec::RtpPayload) && !out.codecs.testFlag(Codec::RtpPayload)) {
-        return false;
-    }
-    return ((in.codecs & out.codecs) &&
-            (in.rates & out.rates) &&
-            (in.channels & out.channels));
-}
-*/
 
 } // namespace audio
 } // namespace coro

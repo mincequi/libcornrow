@@ -27,7 +27,7 @@ namespace audio {
 class AudioAppSink : public core::Sink
 {
 public:
-    static constexpr std::array<AudioCaps,1> inCaps() {
+    static constexpr std::array<AudioCap,1> inCaps() {
         return {{ { AudioCodec::RawInt16 | AudioCodec::RawFloat32 } }};
     }
 
@@ -38,7 +38,7 @@ public:
     void setProcessCallback(ProcessCallback callback);
 
 private:
-    AudioConf doProcess(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
 
     ProcessCallback m_callback;
 };

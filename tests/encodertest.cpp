@@ -56,7 +56,7 @@ void runTest(uint32_t numSamples = 2 * 44100, uint32_t numBuffers = 100)
 
     // Process
     audio::AudioEncoderFfmpeg encoder(AudioCodec::Ac3);
-    audio::AudioDecoderFfmpeg decoder;
+    audio::AudioDecoderFfmpeg<AudioCodec::Ac3> decoder;
     audio::AudioAppSink       sink;
     audio::FileSink           fileSink;
     encoder.setBitrate(320);
@@ -64,8 +64,8 @@ void runTest(uint32_t numSamples = 2 * 44100, uint32_t numBuffers = 100)
     fileSink.start();
     //audio::AlsaSink sink;
     //sink.setDevice("iec958:CARD=sndrpihifiberry,DEV=0");
-    audio::Node::link(encoder, decoder);
-    audio::Node::link(decoder, sink);
+    audio::AudioNode::link(encoder, decoder);
+    audio::AudioNode::link(decoder, sink);
 
     std::vector<float> outSamples;
     outSamples.reserve(inSamples.size() + 4096);

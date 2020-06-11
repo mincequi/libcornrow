@@ -18,10 +18,18 @@
 #pragma once
 
 #include <list>
+#include <map>
 #include <string>
 
 namespace coro {
 namespace sdp {
+
+class Attribute
+{
+public:
+
+    std::string fmtp;
+};
 
 class Media
 {
@@ -35,7 +43,7 @@ public:
     std::string proto;
     std::string fmt;
 
-    std::list<std::string> as;
+    std::map<std::string,std::string> attributes;
 };
 
 class Sdp
@@ -51,7 +59,7 @@ public:
     std::string s;
     std::string t;
 
-    std::list<Media> ms;
+    std::list<Media> media;
 };
 
 } // namespace sdp

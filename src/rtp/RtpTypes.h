@@ -29,7 +29,7 @@ public:
     uint32_t headerExtension; // optional
 
     bool isValidSbc() const;
-    uint8_t size() const; // max 80 bytes
+    uint32_t size() const; // max 80 bytes
 } __attribute__ ((packed));
 
 class RtpSbcHeader {

@@ -26,11 +26,11 @@ namespace zeroconf {
 
 struct ZeroConfService;
 
-class ZeroConfServer
+class ZeroconfServer
 {
 public:
-    ZeroConfServer();
-    ~ZeroConfServer();
+    ZeroconfServer();
+    ~ZeroconfServer();
 
     bool registerService(const ZeroConfService& service);
     void unregisterService(const std::string& name);

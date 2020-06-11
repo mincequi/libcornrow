@@ -33,7 +33,7 @@ const char* AppSource::name() const
     return "AppSource";
 }
 
-AudioConf AppSource::doProcess(const AudioConf& _conf, AudioBuffer& buffer)
+AudioConf AppSource::onProcess(const AudioConf& _conf, AudioBuffer& buffer)
 {
     auto conf = _conf;
     auto next = m_next;

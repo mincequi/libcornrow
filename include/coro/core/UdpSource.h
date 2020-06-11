@@ -31,7 +31,7 @@ namespace core {
 class UdpSource : public audio::Source
 {
 public:
-    static constexpr std::array<audio::AudioCaps,1> outCaps() {
+    static constexpr std::array<audio::AudioCap,1> outCaps() {
         return {{ { audio::AudioCodecs::Any,
                     audio::SampleRates::Any,
                     audio::ChannelFlags::Any } }};
@@ -67,7 +67,7 @@ private:
     int                 m_bufferCount = 0;
     bool                m_isReceiving = false;
     audio::AudioBuffer  m_buffer;
-    size_t              m_previousBytesTransferred = 0;
+    float               m_previousBytesTransferred = 0.0f;
 };
 
 } // namespace core

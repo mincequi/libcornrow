@@ -19,7 +19,7 @@
 
 #include <mutex>
 
-#include "Node.h"
+#include "AudioNode.h"
 #include "TBiquad.h"
 
 namespace coro
@@ -27,18 +27,18 @@ namespace coro
 namespace audio
 {
 
-class Crossover : public audio::Node
+class Crossover : public audio::AudioNode
 {
 public:
     Crossover();
 
-    static constexpr std::array<audio::AudioCaps,1> inCaps() {
+    static constexpr std::array<audio::AudioCap,1> inCaps() {
         return {{ { audio::AudioCodec::RawFloat32,
                     audio::SampleRate::Rate44100 | audio::SampleRate::Rate48000,
                     audio::Channels::Stereo } }};
     }
 
-    static constexpr std::array<audio::AudioCaps,1> outCaps() {
+    static constexpr std::array<audio::AudioCap,1> outCaps() {
         return {{ { audio::AudioCodec::RawFloat32,
                     audio::SampleRate::Rate44100 | audio::SampleRate::Rate48000,
                     audio::Channels::Quad } }};
@@ -51,7 +51,7 @@ public:
     bool lfe();
 
 private:
-    AudioConf doProcess(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
 
     //bool isFrequencyValid() const;
     void updateCrossover();

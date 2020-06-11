@@ -17,31 +17,31 @@
 
 #pragma once
 
-#include <coro/audio/Node.h>
+#include <coro/audio/AudioNode.h>
 
 typedef struct sbc_struct sbc_t;
 
 namespace coro {
 namespace audio {
 
-class SbcDecoder : public Node
+class SbcDecoder : public AudioNode
 {
 public:
     SbcDecoder();
     ~SbcDecoder();
 
-    static constexpr std::array<audio::AudioCaps,1> inCaps() {
+    static constexpr std::array<audio::AudioCap,1> inCaps() {
         return {{ { AudioCodec::Sbc | AudioCodec::RtpPayload, SampleRates::Any, ChannelFlags::Any } }};
     }
 
-    static constexpr std::array<audio::AudioCaps,1> outCaps() {
+    static constexpr std::array<audio::AudioCap,1> outCaps() {
         return {{ { AudioCodec::RawInt16,
                     SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000,
                     Channels::Mono | Channels::Stereo } }};
     }
 
 protected:
-    AudioConf doProcess(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
 
 private:
     AudioConf m_conf;

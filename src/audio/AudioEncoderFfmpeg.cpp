@@ -52,7 +52,7 @@ void AudioEncoderFfmpeg::stop()
     process(m_conf, buffer);
 }
 
-AudioConf AudioEncoderFfmpeg::doProcess(const AudioConf& conf, AudioBuffer& _buffer)
+AudioConf AudioEncoderFfmpeg::onProcess(const AudioConf& conf, AudioBuffer& _buffer)
 {
     if (m_conf != conf) {
         m_conf = conf;

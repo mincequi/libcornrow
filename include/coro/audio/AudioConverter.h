@@ -1,18 +1,18 @@
 #pragma once
 
-#include <coro/audio/Node.h>
+#include <coro/audio/AudioNode.h>
 
 namespace coro {
 namespace audio {
 
 template <class InT, class OutT>
-class AudioConverter : public Node
+class AudioConverter : public AudioNode
 {
 public:
     AudioConverter();
     virtual ~AudioConverter();
 
-    static constexpr std::array<audio::AudioCaps,1> inCaps() {
+    static constexpr std::array<audio::AudioCap,1> inCaps() {
         if (std::is_same<InT, int16_t>::value) {
             return {{ { AudioCodec::RawInt16 } }};
         } else if (std::is_same<InT, float>::value) {
@@ -21,7 +21,7 @@ public:
         return {{ { } }};
     }
 
-    static constexpr std::array<audio::AudioCaps,1> outCaps() {
+    static constexpr std::array<audio::AudioCap,1> outCaps() {
         if (std::is_same<OutT, int16_t>::value) {
             return {{ { AudioCodec::RawInt16 } }};
         } else if (std::is_same<OutT, float>::value) {
@@ -31,7 +31,7 @@ public:
     }
 
 private:
-    AudioConf doProcess(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
 };
 
 } // namespace audio

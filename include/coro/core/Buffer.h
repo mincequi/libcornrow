@@ -28,11 +28,13 @@ public:
     Buffer(const Buffer&) = delete;
     Buffer(Buffer&&) = default;
 
+    // @TODO(mawe): change to unsigned char (uint8_t)?
+    // openssl, apple alac prefer unsigned.
     char* data();
     const char* data() const;
     size_t size() const;
 
-    char* acquire(size_t size);
+    char* acquire(size_t size) const;
     void commit(size_t newSize);
 
     /**
@@ -71,10 +73,10 @@ public:
     void trimBack(size_t size);
 
 protected:
-    std::vector<int32_t> m_buffer; // use int32_t internally to align to 4 byte borders
+    mutable std::vector<int32_t> m_buffer; // use int32_t internally to align to 4 byte borders
     size_t   m_size = 0;
     size_t   m_offset = 0;
-    size_t   m_acquiredOffset = 0;
+    mutable size_t   m_acquiredOffset = 0;
 };
 
 } // namespace core

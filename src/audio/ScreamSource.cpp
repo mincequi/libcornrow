@@ -70,7 +70,7 @@ ScreamSource::~ScreamSource()
 {
 }
 
-AudioConf ScreamSource::doProcess(const AudioConf&, AudioBuffer& buffer)
+AudioConf ScreamSource::onProcess(const AudioConf&, AudioBuffer& buffer)
 {
     if (buffer.size() != (5+1152)) {
         LOG_F(ERROR, "invalid bytes count: %zu", buffer.size());

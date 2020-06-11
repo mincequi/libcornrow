@@ -15,20 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <coro/airplay/AirPlaySource.h>
+#include <coro/airplay/AirplaySource.h>
 #include <coro/audio/AlsaSink.h>
 #include <coro/core/Mainloop.h>
 
 #include <unistd.h>
 
+#include <loguru/loguru.hpp>
+
 using namespace coro;
 
 int main()
 {
-    airplay::AirPlaySource::Config config { "myAirplay" };
-    airplay::AirPlaySource source(config);
-    audio::AlsaSink      sink;
-    audio::Node::link(source, sink);
+    airplay::AirplaySource::Config config { "myAirplay" };
+
+    airplay::AirplaySource source(config);
+    audio::AlsaSink sink;
+    audio::AudioNode::link(source, sink);
 
     core::Mainloop& mainloop = core::Mainloop::instance();
     while (true) {

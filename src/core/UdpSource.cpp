@@ -104,10 +104,10 @@ void UdpSource::doReceive()
 
 void UdpSource::onReceived(const boost::system::error_code& ec, std::size_t bytesTransferred)
 {
-    if (m_previousBytesTransferred != bytesTransferred) {
-        LOG_F(INFO, "Transfer size changed: %lu", bytesTransferred);
-        m_previousBytesTransferred = bytesTransferred;
+    if (fabs((m_previousBytesTransferred - bytesTransferred) / bytesTransferred) > 0.125f) {
+        //LOG_F(1, "Transfer size changed: %lu", bytesTransferred);
     }
+    m_previousBytesTransferred = bytesTransferred;
     m_isReceiving = false;
 
     /*

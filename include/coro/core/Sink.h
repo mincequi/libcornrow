@@ -1,6 +1,6 @@
 #pragma once
 
-#include <coro/audio/Node.h>
+#include <coro/audio/AudioNode.h>
 
 namespace coro {
 namespace core {
@@ -8,7 +8,7 @@ namespace core {
 class Sink : public Node
 {
 public:
-    static constexpr std::array<Caps,0> inCaps() { return {}; }
+    //static constexpr std::array<Caps,0> inCaps() { return {}; }
 
     Sink();
     virtual ~Sink();

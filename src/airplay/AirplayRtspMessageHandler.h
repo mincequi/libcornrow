@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <coro/audio/AudioDecoderFfmpeg.h>
 #include <coro/rtsp/RtspMessageHandler.h>
 
 #include <cstddef>
@@ -24,12 +25,15 @@
 namespace coro {
 namespace airplay {
 
-class AirplayDecryptor;
+class AirplayDecrypter;
 
 class AirplayRtspMessageHandler : public rtsp::RtspMessageHandler
 {
 public:
-    AirplayRtspMessageHandler(uint16_t audioPort, uint16_t controlPort, AirplayDecryptor& decryptor);
+    AirplayRtspMessageHandler(uint16_t audioPort,
+                              uint16_t controlPort,
+                              AirplayDecrypter& decrypter,
+                              audio::AudioDecoderFfmpeg<audio::AudioCodec::Alac>& decoder);
 
 private:
     void onOptions(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const override;
@@ -40,7 +44,8 @@ private:
 
     uint16_t m_audioPort = 0;
     uint16_t m_controlPort = 0;
-    AirplayDecryptor& m_decryptor;
+    AirplayDecrypter& m_decrypter;
+    audio::AudioDecoderFfmpeg<audio::AudioCodec::Alac>& m_decoder;
 };
 
 } // namespace airplay

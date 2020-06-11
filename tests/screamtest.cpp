@@ -40,14 +40,14 @@ int main()
     source.setReadyCallback([&](Source* const, bool ready) {
         if (ready) source.start();
     });
-    rtp::RtpDecoder rtpDecoder;
-    AudioDecoderFfmpeg ac3Decoder;
+    rtp::RtpDecoder<AudioCodec::Ac3> rtpDecoder;
+    AudioDecoderFfmpeg<AudioCodec::Ac3> ac3Decoder;
     AlsaSink     sink;
     audio::AudioConverter<float, int16_t> converter;
-    audio::Node::link(source, rtpDecoder);
-    audio::Node::link(rtpDecoder, ac3Decoder);
-    audio::Node::link(ac3Decoder, converter);
-    audio::Node::link(converter, sink);
+    audio::AudioNode::link(source, rtpDecoder);
+    audio::AudioNode::link(rtpDecoder, ac3Decoder);
+    audio::AudioNode::link(ac3Decoder, converter);
+    audio::AudioNode::link(converter, sink);
 
     core::Mainloop& mainloop = core::Mainloop::instance();
     while (true) {

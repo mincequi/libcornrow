@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <coro/audio/Node.h>
+#include <coro/audio/AudioNode.h>
 
 #include "TBiquad.h"
 
@@ -29,18 +29,18 @@ namespace coro
 namespace audio
 {
 
-class Peq : public audio::Node
+class Peq : public audio::AudioNode
 {
 public:
     Peq();
 
-    static constexpr std::array<audio::AudioCaps,1> inCaps() {
+    static constexpr std::array<audio::AudioCap,1> inCaps() {
         return {{ { AudioCodec::RawFloat32,
                     SampleRate::Rate44100 | audio::SampleRate::Rate48000,
                     Channels::Stereo } }};
     }
 
-    static constexpr std::array<audio::AudioCaps,1> outCaps() {
+    static constexpr std::array<audio::AudioCap,1> outCaps() {
         return {{ { AudioCodec::RawFloat32,
                     SampleRate::Rate44100 | audio::SampleRate::Rate48000,
                     Channels::Stereo } }};
@@ -52,7 +52,7 @@ public:
     std::vector<Filter> filters();
 
 private:
-    AudioConf doProcess(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
 
     float               m_volume = 1.0;
     std::deque<TBiquad<float, float>> m_tBiquads;

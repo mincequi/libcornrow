@@ -42,7 +42,7 @@ bool RtpHeader::isValidSbc() const
     return true;
 }
 
-uint8_t RtpHeader::size() const
+uint32_t RtpHeader::size() const
 {
     uint8_t size = sizeof(RtpHeader);
     size -= (16-csrcCount) * 4;
