@@ -22,7 +22,7 @@
 namespace coro {
 namespace airplay {
 
-class AirPlay2Source : public audio::Source
+class Airplay2Source : public audio::Source
 {
 public:
     static constexpr std::array<audio::AudioCap,1> outCaps() {
@@ -31,12 +31,11 @@ public:
                     audio::Channels::Stereo } }};
     }
 
-    AirPlay2Source();
-    virtual ~AirPlay2Source();
+    Airplay2Source();
+    virtual ~Airplay2Source();
 
 private:
     const char* name() const override;
-    void doPoll() override;
 
     class Airplay2SourcePrivate* const d;
 };

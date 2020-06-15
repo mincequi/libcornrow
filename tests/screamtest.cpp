@@ -24,8 +24,7 @@
 #include <coro/audio/AudioDecoderFfmpeg.h>
 #include <coro/core/Mainloop.h>
 #include <coro/core/UdpSource.h>
-
-#include "rtp/RtpDecoder.h"
+#include <coro/rtp/RtpDecoder.h>
 
 using namespace coro;
 using namespace coro::audio;

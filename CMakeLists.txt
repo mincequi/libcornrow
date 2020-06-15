@@ -17,7 +17,9 @@ add_library(${PROJECT_NAME} STATIC
 
     src/airplay/AirplayDecrypter.cpp
     src/airplay/AirplaySource.cpp
+    src/airplay/AirplaySourcePrivate.cpp
     src/airplay/Airplay2Source.cpp
+    src/airplay/AirplayRtpSession.cpp
     src/airplay/AirplayRtspMessageHandler.cpp
     src/airplay/AlacDecoder.cpp
     src/airplay/alac.c

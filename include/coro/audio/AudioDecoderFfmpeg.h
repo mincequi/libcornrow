@@ -54,10 +54,15 @@ public:
     void init(const std::string& data);
 
 private:
+    const char* name() const override;
+
     AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
     AudioConf onProcessCodec(AudioBuffer& buffer);
 
     void updateConf();
+
+    template<typename T>
+    void interleave(const AVFrame* in, AudioBuffer& out);
 
     std::string m_codecData;
     AudioConf m_conf;

@@ -21,6 +21,7 @@ namespace coro {
 namespace core {
 
 MainloopPrivate::MainloopPrivate()
+    : ioContext(1)
 {
 }
 

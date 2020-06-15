@@ -54,8 +54,8 @@ protected:
     void pushBuffer(const AudioConf& conf, AudioBuffer& buffer);
 
     virtual void doPoll();
-    virtual void doStart();
-    virtual void doStop();
+    virtual void onStart();
+    virtual void onStop();
 
     std::mutex  m_mutex;
     ReadyCallback m_isReadyCallback;

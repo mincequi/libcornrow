@@ -206,6 +206,7 @@ void AudioEncoderFfmpeg::pushFrame(AVFrame* frame)
     LOG_IF_F(WARNING, ret == AVERROR(EAGAIN), "No output available in current state");
     LOG_IF_F(WARNING, ret == AVERROR_EOF, "Encoder flushed, no more output packets");
     LOG_IF_F(WARNING, ret == AVERROR(EINVAL), "Codec not opened");
+    // @TODO(mawe): why is this buffer local? Why 16332 bytes? Can be done dynamically?
     AudioBuffer buffer(16332);
     auto newData = buffer.acquire(m_packet->size);
     std::memcpy(newData, m_packet->data, m_packet->size);

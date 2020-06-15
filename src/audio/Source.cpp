@@ -19,13 +19,13 @@ void Source::poll()
 void Source::start()
 {
     m_isStarted = true;
-    doStart();
+    onStart();
 }
 
 void Source::stop()
 {
     m_isStarted = false;
-    doStop();
+    onStop();
 
     setReady(false);
 }
@@ -73,11 +73,11 @@ void Source::doPoll()
 {
 }
 
-void Source::doStart()
+void Source::onStart()
 {
 }
 
-void Source::doStop()
+void Source::onStop()
 {
 }
 

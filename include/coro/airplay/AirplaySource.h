@@ -41,7 +41,6 @@ public:
 
 private:
     const char* name() const override;
-    void doPoll() override;
 
     class AirplaySourcePrivate* const d;
 };

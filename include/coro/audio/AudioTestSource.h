@@ -39,7 +39,7 @@ public:
     const char* name() const override;
 
 private:
-    void doStart() override;
+    void onStart() override;
 
     AudioConf   m_conf;
     uint32_t    m_numFramesPerBuffer;

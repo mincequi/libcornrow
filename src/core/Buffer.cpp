@@ -21,6 +21,7 @@
 #include <iostream>
 
 #include <audio/AudioBuffer.h>
+#include <core/Node.h>
 #include <loguru/loguru.hpp>
 
 template std::list<coro::audio::AudioBuffer> coro::core::Buffer::split(size_t) const;
@@ -61,13 +62,14 @@ size_t Buffer::size() const
     return m_size;
 }
 
-char* Buffer::acquire(size_t size) const
+char* Buffer::acquire(size_t size, const core::Node* caller) const
 {
     // If we have space in front
     if (m_offset >= size) {
         m_acquiredOffset = 0;
         return (char*)m_buffer.data();
     }
+
     // If we have space at back
     const auto sizeAtBack = m_buffer.size()*4-m_offset-m_size;
     if (sizeAtBack >= size) {
@@ -75,11 +77,17 @@ char* Buffer::acquire(size_t size) const
         m_acquiredOffset += m_acquiredOffset%4;
         return (char*)m_buffer.data()+m_acquiredOffset;
     }
+
     // Create space
-    LOG_F(1, "Buffer reallocated");
-    m_buffer.resize(m_buffer.size()+(size-sizeAtBack)/4+1);
+    auto orgSize = m_buffer.size()*4;
+    m_buffer.resize(m_buffer.size()+(size-sizeAtBack) / 2 /*4*/ +1); // let's try 2 instead of 4 to reduce reallocs.
     m_acquiredOffset = m_offset+m_size;
     m_acquiredOffset += m_acquiredOffset%4;
+    if (caller) {
+        LOG_F(INFO, "%s reallocates buffer. %zu -> %zu bytes", caller->name(), orgSize, m_buffer.size()*4);
+    } else {
+        LOG_F(INFO, "buffer reallocated. %zu -> %zu bytes", orgSize, m_buffer.size()*4);
+    }
     return (char*)m_buffer.data()+m_acquiredOffset;
 }
 

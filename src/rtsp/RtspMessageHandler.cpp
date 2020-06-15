@@ -50,6 +50,7 @@ RtspMessageHandler::RtspMessageHandler() :
     d->methodMap["TEARDOWN"] = std::bind(&RtspMessageHandler::onTeardown, this, _1, _2, _3);
     d->methodMap["GET_PARAMETER"] = std::bind(&RtspMessageHandler::onGetParameter, this, _1, _2, _3);
     d->methodMap["SET_PARAMETER"] = std::bind(&RtspMessageHandler::onSetParameter, this, _1, _2, _3);
+    d->methodMap["FLUSH"] = std::bind(&RtspMessageHandler::onFlush, this, _1, _2, _3);
 }
 
 RtspMessageHandler::~RtspMessageHandler()
@@ -65,7 +66,7 @@ void RtspMessageHandler::onMessage(const RtspMessage& request, RtspMessage* resp
         return;
     }
 
-    LOG_F(1, "method handled: %s", request.method().c_str());
+    LOG_F(INFO, "method handled: %s", request.method().c_str());
     it->second(request, response, ipAddress);
 }
 
@@ -73,7 +74,8 @@ void RtspMessageHandler::onMessage(const RtspMessage& request, RtspMessage* resp
 void RtspMessageHandler::onOptions(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
 {
     response->header("Public") = "OPTIONS, DESCRIBE, SETUP, PLAY, PAUSE, RECORD, "
-                                 "ANNOUNCE, TEARDOWN, GET_PARAMETER, SET_PARAMETER";
+                                 "ANNOUNCE, TEARDOWN, GET_PARAMETER, SET_PARAMETER, "
+                                 "FLUSH";   // FLUSH is proprietary
 }
 
 void RtspMessageHandler::onDescribe(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const

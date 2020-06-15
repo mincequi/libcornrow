@@ -16,74 +16,10 @@
  */
 
 #include "airplay/AirplaySource.h"
-
-#include "airplay/AirplayDecrypter.h"
-#include "airplay/AirplayRtspMessageHandler.h"
-
-#include <audio/AudioDecoderFfmpeg.h>
-#include <core/AppSink.h>
-#include <core/UdpSource.h>
-#include <rtp/RtpDecoder.h>
-#include <rtsp/RtspServer.h>
-#include <zeroconf/ZeroConfServer.h>
-#include <zeroconf/ZeroConfService.h>
+#include "airplay/AirplaySourcePrivate.h"
 
 namespace coro {
 namespace airplay {
-
-using namespace std::placeholders;
-
-class AirplaySourcePrivate
-{
-public:
-    AirplaySourcePrivate(AirplaySource& _p, const AirplaySource::Config& config) :
-        p(_p),
-        rtspMessageHandler(audioReceiver.port(),
-                           controlReceiver.port(),
-                           decrypter,
-                           decoder),
-        rtspServer(rtspMessageHandler)
-    {
-        std::map<std::string, std::string> txtRecords;
-        txtRecords["tp"] = "UDP";
-        txtRecords["sm"] = "false";
-        txtRecords["ek"] = "1";
-        txtRecords["et"] = "0,1";
-        txtRecords["cn"] = "0,1";
-        txtRecords["ch"] = "2";
-        txtRecords["ss"] = "16";
-        txtRecords["sr"] = "44100";
-        txtRecords["vn"] = "3";
-        txtRecords["txtvers"] = "1";
-        txtRecords["pw"] = "false";
-
-        zeroconfServer.registerService( { "010203040506@" + config.name,
-                                          "_raop._tcp",
-                                          rtspServer.port(),
-                                          txtRecords } );
-        core::Node::link(audioReceiver, rtpDecoder);
-        core::Node::link(rtpDecoder, decrypter);
-        core::Node::link(decrypter, decoder);
-        core::Node::link(decoder, appSink);
-
-        appSink.setProcessCallback(std::bind(&AirplaySource::process, &p, _1, _2));
-
-        LOG_F(INFO, "airplay source started. name: %s, rtsp port: %d, rtp port: %d", config.name.c_str(), rtspServer.port(), audioReceiver.port());
-    }
-
-    AirplaySource& p;
-
-    core::UdpSource audioReceiver;
-    core::UdpSource controlReceiver;
-    rtp::RtpDecoder<audio::AudioCodec::Alac> rtpDecoder;
-    AirplayDecrypter decrypter;
-    audio::AudioDecoderFfmpeg<audio::AudioCodec::Alac> decoder;
-    core::AppSink   appSink;
-
-    AirplayRtspMessageHandler rtspMessageHandler;
-    rtsp::RtspServer rtspServer;
-    zeroconf::ZeroconfServer zeroconfServer;
-};
 
 AirplaySource::AirplaySource(const AirplaySource::Config& config)
     : d(new AirplaySourcePrivate(*this, config))
@@ -95,23 +31,9 @@ AirplaySource::~AirplaySource()
     delete d;
 }
 
-/*
-AudioConf AirPlaySource::doProcess(const AudioConf&, AudioBuffer& buffer)
-{
-    return { audio::AudioCodec::RawInt16,
-                SampleRate::Rate44100,
-                audio::Channels::Stereo };
-}
-*/
-
 const char* AirplaySource::name() const
 {
     return "AirplaySource";
-}
-
-void AirplaySource::doPoll()
-{
-
 }
 
 } // namespace airplay

@@ -24,7 +24,7 @@ const char* AudioTestSource::name() const
     return "AudioTestSource";
 }
 
-void AudioTestSource::doStart()
+void AudioTestSource::onStart()
 {
     for (uint32_t i = 0; i < m_numBuffers; ++i) {
 

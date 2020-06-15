@@ -33,19 +33,6 @@ static SampleRate toCoro(int sampleRate)
     }
 }
 
-template<typename T>
-void interleave(const AVFrame* in, AudioBuffer& out)
-{
-    auto data = reinterpret_cast<T*>(out.acquire(in->linesize[0] * in->channels));
-    for (int s = 0; s < in->nb_samples; ++s) {
-        for (int c = 0; c < in->channels; ++c) {
-            *data = *(T*)(in->data[c] + (s * sizeof(T)));
-            ++data;
-        }
-    }
-    out.commit(in->linesize[0] * in->channels);
-}
-
 template class AudioDecoderFfmpeg<audio::AudioCodec::Ac3>;
 template class AudioDecoderFfmpeg<audio::AudioCodec::Alac>;
 
@@ -133,6 +120,12 @@ void AudioDecoderFfmpeg<codec>::init(const std::string& data)
 }
 
 template<audio::AudioCodec codec>
+const char* AudioDecoderFfmpeg<codec>::name() const
+{
+    return "AudioDecoderFfmpeg";
+}
+
+template<audio::AudioCodec codec>
 AudioConf AudioDecoderFfmpeg<codec>::onProcess(const AudioConf& conf, AudioBuffer& _buffer)
 {
     if (m_conf != conf) {
@@ -181,14 +174,14 @@ AudioConf AudioDecoderFfmpeg<codec>::onProcess(const AudioConf& conf, AudioBuffe
     av_packet_free(&packet);
     av_frame_free(&frame);
 
+    LOG_F(INFO, "onProcessCodec> %zu bytes", _buffer.size());
+
     return _conf;
 }
 
 template<audio::AudioCodec codec>
 AudioConf AudioDecoderFfmpeg<codec>::onProcessCodec(AudioBuffer &buffer)
 {
-
-
     return {};
 }
 
@@ -206,6 +199,20 @@ void AudioDecoderFfmpeg<codec>::updateConf()
     m_context->extradata_size = m_codecData.size();
     int ret = avcodec_open2(m_context, decoder, NULL);
     LOG_IF_F(ERROR, ret < 0, "Error opening codec: %d", ret);
+}
+
+template<audio::AudioCodec codec>
+template<typename T>
+void AudioDecoderFfmpeg<codec>::interleave(const AVFrame* in, AudioBuffer& out)
+{
+    auto data = reinterpret_cast<T*>(out.acquire(in->linesize[0] * in->channels, this));
+    for (int s = 0; s < in->nb_samples; ++s) {
+        for (int c = 0; c < in->channels; ++c) {
+            *data = *(T*)(in->data[c] + (s * sizeof(T)));
+            ++data;
+        }
+    }
+    out.commit(in->linesize[0] * in->channels);
 }
 
 } // namespace audio

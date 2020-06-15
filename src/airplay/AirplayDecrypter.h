@@ -48,6 +48,8 @@ public:
     void init(const std::string& key, const std::string& iv);
 
 private:
+    const char* name() const;
+
     audio::AudioConf onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer) override;
 
     void initKey(const std::string& key);

@@ -45,10 +45,14 @@ public:
     }
 
 private:
+    const char* name() const override;
+
     audio::AudioConf onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer) override;
+    void onFlush() override;
     audio::AudioConf onProcessCodec(const RtpHeader& header, audio::AudioBuffer& buffer);
 
-    uint16_t m_lastSequenceNumber = 0;
+    bool     m_isFlushed = true;
+    uint16_t m_seq = 0;
 };
 
 } // namespace rtp

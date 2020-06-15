@@ -32,7 +32,7 @@ public:
     }
 
     // @TODO(mawe): make this pure virtual to enforce nodes to give a name.
-    virtual const char* name() const { return ""; }
+    virtual const char* name() const;
 
     Node* next() const;
 

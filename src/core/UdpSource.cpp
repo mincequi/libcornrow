@@ -51,7 +51,7 @@ UdpSource::UdpSource(const Config& config) :
     m_socket(d->ioContext),
     m_localEndpoint(ip::udp::v4(), config.port),
     m_timeout(d->ioContext, std::chrono::seconds(1)),
-    m_buffer(config.prePadding + m_config.mtu * 7)
+    m_buffer(config.prePadding + m_config.mtu)
 {
     m_socket.open(m_localEndpoint.protocol());
     m_socket.set_option(ip::udp::socket::reuse_address(true));
@@ -76,6 +76,11 @@ UdpSource::~UdpSource()
     //Source::stop();
 }
 
+const char* UdpSource::name() const
+{
+    return "UdpSource";
+}
+
 uint16_t UdpSource::port() const
 {
     return m_socket.local_endpoint().port();
@@ -94,7 +99,8 @@ void UdpSource::doReceive()
     }
     m_isReceiving = true;
 
-    m_buffer.acquire(m_config.prePadding + m_config.mtu);
+
+    m_buffer.acquire(m_config.prePadding + m_config.mtu, this);
     m_buffer.commit(m_config.prePadding + m_config.mtu);
     m_socket.async_receive_from(
                 buffer(m_buffer.data()+m_config.prePadding, m_config.mtu),
@@ -105,7 +111,7 @@ void UdpSource::doReceive()
 void UdpSource::onReceived(const boost::system::error_code& ec, std::size_t bytesTransferred)
 {
     if (fabs((m_previousBytesTransferred - bytesTransferred) / bytesTransferred) > 0.125f) {
-        //LOG_F(1, "Transfer size changed: %lu", bytesTransferred);
+        LOG_F(1, "Transfer size changed: %lu", bytesTransferred);
     }
     m_previousBytesTransferred = bytesTransferred;
     m_isReceiving = false;
@@ -125,6 +131,8 @@ void UdpSource::onReceived(const boost::system::error_code& ec, std::size_t byte
     ++m_bufferCount;
     m_buffer.trimFront(m_config.prePadding);
     m_buffer.shrink(bytesTransferred);
+
+
 
     process(audio::AudioConf { audio::AudioCodec::Unknown,
                                audio::SampleRate::RateUnknown,

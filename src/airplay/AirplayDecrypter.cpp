@@ -60,9 +60,14 @@ void AirplayDecrypter::init(const std::string& key, const std::string& iv)
     initIv(iv);
 }
 
+const char* AirplayDecrypter::name() const
+{
+    return "AirplayDecrypter";
+}
+
 audio::AudioConf AirplayDecrypter::onProcess(const audio::AudioConf&, audio::AudioBuffer& buffer)
 {
-    decrypt(buffer.data(), buffer.acquire(2048), buffer.size());
+    decrypt(buffer.data(), buffer.acquire(buffer.size(), this), buffer.size());
     buffer.commit(buffer.size());
 
     return { audio::AudioCodec::Alac, audio::SampleRate::Rate44100, audio::Channels::Stereo };

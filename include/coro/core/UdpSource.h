@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma once
+
 #include <boost/asio/steady_timer.hpp>
 #include <boost/asio/ip/multicast.hpp>
 #include <boost/asio/ip/udp.hpp>
@@ -48,6 +50,8 @@ public:
     UdpSource();
     explicit UdpSource(const Config& config);
     ~UdpSource();
+
+    const char* name() const override;
 
     uint16_t port() const;
 

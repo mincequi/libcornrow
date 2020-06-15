@@ -17,70 +17,21 @@
 
 #include <coro/airplay/Airplay2Source.h>
 #include <coro/audio/AlsaSink.h>
-
-#include "../src/airplay/AirplayDecrypter.h"
+#include <coro/core/Mainloop.h>
 
 #include <unistd.h>
 
 using namespace coro;
 
-#include <array>
-#include <iostream>
-#include <variant>
-#include <tgmath.h>
-
-using namespace std;
-
-using Caps1 = coro::audio::AudioCap;
-using Caps2 = coro::core::AnyCap;
-
-class Caps : public variant<Caps1, Caps2>
-{
-public:
-    template<class OutCaps, class InCaps>
-    static constexpr bool canIntersect(const OutCaps& outCaps, const InCaps& inCaps)
-    {
-        for (const auto& outCap : outCaps) {
-            for (const auto& inCap : inCaps) {
-                if (holds_alternative<Caps1>(outCap) && holds_alternative<Caps1>(inCap)) {
-                    if (Caps1::intersect(std::get<Caps1>(outCap),
-                                         std::get<Caps1>(inCap)).isValid()) {
-                        return true;
-                    }
-                } /*else if (holds_alternative<Caps2>(outCap) && holds_alternative<Caps2>(inCap)) {
-                    if (Caps2::intersect(std::get<Caps2>(outCap),
-                                         std::get<Caps2>(inCap)).isValid()) {
-                        return true;
-                    }
-                }*/
-            }
-        }
-        return false;
-    }
-};
-
-class Node
-{
-public:
-    template<class T1, class T2>
-    enable_if_t<Caps::canIntersect(T1::outCaps(), T2::inCaps())>
-    static link(T1& prev, T2& next)
-    {
-        prev.m_next = &next;
-    }
-
-private:
-    Node* m_next = nullptr;
-};
-
 int main()
 {
-    airplay::AirPlay2Source source;
-    audio::AlsaSink      sink;
+    airplay::Airplay2Source source;
+    audio::AlsaSink         sink;
     audio::AudioNode::link(source, sink);
 
+    core::Mainloop& mainloop = core::Mainloop::instance();
     while (true) {
         usleep(1000);
-        source.poll();
+        mainloop.poll();
     }
 }

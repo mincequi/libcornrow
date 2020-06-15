@@ -37,7 +37,8 @@ AlsaSink::~AlsaSink()
 
 void AlsaSink::start(const AudioConf& conf)
 {
-    open(conf);
+    //open(conf);
+    openSimple(conf);
 }
 
 void AlsaSink::stop()
@@ -75,11 +76,18 @@ AudioConf AlsaSink::onProcess(const AudioConf& conf, AudioBuffer& buffer)
     if (conf.codec == AudioCodec::Ac3) {
         doAc3Payload(buffer);
     }
+
+    /*
     if (!write(buffer.data(), buffer.size())) {
         stop();
         start(conf);
     }
+    */
+
+    writeSimple(buffer.data(), buffer.size());
+
     buffer.clear();
+
     return conf;
 }
 
@@ -109,6 +117,35 @@ bool AlsaSink::open(const AudioConf& conf)
         LOG_F(INFO, "Unable to set SW params for device '%s'\n", m_device.c_str());
         snd_pcm_close(m_pcm);
         m_pcm = nullptr;
+        return false;
+    }
+
+    return true;
+}
+
+bool AlsaSink::openSimple(const AudioConf& conf)
+{
+    if (m_pcm) {
+        LOG_F(WARNING, "Device already opened");
+        return false;
+    }
+
+    int err = snd_pcm_open(&m_pcm, m_device.c_str(), SND_PCM_STREAM_PLAYBACK, 0);
+    if (err) {
+        LOG_F(ERROR, "Unable to open ALSA device '%s'\n", m_device.c_str());
+        return false;
+    }
+
+    unsigned int rate = toInt(conf.rate);
+    err = snd_pcm_set_params(m_pcm,
+                             SND_PCM_FORMAT_S16,
+                             SND_PCM_ACCESS_RW_INTERLEAVED,
+                             2,
+                             rate,
+                             0,
+                             500000);
+    if (err) {
+        LOG_F(WARNING, "snd_pcm_set_params() failed.");
         return false;
     }
 
@@ -189,12 +226,12 @@ bool AlsaSink::setHwParams(const AudioConf& conf)
 
     err = snd_pcm_hw_params_set_buffer_size_near(m_pcm, params, &buffer_size);
     if (err < 0) {
-        LOG_F(INFO, "snd_pcm_hw_params_set_buffer_size_near() failed.\n");
+        LOG_F(ERROR, "snd_pcm_hw_params_set_buffer_size_near() failed.\n");
         return false;
     }
     err = snd_pcm_hw_params_set_period_size_near(m_pcm, params, &period_size, NULL);
     if (err < 0) {
-        LOG_F(INFO, "snd_pcm_hw_params_set_period_size_near() failed.\n");
+        LOG_F(ERROR, "snd_pcm_hw_params_set_period_size_near() failed.\n");
         return false;
     }
     //}
@@ -202,7 +239,7 @@ bool AlsaSink::setHwParams(const AudioConf& conf)
     /* commit the params structure to the hardware via ALSA */
     err = snd_pcm_hw_params(m_pcm, params);
     if (err < 0){
-        LOG_F(INFO, "snd_pcm_hw_params() failed.\n");
+        LOG_F(ERROR, "snd_pcm_hw_params() failed.\n");
         return false;
     }
 
@@ -217,27 +254,27 @@ bool AlsaSink::setSwParams()
     /* fetch the current software parameters */
     int err = snd_pcm_sw_params_current(m_pcm, params);
     if (err < 0) {
-        LOG_F(INFO, "snd_pcm_sw_params_current() failed.\n");
+        LOG_F(ERROR, "snd_pcm_sw_params_current() failed.\n");
         return false;
     }
 
     err = snd_pcm_sw_params_set_start_threshold(m_pcm, params, spdif::ac3BufferSize);
     if (err < 0) {
-        LOG_F(INFO, "snd_pcm_sw_params_set_start_threshold() failed.\n");
+        LOG_F(ERROR, "snd_pcm_sw_params_set_start_threshold() failed.\n");
         return false;
     }
 
     /* allow the transfer when at least period_size samples can be processed */
     err = snd_pcm_sw_params_set_avail_min(m_pcm, params, spdif::ac3PeriodSize);
     if (err < 0) {
-        LOG_F(INFO, "snd_pcm_sw_params_set_avail_min() failed.\n");
+        LOG_F(ERROR, "snd_pcm_sw_params_set_avail_min() failed.\n");
         return false;
     }
 
     /* commit the params structure to ALSA */
     err = snd_pcm_sw_params(m_pcm, params);
     if (err < 0) {
-        LOG_F(INFO, "snd_pcm_sw_params() failed.\n");
+        LOG_F(ERROR, "snd_pcm_sw_params() failed.\n");
         return false;
     }
 
@@ -252,10 +289,13 @@ bool AlsaSink::write(const char* samples, uint32_t bytesCount)
     while (frameCount > 0) {
         int ret = snd_pcm_writei(m_pcm, ptr, frameCount);
         if (ret == -EAGAIN || ret == -EINTR) {
+            LOG_F(WARNING, "write failed: %d", ret);
             continue;
         }
 
         if (ret < 0) {
+            LOG_F(WARNING, "write failed: %d", ret);
+            snd_pcm_recover(m_pcm, ret, 0);
             return false; // Currently we do not recover. We simply close and reopen the device.
             if (!recover(ret)) {
                 return false;
@@ -268,6 +308,32 @@ bool AlsaSink::write(const char* samples, uint32_t bytesCount)
     }
 
     return true;
+}
+
+void AlsaSink::writeSimple(const char* samples, uint32_t bytesCount)
+{
+    snd_pcm_sframes_t frameCount = bytesCount / 4;
+    char* ptr = (char*)samples;
+
+    while (frameCount > 0) {
+        auto ret = snd_pcm_writei(m_pcm, ptr, frameCount);
+        // If failed, try to recover
+        if (ret < 0) {
+            LOG_F(WARNING, "write failed: %s", snd_strerror(ret));
+            ret = snd_pcm_recover(m_pcm, ret, 0);
+        }
+        // If recover failed
+        if (ret < 0) {
+            LOG_F(WARNING, "recover failed: %s", snd_strerror(ret));
+            break;
+        }
+        if (ret > 0 && ret < frameCount) {
+            LOG_F(WARNING, "frames written: %zd. expected: %zd.", ret, frameCount);
+        }
+
+        frameCount -= ret;
+        ptr += ret * 4;
+    }
 }
 
 bool AlsaSink::recover(int err)

@@ -31,6 +31,11 @@ Node::~Node()
 }
 */
 
+const char* Node::name() const
+{
+    return "NodeUnknown";
+}
+
 Node* Node::next() const
 {
     return m_next;

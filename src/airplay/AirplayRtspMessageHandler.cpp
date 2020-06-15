@@ -21,6 +21,8 @@
 #include "AirplayDecrypter.h"
 
 #include <coro/audio/AudioDecoderFfmpeg.h>
+#include <coro/core/UdpSource.h>
+#include <coro/rtp/RtpDecoder.h>
 #include <coro/rtsp/RtspMessage.h>
 #include "core/MainloopPrivate.h"
 #include "core/Util.h"
@@ -34,6 +36,7 @@
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 
+#include <regex>
 #include <sstream>
 
 namespace coro {
@@ -68,10 +71,12 @@ static char airportRsaPrivateKey[] = "-----BEGIN RSA PRIVATE KEY-----\n"
 
 AirplayRtspMessageHandler::AirplayRtspMessageHandler(uint16_t audioPort,
                                                      uint16_t controlPort,
+                                                     rtp::RtpDecoder<audio::AudioCodec::Alac>& rtpReceiver,
                                                      AirplayDecrypter& decrypter,
                                                      audio::AudioDecoderFfmpeg<audio::AudioCodec::Alac>& decoder)
     : m_audioPort(audioPort),
       m_controlPort(controlPort),
+      m_rtpReceiver(rtpReceiver),
       m_decrypter(decrypter),
       m_decoder(decoder)
 {
@@ -104,6 +109,11 @@ void AirplayRtspMessageHandler::onAnnounce(const RtspMessage& request, RtspMessa
 
 void AirplayRtspMessageHandler::onSetup(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
 {
+    if (m_udpSourceAudio) {
+        delete m_udpSourceAudio;
+        m_udpSourceAudio = new core::UdpSource;
+    }
+
     std::stringstream ss;
     ss << "RTP/AVP/UDP;unicast;mode=record";
     ss << ";server_port=" << m_audioPort;       // server_port and
@@ -113,6 +123,20 @@ void AirplayRtspMessageHandler::onSetup(const RtspMessage& request, RtspMessage*
 
     //response->header("Session") = "1";    // not needed
     response->header("Transport") = ss.str();
+}
+
+void AirplayRtspMessageHandler::onRecord(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const
+{
+    //m_rtpReceiver.flush();
+}
+
+void AirplayRtspMessageHandler::onTeardown(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const
+{
+    if (m_udpSourceAudio) {
+        delete m_udpSourceAudio;
+        m_udpSourceAudio = nullptr;
+    }
+    //m_rtpReceiver.flush();
 }
 
 void AirplayRtspMessageHandler::onAppleChallenge(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const

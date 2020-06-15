@@ -29,9 +29,11 @@ public:
 private:
     // alsa members
     bool open(const AudioConf& conf);
+    bool openSimple(const AudioConf& conf);
     bool setHwParams(const AudioConf& conf);
     bool setSwParams();
     bool write(const char* samples, uint32_t bytesCount);
+    void writeSimple(const char* samples, uint32_t bytesCount);
     bool recover(int err);
     //
     static void doAc3Payload(AudioBuffer& buffer);

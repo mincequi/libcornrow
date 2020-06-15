@@ -25,12 +25,12 @@ class Airplay2SourcePrivate
 
 };
 
-AirPlay2Source::AirPlay2Source()
+Airplay2Source::Airplay2Source()
     : d(new Airplay2SourcePrivate())
 {
 }
 
-AirPlay2Source::~AirPlay2Source()
+Airplay2Source::~Airplay2Source()
 {
     delete d;
 }
@@ -44,13 +44,9 @@ AudioConf AirPlay2Source::doProcess(const AudioConf&, AudioBuffer& buffer)
 }
 */
 
-const char* AirPlay2Source::name() const
+const char* Airplay2Source::name() const
 {
-    return "AirPlay2Source";
-}
-
-void AirPlay2Source::doPoll()
-{
+    return "Airplay2Source";
 }
 
 } // namespace airplay

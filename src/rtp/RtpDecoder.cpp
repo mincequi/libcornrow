@@ -41,6 +41,12 @@ RtpDecoder<codec>::~RtpDecoder()
 }
 
 template<audio::AudioCodec codec>
+const char* RtpDecoder<codec>::name() const
+{
+    return "RtpDecoder";
+}
+
+template<audio::AudioCodec codec>
 audio::AudioConf RtpDecoder<codec>::onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer)
 {
     if (buffer.size() < 12) { // RtpHeader 12 bytes
@@ -57,13 +63,23 @@ audio::AudioConf RtpDecoder<codec>::onProcess(const audio::AudioConf& conf, audi
         LOG_F(WARNING, "header invalid");
         return {};
     }
-    // @TODO(mawe): prev(65535), curr(0) triggers discontinuity here. Let's fix it.
-    if (m_lastSequenceNumber+1 != rtpHeader->sequenceNumber) {
-        LOG_F(WARNING, "sequence discontinuous: %d, %d", m_lastSequenceNumber, rtpHeader->sequenceNumber);
+
+    if (m_isFlushed) {
+        m_isFlushed = false;
+        m_seq = rtpHeader->sequenceNumber;
+        LOG_F(INFO, "sequence starts at: %d", m_seq);
+    } else if (++m_seq != rtpHeader->sequenceNumber) {
+        LOG_F(WARNING, "sequence discontinuous. %d, %d", m_seq, rtpHeader->sequenceNumber);
+        m_seq = rtpHeader->sequenceNumber;
     }
-    m_lastSequenceNumber = rtpHeader->sequenceNumber;
 
     return onProcessCodec(*rtpHeader, buffer);
+}
+
+template<audio::AudioCodec codec>
+void RtpDecoder<codec>::onFlush()
+{
+    m_isFlushed = true;
 }
 
 template<>

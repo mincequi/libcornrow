@@ -10,6 +10,8 @@ class AudioBuffer;
 }
 namespace core {
 
+class Node;
+
 class Buffer
 {
 public:
@@ -34,7 +36,7 @@ public:
     const char* data() const;
     size_t size() const;
 
-    char* acquire(size_t size) const;
+    char* acquire(size_t size, const core::Node* caller = nullptr) const;
     void commit(size_t newSize);
 
     /**
