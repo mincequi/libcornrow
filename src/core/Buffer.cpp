@@ -84,7 +84,7 @@ char* Buffer::acquire(size_t size, const core::Node* caller) const
     m_acquiredOffset = m_offset+m_size;
     m_acquiredOffset += m_acquiredOffset%4;
     if (caller) {
-        LOG_F(INFO, "%s reallocates buffer. %zu -> %zu bytes", caller->name(), orgSize, m_buffer.size()*4);
+        LOG_F(INFO, "%s reallocated buffer. %zu -> %zu bytes", caller->name(), orgSize, m_buffer.size()*4);
     } else {
         LOG_F(INFO, "buffer reallocated. %zu -> %zu bytes", orgSize, m_buffer.size()*4);
     }

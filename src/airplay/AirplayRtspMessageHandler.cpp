@@ -24,6 +24,7 @@
 #include <coro/core/UdpSource.h>
 #include <coro/rtp/RtpDecoder.h>
 #include <coro/rtsp/RtspMessage.h>
+#include "airplay/AirplaySourcePrivate.h"
 #include "core/MainloopPrivate.h"
 #include "core/Util.h"
 #include "sdp/Sdp.h"
@@ -71,11 +72,13 @@ static char airportRsaPrivateKey[] = "-----BEGIN RSA PRIVATE KEY-----\n"
 
 AirplayRtspMessageHandler::AirplayRtspMessageHandler(uint16_t audioPort,
                                                      uint16_t controlPort,
+                                                     AirplaySourcePrivate& airplaySourcePrivate,
                                                      rtp::RtpDecoder<audio::AudioCodec::Alac>& rtpReceiver,
                                                      AirplayDecrypter& decrypter,
                                                      audio::AudioDecoderFfmpeg<audio::AudioCodec::Alac>& decoder)
     : m_audioPort(audioPort),
       m_controlPort(controlPort),
+      m_airplaySourcePrivate(airplaySourcePrivate),
       m_rtpReceiver(rtpReceiver),
       m_decrypter(decrypter),
       m_decoder(decoder)
@@ -109,10 +112,7 @@ void AirplayRtspMessageHandler::onAnnounce(const RtspMessage& request, RtspMessa
 
 void AirplayRtspMessageHandler::onSetup(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
 {
-    if (m_udpSourceAudio) {
-        delete m_udpSourceAudio;
-        m_udpSourceAudio = new core::UdpSource;
-    }
+    m_airplaySourcePrivate.audioReceiver.start();
 
     std::stringstream ss;
     ss << "RTP/AVP/UDP;unicast;mode=record";
@@ -132,11 +132,7 @@ void AirplayRtspMessageHandler::onRecord(const rtsp::RtspMessage& request, rtsp:
 
 void AirplayRtspMessageHandler::onTeardown(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const
 {
-    if (m_udpSourceAudio) {
-        delete m_udpSourceAudio;
-        m_udpSourceAudio = nullptr;
-    }
-    //m_rtpReceiver.flush();
+    m_airplaySourcePrivate.audioReceiver.stop();
 }
 
 void AirplayRtspMessageHandler::onAppleChallenge(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const

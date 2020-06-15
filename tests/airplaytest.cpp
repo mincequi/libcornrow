@@ -35,7 +35,7 @@ int main()
 
     core::Mainloop& mainloop = core::Mainloop::instance();
     while (true) {
-        usleep(1000);
+        usleep(3000);
         mainloop.poll();
     }
 }

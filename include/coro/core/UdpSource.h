@@ -56,6 +56,9 @@ public:
     uint16_t port() const;
 
 private:
+    void onStart() override;
+    void onStop() override;
+
     void startTimer();
     void doReceive();
     void onReceived(const boost::system::error_code& ec, std::size_t bytesTransferred);

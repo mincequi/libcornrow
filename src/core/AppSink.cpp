@@ -23,7 +23,8 @@ namespace core {
 class AppSinkPrivate
 {
 public:
-    AppSink::ProcessCallback callback = nullptr;
+    AppSink::ProcessCallback processCallback = nullptr;
+    AppSink::FlushCallback flushCallback = nullptr;
 };
 
 AppSink::AppSink()
@@ -38,16 +39,28 @@ AppSink::~AppSink()
 
 void AppSink::setProcessCallback(ProcessCallback callback)
 {
-    d->callback = callback;
+    d->processCallback = callback;
+}
+
+void AppSink::setFlushCallback(FlushCallback callback)
+{
+    d->flushCallback = callback;
 }
 
 audio::AudioConf AppSink::onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer)
 {
-    if (d->callback) {
-        d->callback(conf, buffer);
+    if (d->processCallback) {
+        d->processCallback(conf, buffer);
     }
 
     return {};
+}
+
+void AppSink::onFlush()
+{
+    if (d->flushCallback) {
+        d->flushCallback();
+    }
 }
 
 } // namespace core

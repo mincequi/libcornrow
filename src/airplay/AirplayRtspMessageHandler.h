@@ -30,12 +30,14 @@ class UdpSource;
 namespace airplay {
 
 class AirplayDecrypter;
+class AirplaySourcePrivate;
 
 class AirplayRtspMessageHandler : public rtsp::RtspMessageHandler
 {
 public:
     AirplayRtspMessageHandler(uint16_t audioPort,
                               uint16_t controlPort,
+                              AirplaySourcePrivate& airplaySourcePrivate,
                               rtp::RtpDecoder<audio::AudioCodec::Alac>& rtpReceiver,
                               AirplayDecrypter& decrypter,
                               audio::AudioDecoderFfmpeg<audio::AudioCodec::Alac>& decoder);
@@ -51,7 +53,7 @@ private:
 
     uint16_t m_audioPort = 0;
     uint16_t m_controlPort = 0;
-    mutable core::UdpSource* m_udpSourceAudio = nullptr;
+    AirplaySourcePrivate& m_airplaySourcePrivate;
     rtp::RtpDecoder<audio::AudioCodec::Alac>& m_rtpReceiver;
     AirplayDecrypter& m_decrypter;
     audio::AudioDecoderFfmpeg<audio::AudioCodec::Alac>& m_decoder;

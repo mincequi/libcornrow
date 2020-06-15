@@ -174,7 +174,7 @@ AudioConf AudioDecoderFfmpeg<codec>::onProcess(const AudioConf& conf, AudioBuffe
     av_packet_free(&packet);
     av_frame_free(&frame);
 
-    LOG_F(INFO, "onProcessCodec> %zu bytes", _buffer.size());
+    //LOG_F(1, "onProcessCodec> %zu bytes", _buffer.size());
 
     return _conf;
 }

@@ -39,6 +39,27 @@ void AlsaSink::start(const AudioConf& conf)
 {
     //open(conf);
     openSimple(conf);
+    //if (!setDelay(64)) {
+    //    LOG_F(WARNING, "Delay not accepted: %d ms", 16);
+    //}
+
+
+    // Get current sw params
+    snd_pcm_sw_params_t* params;
+    snd_pcm_sw_params_alloca(&params);
+    int err = snd_pcm_sw_params_current(m_pcm, params);
+    if (err < 0) {
+        LOG_F(ERROR, "snd_pcm_sw_params_current() failed.\n");
+        return;
+    }
+
+    snd_pcm_uframes_t frames = 0;
+    snd_pcm_sw_params_get_start_threshold(params, &frames);
+    snd_pcm_uframes_t min = 0;
+    snd_pcm_sw_params_get_avail_min(params, &min);
+    LOG_F(INFO, "Device opened. start threshold: %zu, min avail: %zu", frames, min);
+
+    snd_pcm_prepare(m_pcm);
 }
 
 void AlsaSink::stop()
@@ -84,11 +105,22 @@ AudioConf AlsaSink::onProcess(const AudioConf& conf, AudioBuffer& buffer)
     }
     */
 
+    //
+    snd_pcm_sframes_t delay = 0;
+    snd_pcm_delay(m_pcm, &delay);
+    LOG_F(1, "Device delay: %zu ms", delay * 1000 / toInt(m_conf.rate));
+
     writeSimple(buffer.data(), buffer.size());
 
     buffer.clear();
 
     return conf;
+}
+
+void AlsaSink::onFlush()
+{
+    stop();
+    LOG_F(INFO, "Device flushed");
 }
 
 bool AlsaSink::open(const AudioConf& conf)
@@ -143,7 +175,7 @@ bool AlsaSink::openSimple(const AudioConf& conf)
                              2,
                              rate,
                              0,
-                             500000);
+                             40000);
     if (err) {
         LOG_F(WARNING, "snd_pcm_set_params() failed.");
         return false;
@@ -281,30 +313,30 @@ bool AlsaSink::setSwParams()
     return true;
 }
 
-bool AlsaSink::write(const char* samples, uint32_t bytesCount)
+bool AlsaSink::setDelay(uint16_t ms)
 {
-    uint32_t frameCount = bytesCount / 4; // 4 = frameSize = 2 channels * 2 byte per sample
-    char* ptr = (char*)samples;
+    snd_pcm_sw_params_t* params;
+    snd_pcm_sw_params_alloca(&params);
 
-    while (frameCount > 0) {
-        int ret = snd_pcm_writei(m_pcm, ptr, frameCount);
-        if (ret == -EAGAIN || ret == -EINTR) {
-            LOG_F(WARNING, "write failed: %d", ret);
-            continue;
-        }
+    // get current sw params
+    int err = snd_pcm_sw_params_current(m_pcm, params);
+    if (err < 0) {
+        LOG_F(ERROR, "snd_pcm_sw_params_current() failed.\n");
+        return false;
+    }
 
-        if (ret < 0) {
-            LOG_F(WARNING, "write failed: %d", ret);
-            snd_pcm_recover(m_pcm, ret, 0);
-            return false; // Currently we do not recover. We simply close and reopen the device.
-            if (!recover(ret)) {
-                return false;
-            }
-            continue;
-        }
+    // set start threshold
+    err = snd_pcm_sw_params_set_start_threshold(m_pcm, params, 44100 * ms / 1000);
+    if (err < 0) {
+        LOG_F(ERROR, "snd_pcm_sw_params_set_start_threshold() failed.\n");
+        return false;
+    }
 
-        frameCount -= ret;
-        ptr += ret * 4;
+    // commit the params to ALSA */
+    err = snd_pcm_sw_params(m_pcm, params);
+    if (err < 0) {
+        LOG_F(ERROR, "snd_pcm_sw_params() failed.\n");
+        return false;
     }
 
     return true;
@@ -317,18 +349,23 @@ void AlsaSink::writeSimple(const char* samples, uint32_t bytesCount)
 
     while (frameCount > 0) {
         auto ret = snd_pcm_writei(m_pcm, ptr, frameCount);
+        // If all ok
+        if (ret == 0) {
+            return;
+        }
         // If failed, try to recover
         if (ret < 0) {
-            LOG_F(WARNING, "write failed: %s", snd_strerror(ret));
+            LOG_F(WARNING, "Write failed: %s", snd_strerror(ret));
             ret = snd_pcm_recover(m_pcm, ret, 0);
         }
         // If recover failed
         if (ret < 0) {
-            LOG_F(WARNING, "recover failed: %s", snd_strerror(ret));
+            LOG_F(WARNING, "Recovery failed: %s", snd_strerror(ret));
             break;
         }
+        // If less frames written
         if (ret > 0 && ret < frameCount) {
-            LOG_F(WARNING, "frames written: %zd. expected: %zd.", ret, frameCount);
+            LOG_F(WARNING, "Frames written: %zd. expected: %zd.", ret, frameCount);
         }
 
         frameCount -= ret;

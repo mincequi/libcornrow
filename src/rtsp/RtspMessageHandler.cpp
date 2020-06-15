@@ -66,7 +66,7 @@ void RtspMessageHandler::onMessage(const RtspMessage& request, RtspMessage* resp
         return;
     }
 
-    LOG_F(INFO, "method handled: %s", request.method().c_str());
+    LOG_F(1, "Method handled: %s", request.method().c_str());
     it->second(request, response, ipAddress);
 }
 
@@ -132,7 +132,7 @@ void RtspMessageHandler::onFlush(const RtspMessage& request, RtspMessage* respon
 // Other RtspRequests
 void RtspMessageHandler::onUnknown(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
 {
-    LOG_F(WARNING, "method unknown: %s", request.method().c_str());
+    LOG_F(WARNING, "Method unknown: %s", request.method().c_str());
 }
 
 } // namespace rtsp

@@ -24,14 +24,16 @@ public:
 
     void setDevice(const std::string& device);
 
-    AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
-
 private:
+    AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
+    void onFlush() override;
+
     // alsa members
     bool open(const AudioConf& conf);
     bool openSimple(const AudioConf& conf);
     bool setHwParams(const AudioConf& conf);
     bool setSwParams();
+    bool setDelay(uint16_t ms);
     bool write(const char* samples, uint32_t bytesCount);
     void writeSimple(const char* samples, uint32_t bytesCount);
     bool recover(int err);

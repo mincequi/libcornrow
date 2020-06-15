@@ -31,12 +31,11 @@
 namespace coro {
 namespace airplay {
 
-using namespace std::placeholders;
-
 AirplaySourcePrivate::AirplaySourcePrivate(AirplaySource& _p, const AirplaySource::Config& config) :
     p(_p),
     rtspMessageHandler(audioReceiver.port(),
                        controlReceiver.port(),
+                       *this,
                        rtpDecoder,
                        decrypter,
                        decoder),
@@ -63,14 +62,32 @@ AirplaySourcePrivate::AirplaySourcePrivate(AirplaySource& _p, const AirplaySourc
     core::Node::link(rtpDecoder, decrypter);
     core::Node::link(decrypter, decoder);
     core::Node::link(decoder, appSink);
-    appSink.setProcessCallback(std::bind(&AirplaySource::process, &p, _1, _2));
 
-    LOG_F(INFO, "airplay source started. name: %s, rtsp port: %d, rtp port: %d", config.name.c_str(), rtspServer.port(), audioReceiver.port());
+    LOG_F(INFO, "Reception started. name: %s, rtsp port: %d, rtp port: %d", config.name.c_str(), rtspServer.port(), audioReceiver.port());
 }
 
-void AirplaySourcePrivate::setUdpSourceAudio(core::UdpSource* udpSourceAudio)
+void AirplaySourcePrivate::startRtpSession(uint16_t* audioPort, uint16_t* controlPort)
 {
+    if (udpSourceAudio) {
+        delete udpSourceAudio;
+    }
+
+    udpSourceAudio = new core::UdpSource;
     core::Node::link(*udpSourceAudio, rtpDecoder);
+
+    *audioPort = udpSourceAudio->port();
+
+    LOG_F(INFO, "RtpSession started. port: %d", *audioPort);
+}
+
+void AirplaySourcePrivate::stopRtpSession()
+{
+    if (udpSourceAudio) {
+        delete udpSourceAudio;
+        udpSourceAudio = nullptr;
+    }
+
+    LOG_F(INFO, "RtpSession stopped");
 }
 
 } // namespace airplay

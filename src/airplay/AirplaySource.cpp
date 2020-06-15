@@ -21,9 +21,13 @@
 namespace coro {
 namespace airplay {
 
+using namespace std::placeholders;
+
 AirplaySource::AirplaySource(const AirplaySource::Config& config)
     : d(new AirplaySourcePrivate(*this, config))
 {
+    d->appSink.setProcessCallback(std::bind(&AirplaySource::pushBuffer, this, _1, _2));
+    d->appSink.setFlushCallback(std::bind(&AirplaySource::flush, this));
 }
 
 AirplaySource::~AirplaySource()

@@ -39,8 +39,12 @@ public:
     using ProcessCallback = std::function<void(const audio::AudioConf&, audio::AudioBuffer& buffer)>;
     void setProcessCallback(ProcessCallback callback);
 
+    using FlushCallback = std::function<void()>;
+    void setFlushCallback(FlushCallback callback);
+
 private:
     virtual audio::AudioConf onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer) override;
+    virtual void onFlush() override;
 
     class AppSinkPrivate* const d;
 };

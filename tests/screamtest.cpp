@@ -36,7 +36,7 @@ int main()
     config.mtu = 3000;
     config.multicastGroup = boost::asio::ip::address_v4::from_string("239.255.77.77").to_uint();
     core::UdpSource source(config);
-    source.setReadyCallback([&](Source* const, bool ready) {
+    source.setReadyCallback([&](bool ready, Source* const) {
         if (ready) source.start();
     });
     rtp::RtpDecoder<AudioCodec::Ac3> rtpDecoder;

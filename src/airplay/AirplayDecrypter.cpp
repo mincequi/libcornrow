@@ -17,10 +17,9 @@
 
 #include "AirplayDecrypter.h"
 
-#include <cstring>
-
 #include <core/Util.h>
 
+#include <cstring>
 #include <openssl/pem.h>
 
 namespace coro {

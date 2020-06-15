@@ -39,6 +39,8 @@ Mainloop& Mainloop::instance()
 
 void Mainloop::poll()
 {
+    // Better poll one event here (instead of all).
+    // Due to network buffering, this behaves better.
     d.ioContext.poll_one();
 }
 

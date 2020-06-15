@@ -26,6 +26,7 @@ namespace coro {
 namespace core {
 
 using namespace boost::asio;
+using namespace boost::asio::ip;
 namespace ph = std::placeholders;
 
 class UdpSourcePrivate
@@ -72,6 +73,11 @@ UdpSource::UdpSource(const Config& config) :
 
 UdpSource::~UdpSource()
 {
+    // When we close, we have to poll for pending events in queue.
+    // Otherwise signal handler on deleted object will be called.
+    m_socket.close();
+    d->ioContext.poll();
+
     delete d;
     //Source::stop();
 }
@@ -84,6 +90,16 @@ const char* UdpSource::name() const
 uint16_t UdpSource::port() const
 {
     return m_socket.local_endpoint().port();
+}
+
+void UdpSource::onStart()
+{
+    //doReceive();
+}
+
+void UdpSource::onStop()
+{
+    flush();
 }
 
 void UdpSource::startTimer()
@@ -99,7 +115,6 @@ void UdpSource::doReceive()
     }
     m_isReceiving = true;
 
-
     m_buffer.acquire(m_config.prePadding + m_config.mtu, this);
     m_buffer.commit(m_config.prePadding + m_config.mtu);
     m_socket.async_receive_from(
@@ -110,6 +125,11 @@ void UdpSource::doReceive()
 
 void UdpSource::onReceived(const boost::system::error_code& ec, std::size_t bytesTransferred)
 {
+    if (ec) {
+        LOG_F(INFO, "%s", ec.message().c_str());
+        return;
+    }
+
     if (fabs((m_previousBytesTransferred - bytesTransferred) / bytesTransferred) > 0.125f) {
         LOG_F(1, "Transfer size changed: %lu", bytesTransferred);
     }
@@ -132,11 +152,9 @@ void UdpSource::onReceived(const boost::system::error_code& ec, std::size_t byte
     m_buffer.trimFront(m_config.prePadding);
     m_buffer.shrink(bytesTransferred);
 
-
-
-    process(audio::AudioConf { audio::AudioCodec::Unknown,
-                               audio::SampleRate::RateUnknown,
-                               audio::ChannelFlags::Any }, m_buffer);
+    pushBuffer(audio::AudioConf { audio::AudioCodec::Unknown,
+                                  audio::SampleRate::RateUnknown,
+                                  audio::ChannelFlags::Any }, m_buffer);
 
     doReceive();
 }

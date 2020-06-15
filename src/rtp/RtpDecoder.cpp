@@ -51,7 +51,7 @@ audio::AudioConf RtpDecoder<codec>::onProcess(const audio::AudioConf& conf, audi
 {
     if (buffer.size() < 12) { // RtpHeader 12 bytes
         buffer.clear();
-        LOG_F(WARNING, "header invalid");
+        LOG_F(WARNING, "Header invalid");
         return {};
     }
 
@@ -60,16 +60,16 @@ audio::AudioConf RtpDecoder<codec>::onProcess(const audio::AudioConf& conf, audi
     rtpHeader->timestamp = boost::endian::big_to_native(rtpHeader->timestamp);
     if (rtpHeader->payloadType < 96) {
         buffer.clear();
-        LOG_F(WARNING, "header invalid");
+        LOG_F(WARNING, "Header invalid");
         return {};
     }
 
     if (m_isFlushed) {
         m_isFlushed = false;
         m_seq = rtpHeader->sequenceNumber;
-        LOG_F(INFO, "sequence starts at: %d", m_seq);
+        LOG_F(INFO, "Sequence starts at: %d", m_seq);
     } else if (++m_seq != rtpHeader->sequenceNumber) {
-        LOG_F(WARNING, "sequence discontinuous. %d, %d", m_seq, rtpHeader->sequenceNumber);
+        LOG_F(WARNING, "Sequence discontinuous. %d, %d", m_seq, rtpHeader->sequenceNumber);
         m_seq = rtpHeader->sequenceNumber;
     }
 

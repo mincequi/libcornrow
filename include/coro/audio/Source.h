@@ -33,12 +33,8 @@ class AudioConf;
 class Source : public AudioNode
 {
 public:
-    static constexpr std::array<AudioCap,0> outCaps() { return {}; }
-
     Source();
     virtual ~Source();
-
-    Source(const Source&) = delete;
 
     void poll();
     void start();
@@ -47,13 +43,13 @@ public:
     virtual bool isReady() const;
     virtual void setReady(bool wts);
 
-    using ReadyCallback = std::function<void(Source* const, bool)>;
+    using ReadyCallback = std::function<void(bool, Source* const)>;
     void setReadyCallback(ReadyCallback callback);
 
 protected:
     void pushBuffer(const AudioConf& conf, AudioBuffer& buffer);
 
-    virtual void doPoll();
+    virtual void onPoll();
     virtual void onStart();
     virtual void onStop();
 
@@ -61,7 +57,7 @@ protected:
     ReadyCallback m_isReadyCallback;
 
 private:
-    std::atomic_bool m_isStarted = false;
+    std::atomic_bool m_isStarted = true;
     std::atomic_bool m_isReady = false;
 };
 

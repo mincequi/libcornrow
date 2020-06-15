@@ -64,7 +64,7 @@ void RtspServerPrivate::doReceive()
 void RtspServerPrivate::onReceived(const boost::system::error_code& error, size_t bytes)
 {
     if (error) {
-        LOG_F(WARNING, "error: %s", error.message().c_str());
+        LOG_F(INFO, "%s", error.message().c_str());
         doAccept();
         return;
     }

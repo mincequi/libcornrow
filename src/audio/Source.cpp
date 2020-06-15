@@ -13,7 +13,7 @@ Source::~Source()
 
 void Source::poll()
 {
-    doPoll();
+    onPoll();
 }
 
 void Source::start()
@@ -45,7 +45,7 @@ void Source::setReady(bool ready)
     m_isReady = ready;
     m_mutex.lock();
     if (m_isReadyCallback) {
-        m_isReadyCallback(this, ready);
+        m_isReadyCallback(ready, this);
     }
     m_mutex.unlock();
 }
@@ -59,17 +59,13 @@ void Source::setReadyCallback(ReadyCallback callback)
 
 void Source::pushBuffer(const AudioConf& _conf, AudioBuffer& buffer)
 {
-    auto conf = _conf;
-    auto next = m_next;
-    while (next && (conf.codec != AudioCodec::Invalid) && buffer.size()) {
-        if (!next->isBypassed()) {
-            conf = next->process(conf, buffer);
-        }
-        next = next->next();
+    // @TODO(mawe): currently, sources are started per default. This will change.
+    if (isStarted()) {
+        process(_conf, buffer);
     }
 }
 
-void Source::doPoll()
+void Source::onPoll()
 {
 }
 
