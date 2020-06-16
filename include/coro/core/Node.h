@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2020 Manuel Weichselbaumer <mincequi@web.de>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 // @TODO(mawe): Temporary use audio types
@@ -36,23 +53,22 @@ public:
 
     Node* next() const;
 
-    virtual void start() {}
-    virtual void stop() {}
-
     audio::AudioConf process(const audio::AudioConf& conf, audio::AudioBuffer& buffer);
     void flush();
 
     bool isBypassed() const;
     void setIsBypassed(bool);
 
-    Node* m_next = nullptr;
-
 protected:
+    virtual void onStart();
+    virtual void onStop();
     virtual audio::AudioConf onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer);
-    virtual void onFlush();
 
 private:
+    Node* m_next = nullptr;
     bool m_isBypassed = false;
+
+    friend class Source;
 };
 
 template<class InCaps, class OutCaps>

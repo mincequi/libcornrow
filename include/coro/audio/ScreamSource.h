@@ -19,7 +19,7 @@
 
 #include <coro/audio/AudioCaps.h>
 #include <coro/audio/AudioConf.h>
-#include <coro/audio/Source.h>
+#include <coro/core/Source.h>
 #include <coro/core/UdpSource.h>
 
 namespace coro {

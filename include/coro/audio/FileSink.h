@@ -33,14 +33,13 @@ public:
     FileSink();
     virtual ~FileSink();
 
-    void start() override;
-    void stop() override;
-
     void setFileName(const std::string& fileName);
 
+private:
+    void onStart() override;
+    void onStop() override;
     AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
 
-private:
     std::string m_fileName;
     std::ofstream m_file;
 };

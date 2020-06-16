@@ -15,23 +15,40 @@ FileSink::~FileSink()
 {
 }
 
-void FileSink::start()
+void FileSink::setFileName(const std::string& fileName)
 {
+    if (m_fileName == fileName) {
+        return;
+    }
+
+    m_fileName = fileName;
+
+    // If it had been opened previously, reopen with new filename.
+    if (m_file.is_open()) {
+        onStart();
+    }
+}
+
+void FileSink::onStart()
+{
+    // Close previously opened file
+    onStop();
     m_file.open(m_fileName, std::ios::out | std::ios::binary);
 }
 
-void FileSink::stop()
+void FileSink::onStop()
 {
-    m_file.close();
-}
-
-void FileSink::setFileName(const std::string& fileName)
-{
-    m_fileName = fileName;
+    if (m_file.is_open()) {
+        m_file.close();
+    }
 }
 
 AudioConf FileSink::onProcess(const AudioConf& conf, AudioBuffer& buffer)
 {
+    if (!m_file.is_open()) {
+        onStart();
+    }
+
     m_file.write(buffer.data(), buffer.size());
     buffer.clear();
     return conf;

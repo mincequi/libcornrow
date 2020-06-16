@@ -62,15 +62,6 @@ void AlsaSink::start(const AudioConf& conf)
     snd_pcm_prepare(m_pcm);
 }
 
-void AlsaSink::stop()
-{
-    if (m_pcm) {
-        snd_pcm_drain(m_pcm);
-        snd_pcm_close(m_pcm);
-        m_pcm = nullptr;
-    }
-}
-
 void AlsaSink::setDevice(const std::string& device)
 {
     if (device == m_device) {
@@ -78,14 +69,14 @@ void AlsaSink::setDevice(const std::string& device)
     }
 
     m_device = device;
-    stop();
+    onStop();
     start(m_conf);
 }
 
 AudioConf AlsaSink::onProcess(const AudioConf& conf, AudioBuffer& buffer)
 {
     if (m_conf != conf) {
-        stop();
+        onStop();
         start(conf);
         m_conf = conf;
     }
@@ -106,9 +97,9 @@ AudioConf AlsaSink::onProcess(const AudioConf& conf, AudioBuffer& buffer)
     */
 
     //
-    snd_pcm_sframes_t delay = 0;
-    snd_pcm_delay(m_pcm, &delay);
-    LOG_F(1, "Device delay: %zu ms", delay * 1000 / toInt(m_conf.rate));
+    //snd_pcm_sframes_t delay = 0;
+    //snd_pcm_delay(m_pcm, &delay);
+    //LOG_F(1, "Device delay: %zu ms", delay * 1000 / toInt(m_conf.rate));
 
     writeSimple(buffer.data(), buffer.size());
 
@@ -117,9 +108,13 @@ AudioConf AlsaSink::onProcess(const AudioConf& conf, AudioBuffer& buffer)
     return conf;
 }
 
-void AlsaSink::onFlush()
+void AlsaSink::onStop()
 {
-    stop();
+    if (m_pcm) {
+        snd_pcm_drain(m_pcm);
+        snd_pcm_close(m_pcm);
+        m_pcm = nullptr;
+    }
     LOG_F(INFO, "Device flushed");
 }
 

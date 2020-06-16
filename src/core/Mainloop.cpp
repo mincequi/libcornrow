@@ -39,6 +39,8 @@ Mainloop& Mainloop::instance()
 
 void Mainloop::poll()
 {
+    // This has to be called, if io_context ran out of work.
+    //d.ioContext.restart();
     // Better poll one event here (instead of all).
     // Due to network buffering, this behaves better.
     d.ioContext.poll_one();

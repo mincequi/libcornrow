@@ -38,8 +38,7 @@ public:
     void setBitrate(uint16_t kbps);
 
 private:
-    void stop() override;
-
+    void onStop() override;
     AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
 
     void updateConf();

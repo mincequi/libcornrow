@@ -68,7 +68,7 @@ audio::AudioConf Node::process(const audio::AudioConf& _conf, audio::AudioBuffer
 void Node::flush()
 {
     if (!isBypassed()) {
-        onFlush();
+        onStop();
     }
 
     if (next()) {
@@ -86,13 +86,17 @@ void Node::setIsBypassed(bool bypass)
     m_isBypassed = bypass;
 }
 
+void Node::onStart()
+{
+}
+
+void Node::onStop()
+{
+}
+
 audio::AudioConf Node::onProcess(const audio::AudioConf& conf, audio::AudioBuffer&)
 {
     return conf;
-}
-
-void Node::onFlush()
-{
 }
 
 } // namespace core

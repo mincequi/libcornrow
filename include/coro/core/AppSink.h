@@ -44,7 +44,7 @@ public:
 
 private:
     virtual audio::AudioConf onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer) override;
-    virtual void onFlush() override;
+    virtual void onStop() override;
 
     class AppSinkPrivate* const d;
 };

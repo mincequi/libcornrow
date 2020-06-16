@@ -21,7 +21,7 @@ public:
 
 private:
     const char* name() const override;
-    void stop() override;
+    void onStop() override;
     audio::AudioConf onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer) override;
 
     AUDIOPLAY_STATE_T*  m_handle = nullptr;

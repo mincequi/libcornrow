@@ -17,21 +17,31 @@
 
 #pragma once
 
-#include <coro/core/Buffer.h>
+#include <coro/core/Source.h>
 
 namespace coro {
-namespace audio {
+namespace core {
 
-class AudioBuffer : public core::Buffer
+class FdSource : public core::Source
 {
 public:
-    using core::Buffer::Buffer;
-    AudioBuffer(const AudioBuffer&) = delete;
-    AudioBuffer(AudioBuffer&&) = default;
+    static constexpr std::array<audio::AudioCap,1> outCaps() {
+        return {{ { audio::AudioCodecs::Any,
+                    audio::SampleRates::Any,
+                    audio::ChannelFlags::Any } }};
+    }
 
-    std::list<AudioBuffer> split(size_t size, size_t reservedSize = 0) const;
+    FdSource();
+    ~FdSource();
+
+    void init(int fd, uint16_t blockSize);
+
+private:
+    const char* name() const override;
+
+    class FdSourcePrivate* const d;
+    friend class FdSourcePrivate;
 };
 
-} // namespace audio
+} // namespace core
 } // namespace coro
-

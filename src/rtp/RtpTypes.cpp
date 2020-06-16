@@ -29,7 +29,7 @@ bool RtpHeader::isValidSbc() const
     //uint16_t marker:1;
     //uint16_t payloadType:7;
 
-    // Marker bit MUST not be set
+    // Marker bit MUST NOT be set
     if (marker) {
         return false;
     }

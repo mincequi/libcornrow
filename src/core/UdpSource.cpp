@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <coro/audio/Source.h>
+#include <coro/core/Source.h>
 #include <coro/core/UdpSource.h>
 
 #include "core/MainloopPrivate.h"

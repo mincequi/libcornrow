@@ -61,7 +61,7 @@ void runTest(uint32_t numSamples = 2 * 44100, uint32_t numBuffers = 100)
     audio::FileSink           fileSink;
     encoder.setBitrate(320);
     fileSink.setFileName("test32float.ac3");
-    fileSink.start();
+    fileSink.onStart();
     //audio::AlsaSink sink;
     //sink.setDevice("iec958:CARD=sndrpihifiberry,DEV=0");
     audio::AudioNode::link(encoder, decoder);
@@ -80,7 +80,7 @@ void runTest(uint32_t numSamples = 2 * 44100, uint32_t numBuffers = 100)
         AudioBuffer inBuffer((char*)inSamples.data(), inSamples.size()*4);
         encoder.process({ AudioCodec::RawFloat32, SampleRate::Rate48000, Channels::Stereo }, inBuffer);
     }
-    encoder.stop();
+    encoder.onStop();
 
     std::vector<float> sum(inSamples.size()/2, 0.0f);
     for (uint i = 0; i < inSamples.size(); i += 2) {

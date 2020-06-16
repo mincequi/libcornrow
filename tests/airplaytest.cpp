@@ -31,7 +31,7 @@ int main()
 
     airplay::AirplaySource source(config);
     audio::AlsaSink sink;
-    audio::AudioNode::link(source, sink);
+    core::Node::link(source, sink);
 
     core::Mainloop& mainloop = core::Mainloop::instance();
     while (true) {

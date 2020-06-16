@@ -25,12 +25,12 @@
 #include <loguru/loguru.hpp>
 
 #include <coro/audio/AudioBuffer.h>
-#include <coro/audio/Source.h>
+#include <coro/core/Source.h>
 
 namespace coro {
 namespace core {
 
-class UdpSource : public audio::Source
+class UdpSource : public core::Source
 {
 public:
     static constexpr std::array<audio::AudioCap,1> outCaps() {

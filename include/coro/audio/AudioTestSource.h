@@ -19,12 +19,12 @@
 
 #include <coro/audio/AudioCaps.h>
 #include <coro/audio/AudioConf.h>
-#include <coro/audio/Source.h>
+#include <coro/core/Source.h>
 
 namespace coro {
 namespace audio {
 
-class AudioTestSource : public Source
+class AudioTestSource : public core::Source
 {
 public:
     static constexpr std::array<AudioCap,1> outCaps() {

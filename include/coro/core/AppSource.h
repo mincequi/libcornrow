@@ -18,12 +18,14 @@
 #pragma once
 
 #include <coro/audio/AudioCaps.h>
-#include <coro/audio/AudioBuffer.h>
-#include <coro/audio/AudioConf.h>
-#include <coro/audio/Source.h>
+#include <coro/core/Source.h>
 
 namespace coro {
 namespace audio {
+class AudioBuffer;
+class AudioConf;
+}
+namespace core {
 
 class AppSource : public Source
 {
@@ -37,8 +39,8 @@ public:
 
     const char* name() const override;
 
-    AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
+    audio::AudioConf onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer) override;
 };
 
-} // namespace audio
+} // namespace core
 } // namespace coro

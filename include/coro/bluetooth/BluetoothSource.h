@@ -19,12 +19,12 @@
 
 #include <coro/audio/AudioCaps.h>
 #include <coro/audio/AudioConf.h>
-#include <coro/audio/Source.h>
+#include <coro/core/Source.h>
 
 namespace coro {
 namespace bluetooth {
 
-class BluetoothSource : public audio::Source
+class BluetoothSource : public core::Source
 {
 public:
     static constexpr std::array<audio::AudioCaps,1> outCaps() {

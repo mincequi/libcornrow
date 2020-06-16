@@ -29,6 +29,7 @@ namespace rtp {
 
 template class RtpDecoder<audio::AudioCodec::Ac3>;
 template class RtpDecoder<audio::AudioCodec::Alac>;
+template class RtpDecoder<audio::AudioCodec::Sbc>;
 
 template<audio::AudioCodec codec>
 RtpDecoder<codec>::RtpDecoder()
@@ -77,7 +78,7 @@ audio::AudioConf RtpDecoder<codec>::onProcess(const audio::AudioConf& conf, audi
 }
 
 template<audio::AudioCodec codec>
-void RtpDecoder<codec>::onFlush()
+void RtpDecoder<codec>::onStop()
 {
     m_isFlushed = true;
 }
@@ -106,6 +107,37 @@ audio::AudioConf RtpDecoder<audio::AudioCodec::Ac3>::onProcessCodec(const rtp::R
     buffer.trimFront(header.size() + 2);
 
     return { audio::AudioCodec::Ac3 };
+}
+
+template<>
+audio::AudioConf RtpDecoder<audio::AudioCodec::Sbc>::onProcessCodec(const rtp::RtpHeader& header, audio::AudioBuffer& buffer)
+{
+    if (buffer.size() < header.size() + 1) { // RtpHeader 12 bytes + SbcHeader 1 byte
+        LOG_F(WARNING, "SBC header invalid");
+        return {};
+    }
+
+    if (!header.isValidSbc()) {
+        LOG_F(WARNING, "SBC header invalid");
+        return {};
+    }
+
+    coro::rtp::RtpSbcHeader* rtpSbcHeader = (coro::rtp::RtpSbcHeader*)(buffer.data() + header.size());
+    if (!rtpSbcHeader->isValid()) {
+        LOG_F(WARNING, "SBC header invalid");
+        return {};
+    }
+
+    if (rtpSbcHeader->isFragmented) {
+        LOG_F(WARNING, "Fragmented packet(s) not supported");
+        return {};
+    }
+
+    //LOG_F(2, "Sequence number: %d", header.sequenceNumber);
+
+    buffer.trimFront(header.size() + 1);
+
+    return { audio::AudioCodec::Sbc };
 }
 
 template<audio::AudioCodec codec>

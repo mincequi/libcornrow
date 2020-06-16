@@ -15,10 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "audio/AppSource.h"
+#include "core/AppSource.h"
 
 namespace coro {
-namespace audio {
+namespace core {
 
 AppSource::AppSource()
 {
@@ -33,19 +33,19 @@ const char* AppSource::name() const
     return "AppSource";
 }
 
-AudioConf AppSource::onProcess(const AudioConf& _conf, AudioBuffer& buffer)
+audio::AudioConf AppSource::onProcess(const audio::AudioConf& _conf, audio::AudioBuffer& buffer)
 {
     auto conf = _conf;
-    auto next = m_next;
-    while (next && (conf.codec != AudioCodec::Invalid) && buffer.size()) {
-        if (!next->isBypassed()) {
-            conf = next->process(conf, buffer);
+    auto _next = next();
+    while (_next && (conf.codec != audio::AudioCodec::Invalid) && buffer.size()) {
+        if (!_next->isBypassed()) {
+            conf = _next->process(conf, buffer);
         }
-        next = next->next();
+        _next = _next->next();
     }
 
     return conf;
 }
 
-} // namespace audio
+} // namespace core
 } // namespace coro

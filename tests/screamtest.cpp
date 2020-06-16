@@ -28,6 +28,7 @@
 
 using namespace coro;
 using namespace coro::audio;
+using namespace coro::core;
 
 int main()
 {

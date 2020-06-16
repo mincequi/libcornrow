@@ -1,4 +1,4 @@
-#include <coro/audio/AppSource.h>
+#include <coro/core/AppSource.h>
 #include <coro/audio/SbcDecoder.h>
 
 using namespace coro::audio;

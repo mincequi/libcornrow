@@ -17,8 +17,7 @@
 
 #pragma once
 
-#include <coro/audio/AudioCaps.h>
-#include <coro/audio/AudioNode.h>
+#include <coro/core/Node.h>
 
 #include <atomic>
 #include <functional>
@@ -26,40 +25,40 @@
 
 namespace coro {
 namespace audio {
-
 class AudioBuffer;
 class AudioConf;
+}
+namespace core {
 
-class Source : public AudioNode
+class Source : public core::Node
 {
 public:
     Source();
     virtual ~Source();
 
-    void poll();
+    // @TODO(mawe): make these private and let SourceController call these.
     void start();
     void stop();
-    virtual bool isStarted() const;
-    virtual bool isReady() const;
-    virtual void setReady(bool wts);
+
+    bool isStarted() const;
+    bool isReady() const;
+    void setReady(bool wts);
 
     using ReadyCallback = std::function<void(bool, Source* const)>;
     void setReadyCallback(ReadyCallback callback);
 
 protected:
-    void pushBuffer(const AudioConf& conf, AudioBuffer& buffer);
+    void pushBuffer(const audio::AudioConf& conf, audio::AudioBuffer& buffer);
 
-    virtual void onPoll();
-    virtual void onStart();
-    virtual void onStop();
-
+private:
     std::mutex  m_mutex;
     ReadyCallback m_isReadyCallback;
 
-private:
     std::atomic_bool m_isStarted = true;
     std::atomic_bool m_isReady = false;
+
+    friend class SourceController;
 };
 
-} // namespace audio
+} // namespace core
 } // namespace coro

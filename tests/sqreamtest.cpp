@@ -1,7 +1,7 @@
 #define private public
 #include <coro/audio/AlsaSink.h>
 #undef private
-#include <coro/audio/AppSource.h>
+#include <coro/core/AppSource.h>
 #include <coro/audio/SbcDecoder.h>
 
 #include <QAudioOutput>

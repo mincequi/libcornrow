@@ -56,7 +56,7 @@ audio::AudioConf AppSink::onProcess(const audio::AudioConf& conf, audio::AudioBu
     return {};
 }
 
-void AppSink::onFlush()
+void AppSink::onStop()
 {
     if (d->flushCallback) {
         d->flushCallback();

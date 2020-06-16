@@ -46,7 +46,7 @@ void AudioEncoderFfmpeg::setBitrate(uint16_t kbps)
     m_bitrateKbps = kbps;
 }
 
-void AudioEncoderFfmpeg::stop()
+void AudioEncoderFfmpeg::onStop()
 {
     AudioBuffer buffer;
     process(m_conf, buffer);

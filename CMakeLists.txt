@@ -24,7 +24,6 @@ add_library(${PROJECT_NAME} STATIC
     src/airplay/AlacDecoder.cpp
     src/airplay/alac.c
     src/audio/AlsaSink.cpp
-    src/audio/AppSource.cpp
     src/audio/AudioAppSink.cpp
     src/audio/AudioBuffer.cpp
     src/audio/AudioCaps.cpp
@@ -41,14 +40,16 @@ add_library(${PROJECT_NAME} STATIC
     src/audio/Peq.cpp
     src/audio/ScreamSource.cpp
     src/audio/SbcDecoder.cpp
-    src/audio/Source.cpp
     src/audio/TBiquad.cpp
     src/core/AppSink.cpp
+    src/core/AppSource.cpp
     src/core/Buffer.cpp
+    src/core/FdSource.cpp
     src/core/Mainloop.cpp
     src/core/MainloopPrivate.cpp
     src/core/Node.cpp
     src/core/Sink.cpp
+    src/core/Source.cpp
     src/core/UdpSource.cpp
     src/core/Util.cpp
     src/loguru/loguru.cpp

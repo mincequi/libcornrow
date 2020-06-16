@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include <coro/audio/Source.h>
+#include <coro/core/Source.h>
 
 namespace coro {
 namespace airplay {
 
-class AirplaySource : public audio::Source
+class AirplaySource : public core::Source
 {
 public:
     static constexpr std::array<audio::AudioCap,1> outCaps() {
