@@ -115,7 +115,7 @@ void AlsaSink::onStop()
         snd_pcm_close(m_pcm);
         m_pcm = nullptr;
     }
-    LOG_F(INFO, "Device flushed");
+    LOG_F(INFO, "Device stopped");
 }
 
 bool AlsaSink::open(const AudioConf& conf)

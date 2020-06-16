@@ -23,6 +23,7 @@
 #include <audio/AudioDecoderFfmpeg.h>
 #include <core/AppSink.h>
 #include <core/UdpSource.h>
+#include <loguru/loguru.hpp>
 #include <rtp/RtpDecoder.h>
 #include <rtsp/RtspServer.h>
 #include <zeroconf/ZeroConfServer.h>
@@ -64,30 +65,6 @@ AirplaySourcePrivate::AirplaySourcePrivate(AirplaySource& _p, const AirplaySourc
     core::Node::link(decoder, appSink);
 
     LOG_F(INFO, "Reception started. name: %s, rtsp port: %d, rtp port: %d", config.name.c_str(), rtspServer.port(), audioReceiver.port());
-}
-
-void AirplaySourcePrivate::startRtpSession(uint16_t* audioPort, uint16_t* controlPort)
-{
-    if (udpSourceAudio) {
-        delete udpSourceAudio;
-    }
-
-    udpSourceAudio = new core::UdpSource;
-    core::Node::link(*udpSourceAudio, rtpDecoder);
-
-    *audioPort = udpSourceAudio->port();
-
-    LOG_F(INFO, "RtpSession started. port: %d", *audioPort);
-}
-
-void AirplaySourcePrivate::stopRtpSession()
-{
-    if (udpSourceAudio) {
-        delete udpSourceAudio;
-        udpSourceAudio = nullptr;
-    }
-
-    LOG_F(INFO, "RtpSession stopped");
 }
 
 } // namespace airplay

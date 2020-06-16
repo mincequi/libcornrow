@@ -22,8 +22,6 @@
 #include <boost/asio/ip/udp.hpp>
 #include <boost/system/error_code.hpp>
 
-#include <loguru/loguru.hpp>
-
 #include <coro/audio/AudioBuffer.h>
 #include <coro/core/Source.h>
 
@@ -51,13 +49,10 @@ public:
     explicit UdpSource(const Config& config);
     ~UdpSource();
 
-    const char* name() const override;
-
     uint16_t port() const;
 
 private:
-    void onStart() override;
-    void onStop() override;
+    const char* name() const override;
 
     void startTimer();
     void doReceive();
@@ -68,6 +63,7 @@ private:
 
     class UdpSourcePrivate* const d;
 
+    // @TODO(mawe): move these to UdpSourcePrivate
     boost::asio::ip::udp::socket     m_socket;
     boost::asio::ip::udp::endpoint   m_localEndpoint;
     boost::asio::steady_timer  m_timeout;

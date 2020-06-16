@@ -27,7 +27,7 @@ AirplaySource::AirplaySource(const AirplaySource::Config& config)
     : d(new AirplaySourcePrivate(*this, config))
 {
     d->appSink.setProcessCallback(std::bind(&AirplaySource::pushBuffer, this, _1, _2));
-    d->appSink.setFlushCallback(std::bind(&AirplaySource::flush, this));
+    d->appSink.setStopCallback(std::bind(&AirplaySource::stop, this));
 }
 
 AirplaySource::~AirplaySource()
@@ -38,6 +38,11 @@ AirplaySource::~AirplaySource()
 const char* AirplaySource::name() const
 {
     return "AirplaySource";
+}
+
+void AirplaySource::setReadyCallback(ReadyCallback callback)
+{
+    d->audioReceiver.setReadyCallback(callback);
 }
 
 } // namespace airplay

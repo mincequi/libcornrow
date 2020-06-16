@@ -41,6 +41,8 @@ public:
 
 private:
     const char* name() const override;
+    // @TODO(mawe): think about this. This sucks to override.
+    void setReadyCallback(ReadyCallback callback) override;
 
     class AirplaySourcePrivate* const d;
 };

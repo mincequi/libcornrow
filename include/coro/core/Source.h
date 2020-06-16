@@ -36,7 +36,7 @@ public:
     Source();
     virtual ~Source();
 
-    // @TODO(mawe): make these private and let SourceController call these.
+    // @TODO(mawe): make these private and let SourceSelector call these.
     void start();
     void stop();
 
@@ -45,7 +45,7 @@ public:
     void setReady(bool wts);
 
     using ReadyCallback = std::function<void(bool, Source* const)>;
-    void setReadyCallback(ReadyCallback callback);
+    virtual void setReadyCallback(ReadyCallback callback);
 
 protected:
     void pushBuffer(const audio::AudioConf& conf, audio::AudioBuffer& buffer);
@@ -57,7 +57,7 @@ private:
     std::atomic_bool m_isStarted = true;
     std::atomic_bool m_isReady = false;
 
-    friend class SourceController;
+    friend class SourceSelector;
 };
 
 } // namespace core

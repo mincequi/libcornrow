@@ -20,6 +20,8 @@
 
 #include "core/MainloopPrivate.h"
 
+#include <loguru/loguru.hpp>
+
 #include <functional>
 
 namespace coro {
@@ -90,16 +92,6 @@ const char* UdpSource::name() const
 uint16_t UdpSource::port() const
 {
     return m_socket.local_endpoint().port();
-}
-
-void UdpSource::onStart()
-{
-    //doReceive();
-}
-
-void UdpSource::onStop()
-{
-    flush();
 }
 
 void UdpSource::startTimer()

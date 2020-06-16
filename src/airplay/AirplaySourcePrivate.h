@@ -36,15 +36,11 @@ class AirplaySourcePrivate
 public:
     AirplaySourcePrivate(AirplaySource& _p, const AirplaySource::Config& config);
 
-    void startRtpSession(uint16_t* audioPort, uint16_t* controlPort);
-    void stopRtpSession();
-
     AirplaySource& p;
 
     core::UdpSource audioReceiver;
     core::UdpSource controlReceiver;
 
-    core::UdpSource* udpSourceAudio = nullptr;
     rtp::RtpDecoder<audio::AudioCodec::Alac> rtpDecoder;
     AirplayDecrypter decrypter;
     audio::AudioDecoderFfmpeg<audio::AudioCodec::Alac> decoder;

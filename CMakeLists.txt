@@ -50,6 +50,7 @@ add_library(${PROJECT_NAME} STATIC
     src/core/Node.cpp
     src/core/Sink.cpp
     src/core/Source.cpp
+    src/core/SourceSelector.cpp
     src/core/UdpSource.cpp
     src/core/Util.cpp
     src/loguru/loguru.cpp

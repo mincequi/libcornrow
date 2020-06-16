@@ -37,17 +37,16 @@ void Source::start()
 void Source::stop()
 {
     m_isStarted = false;
-    onStop();
 
-    setReady(false);
-
-    auto _next = next();
+    Node* _next = this;
     while (_next) {
         if (!_next->isBypassed()) {
             _next->onStop();
         }
         _next = _next->next();
     }
+
+    setReady(false);
 }
 
 bool Source::isStarted() const
@@ -79,6 +78,11 @@ void Source::setReadyCallback(ReadyCallback callback)
 
 void Source::pushBuffer(const audio::AudioConf& _conf, audio::AudioBuffer& buffer)
 {
+    // If source wants to push buffers, we consider it ready.
+    //if (!isReady()) {
+        setReady(true);
+    //}
+
     // @TODO(mawe): currently, sources are started per default. This will change.
     if (isStarted()) {
         process(_conf, buffer);

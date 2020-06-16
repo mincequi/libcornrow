@@ -15,53 +15,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "core/AppSink.h"
+#pragma once
+
+#include <coro/core/Node.h>
+
+#include <atomic>
+#include <functional>
+#include <mutex>
 
 namespace coro {
 namespace core {
 
-class AppSinkPrivate
+class Source;
+
+class SourceSelector
 {
 public:
-    AppSink::ProcessCallback processCallback = nullptr;
-    AppSink::StopCallback stopCallback = nullptr;
+    SourceSelector();
+    virtual ~SourceSelector();
+
+    void addSource(Source& source);
+    void removeSource(Source& source);
+
+private:
+    class SourceSelectorPrivate* const d;
 };
-
-AppSink::AppSink()
-    : d(new AppSinkPrivate)
-{
-}
-
-AppSink::~AppSink()
-{
-    delete d;
-}
-
-void AppSink::setProcessCallback(ProcessCallback callback)
-{
-    d->processCallback = callback;
-}
-
-void AppSink::setStopCallback(StopCallback callback)
-{
-    d->stopCallback = callback;
-}
-
-audio::AudioConf AppSink::onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer)
-{
-    if (d->processCallback) {
-        d->processCallback(conf, buffer);
-    }
-
-    return {};
-}
-
-void AppSink::onStop()
-{
-    if (d->stopCallback) {
-        d->stopCallback();
-    }
-}
 
 } // namespace core
 } // namespace coro

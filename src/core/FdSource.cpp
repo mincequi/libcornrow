@@ -84,7 +84,7 @@ public:
         } while(bytesReadable);
 
         if (rounds > 1) {
-            LOG_F(2, "Sequential reads: %zu", rounds);
+            LOG_F(INFO, "Sequential reads: %zu", rounds);
         }
 
         doWait();
@@ -97,7 +97,6 @@ public:
 
     int                 bufferCount = 0;
     audio::AudioBuffer  buffer;
-    float               previousBytesTransferred = 0.0f;
 };
 
 FdSource::FdSource() :
@@ -122,8 +121,9 @@ void FdSource::init(int fd, uint16_t blockSize)
         d->streamDescriptor.close();
     }
 
-    // If invalid FD give, do nothing.
+    // If invalid FD, stop pipeline.
     if (fd < 0) {
+        stop();
         return;
     }
 

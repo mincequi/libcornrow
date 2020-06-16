@@ -54,7 +54,6 @@ public:
     Node* next() const;
 
     audio::AudioConf process(const audio::AudioConf& conf, audio::AudioBuffer& buffer);
-    void flush();
 
     bool isBypassed() const;
     void setIsBypassed(bool);

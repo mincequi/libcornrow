@@ -17,6 +17,8 @@
 
 #include "core/Node.h"
 
+#include <loguru/loguru.hpp>
+
 namespace coro {
 namespace core {
 
@@ -65,17 +67,6 @@ audio::AudioConf Node::process(const audio::AudioConf& _conf, audio::AudioBuffer
     return next()->process(conf, buffer);
 }
 
-void Node::flush()
-{
-    if (!isBypassed()) {
-        onStop();
-    }
-
-    if (next()) {
-        next()->flush();
-    }
-}
-
 bool Node::isBypassed() const
 {
     return m_isBypassed;
@@ -92,6 +83,7 @@ void Node::onStart()
 
 void Node::onStop()
 {
+    LOG_F(2, "%s stopped", name());
 }
 
 audio::AudioConf Node::onProcess(const audio::AudioConf& conf, audio::AudioBuffer&)
