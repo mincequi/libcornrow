@@ -27,6 +27,117 @@
 namespace coro {
 namespace audio {
 
+static void doAc3Payload(AudioBuffer& buffer);
+
+int snd_pcm_set_params2(snd_pcm_t *pcm,
+                        snd_pcm_format_t format,
+                        snd_pcm_access_t access,
+                        unsigned int channels,
+                        unsigned int rate,
+                        snd_pcm_uframes_t period_size = 256) {
+    snd_pcm_hw_params_t   *params;
+    snd_pcm_hw_params_alloca(&params);
+    //snd_pcm_hw_params_t params = {0};
+    snd_pcm_sw_params_t *swparams;
+    snd_pcm_sw_params_alloca(&swparams);
+    //snd_pcm_sw_params_t swparams = {0};
+    const char *s = snd_pcm_stream_name(snd_pcm_stream(pcm));
+    int err;
+    snd_pcm_uframes_t delay_size = rate / 10;
+    snd_pcm_uframes_t buffer_size = rate / 2;
+
+    assert(pcm);
+    {
+        /* choose all parameters */
+        err = snd_pcm_hw_params_any(pcm, params);
+        if (err < 0) {
+            SNDERR("Broken configuration for %s: no configurations available", s);
+            return err;
+        }
+        /* set the selected read/write format */
+        err = snd_pcm_hw_params_set_access(pcm, params, access);
+        if (err < 0) {
+            SNDERR("Access type not available for %s: %s", s, snd_strerror(err));
+            return err;
+        }
+        /* set the sample format */
+        err = snd_pcm_hw_params_set_format(pcm, params, format);
+        if (err < 0) {
+            SNDERR("Sample format not available for %s: %s", s, snd_strerror(err));
+            return err;
+        }
+        /* set the count of channels */
+        err = snd_pcm_hw_params_set_channels(pcm, params, channels);
+        if (err < 0) {
+            SNDERR("Channels count (%i) not available for %s: %s", channels, s, snd_strerror(err));
+            return err;
+        }
+        /* set the stream rate */
+        unsigned int rrate = rate;
+        err = snd_pcm_hw_params_set_rate_near(pcm, params, &rrate, 0);
+        if (err < 0) {
+            SNDERR("Rate %iHz not available for playback: %s", rate, snd_strerror(err));
+            return err;
+        }
+        if (rrate != rate) {
+            SNDERR("Rate doesn't match (requested %iHz, get %iHz)", rate, rrate);
+            return -EINVAL;
+        }
+        /* set the period size */
+        err = snd_pcm_hw_params_set_period_size_near(pcm, params, &period_size, NULL);
+        if (err < 0) {
+            SNDERR("Unable to set period size %i for %s: %s", period_size, s, snd_strerror(err));
+            return err;
+        }
+
+        // set the buffer size
+        buffer_size = std::max(period_size * 16, buffer_size);
+        err = snd_pcm_hw_params_set_buffer_size_near(pcm, params, &buffer_size);
+        if (err < 0) {
+            SNDERR("Unable to set buffer size %lu %s: %s", buffer_size, s, snd_strerror(err));
+            return err;
+        }
+    }
+
+    /* write the parameters to device */
+    err = snd_pcm_hw_params(pcm, params);
+    if (err < 0) {
+        SNDERR("Unable to set hw params for %s: %s", s, snd_strerror(err));
+        return err;
+    }
+
+    /* get the current swparams */
+    err = snd_pcm_sw_params_current(pcm, swparams);
+    if (err < 0) {
+        SNDERR("Unable to determine current swparams for %s: %s", s, snd_strerror(err));
+        return err;
+    }
+
+    // start the transfer when the buffer with delay.
+    delay_size = std::max(period_size * 4, delay_size);
+    err = snd_pcm_sw_params_set_start_threshold(pcm, swparams, delay_size);
+    if (err < 0) {
+        SNDERR("Unable to set start threshold mode for %s: %s", s, snd_strerror(err));
+        return err;
+    }
+    /*
+     * allow the transfer when at least period_size samples can be processed
+     */
+    err = snd_pcm_sw_params_set_avail_min(pcm, swparams, period_size);
+    if (err < 0) {
+        SNDERR("Unable to set avail min for %s: %s", s, snd_strerror(err));
+        return err;
+    }
+    /* write the parameters to the playback device */
+    err = snd_pcm_sw_params(pcm, swparams);
+    if (err < 0) {
+        SNDERR("Unable to set sw params for %s: %s", s, snd_strerror(err));
+        return err;
+    }
+
+    return 0;
+}
+
 AlsaSink::AlsaSink()
 {
 }
@@ -39,17 +150,20 @@ void AlsaSink::start(const AudioConf& conf)
 {
     //open(conf);
     openSimple(conf);
-    //if (!setDelay(64)) {
-    //    LOG_F(WARNING, "Delay not accepted: %d ms", 16);
-    //}
 
-
-    // Get current sw params
+    // Get current params
     snd_pcm_sw_params_t* params;
     snd_pcm_sw_params_alloca(&params);
+    snd_pcm_hw_params_t* hwparams;
+    snd_pcm_hw_params_alloca(&hwparams);
     int err = snd_pcm_sw_params_current(m_pcm, params);
     if (err < 0) {
         LOG_F(ERROR, "snd_pcm_sw_params_current() failed.\n");
+        return;
+    }
+    err = snd_pcm_hw_params_current(m_pcm, hwparams);
+    if (err < 0) {
+        LOG_F(ERROR, "snd_pcm_hw_params_current() failed.\n");
         return;
     }
 
@@ -57,7 +171,14 @@ void AlsaSink::start(const AudioConf& conf)
     snd_pcm_sw_params_get_start_threshold(params, &frames);
     snd_pcm_uframes_t min = 0;
     snd_pcm_sw_params_get_avail_min(params, &min);
-    LOG_F(INFO, "Device opened. start threshold: %zu, min avail: %zu", frames, min);
+    snd_pcm_uframes_t buffer_size;
+    err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
+    if (err < 0) {
+        LOG_F(WARNING, "snd_pcm_hw_params_get_buffer_time() failed.\n");
+    }
+    LOG_F(INFO, "Device opened. delay: %u ms, buffer: %u ms",
+          (uint)frames * 1000 / toInt(conf.rate),
+          (uint)buffer_size * 1000 / toInt(conf.rate));
 
     snd_pcm_prepare(m_pcm);
 }
@@ -118,38 +239,6 @@ void AlsaSink::onStop()
     LOG_F(INFO, "Device stopped");
 }
 
-bool AlsaSink::open(const AudioConf& conf)
-{
-    if (m_pcm) {
-        LOG_F(INFO, "Device already opened");
-        return false;
-    }
-
-    int err = snd_pcm_open(&m_pcm, m_device.c_str(), SND_PCM_STREAM_PLAYBACK, 0);
-    if (err) {
-        LOG_F(INFO, "Unable to open ALSA device '%s'\n", m_device.c_str());
-        return false;
-    }
-
-    /* try to set up hw params */
-    if (!setHwParams(conf)) {
-        LOG_F(INFO, "Unable to set HW params for device '%s'\n", m_device.c_str());
-        snd_pcm_close(m_pcm);
-        m_pcm = nullptr;
-        return false;
-    }
-
-    /* try to set up sw params */
-    if (!setSwParams()) {
-        LOG_F(INFO, "Unable to set SW params for device '%s'\n", m_device.c_str());
-        snd_pcm_close(m_pcm);
-        m_pcm = nullptr;
-        return false;
-    }
-
-    return true;
-}
-
 bool AlsaSink::openSimple(const AudioConf& conf)
 {
     if (m_pcm) {
@@ -164,173 +253,13 @@ bool AlsaSink::openSimple(const AudioConf& conf)
     }
 
     unsigned int rate = toInt(conf.rate);
-    err = snd_pcm_set_params(m_pcm,
-                             SND_PCM_FORMAT_S16,
-                             SND_PCM_ACCESS_RW_INTERLEAVED,
-                             2,
-                             rate,
-                             0,
-                             40000);
+    err = snd_pcm_set_params2(m_pcm,
+                              SND_PCM_FORMAT_S16,
+                              SND_PCM_ACCESS_RW_INTERLEAVED,
+                              2,
+                              rate);
     if (err) {
-        LOG_F(WARNING, "snd_pcm_set_params() failed.");
-        return false;
-    }
-
-    return true;
-}
-
-bool AlsaSink::setHwParams(const AudioConf& conf)
-{
-    snd_pcm_hw_params_t   *params;
-    snd_pcm_hw_params_alloca(&params);
-
-    /* fetch all possible hardware parameters */
-    int err = snd_pcm_hw_params_any(m_pcm, params);
-    if (err < 0) {
-        LOG_F(INFO, "snd_pcm_hw_params_any() failed.\n");
-        return false;
-    }
-
-    /* set the access type */
-    err = snd_pcm_hw_params_set_access(m_pcm, params, SND_PCM_ACCESS_RW_INTERLEAVED);
-    if (err < 0) {
-        LOG_F(INFO, "snd_pcm_hw_params_set_access() failed.\n");
-        return false;
-    }
-
-    /* set the sample bitformat */
-    err = snd_pcm_hw_params_set_format(m_pcm, params, SND_PCM_FORMAT_S16);
-    if (err < 0) {
-        LOG_F(INFO, "snd_pcm_hw_params_set_format() failed.\n");
-        return false;
-    }
-
-    /* set the number of channels */
-    err = snd_pcm_hw_params_set_channels(m_pcm, params, 2);
-    if (err < 0) {
-        LOG_F(INFO, "snd_pcm_hw_params_set_channels() failed.\n");
-        return false;
-    }
-
-    /* set the sample rate */
-    unsigned int rate = toInt(conf.rate);
-    err = snd_pcm_hw_params_set_rate_near(m_pcm, params, &rate, 0);
-    if (err < 0) {
-        LOG_F(INFO, "snd_pcm_hw_params_set_rate_near() failed.\n");
-        return false;
-    }
-    if (rate > 1.05 * toInt(conf.rate) || rate < 0.95 * toInt(conf.rate)) {
-        LOG_F(INFO, "sample rate %i not supported by the hardware, using %u\n", toInt(conf.rate), rate);
-    }
-
-    /*
-    // set the time per hardware sample transfer
-    if (internal->period_time == 0)
-        internal->period_time = internal->buffer_time/4;
-
-    err = snd_pcm_hw_params_set_period_time_near(m_pcm, params, &(internal->period_time), 0);
-    if (err < 0){
-        LOG_F(INFO, "snd_pcm_hw_params_set_period_time_near() failed.\n");
-        return err;
-    }
-
-    // set the length of the hardware sample buffer in microseconds
-    // some plug devices have very high minimum periods; don't allow a buffer
-    // size small enough that it's ~ guaranteed to skip
-    if(internal->buffer_time<internal->period_time*3)
-        internal->buffer_time=internal->period_time*3;
-    err = snd_pcm_hw_params_set_buffer_time_near(m_pcm, params, &(internal->buffer_time), 0);
-    if (err < 0) {
-        LOG_F(INFO, "snd_pcm_hw_params_set_buffer_time_near() failed.\n");
-        return err;
-    }
-    */
-
-    /* Set buffer size and period size manually for SPDIF */
-    //if (self->passthrough) {
-    snd_pcm_uframes_t buffer_size = spdif::ac3BufferSize;
-    snd_pcm_uframes_t period_size = spdif::ac3PeriodSize;
-
-    err = snd_pcm_hw_params_set_buffer_size_near(m_pcm, params, &buffer_size);
-    if (err < 0) {
-        LOG_F(ERROR, "snd_pcm_hw_params_set_buffer_size_near() failed.\n");
-        return false;
-    }
-    err = snd_pcm_hw_params_set_period_size_near(m_pcm, params, &period_size, NULL);
-    if (err < 0) {
-        LOG_F(ERROR, "snd_pcm_hw_params_set_period_size_near() failed.\n");
-        return false;
-    }
-    //}
-
-    /* commit the params structure to the hardware via ALSA */
-    err = snd_pcm_hw_params(m_pcm, params);
-    if (err < 0){
-        LOG_F(ERROR, "snd_pcm_hw_params() failed.\n");
-        return false;
-    }
-
-    return true;
-}
-
-bool AlsaSink::setSwParams()
-{
-    snd_pcm_sw_params_t *params;
-    snd_pcm_sw_params_alloca(&params);
-
-    /* fetch the current software parameters */
-    int err = snd_pcm_sw_params_current(m_pcm, params);
-    if (err < 0) {
-        LOG_F(ERROR, "snd_pcm_sw_params_current() failed.\n");
-        return false;
-    }
-
-    err = snd_pcm_sw_params_set_start_threshold(m_pcm, params, spdif::ac3BufferSize);
-    if (err < 0) {
-        LOG_F(ERROR, "snd_pcm_sw_params_set_start_threshold() failed.\n");
-        return false;
-    }
-
-    /* allow the transfer when at least period_size samples can be processed */
-    err = snd_pcm_sw_params_set_avail_min(m_pcm, params, spdif::ac3PeriodSize);
-    if (err < 0) {
-        LOG_F(ERROR, "snd_pcm_sw_params_set_avail_min() failed.\n");
-        return false;
-    }
-
-    /* commit the params structure to ALSA */
-    err = snd_pcm_sw_params(m_pcm, params);
-    if (err < 0) {
-        LOG_F(ERROR, "snd_pcm_sw_params() failed.\n");
-        return false;
-    }
-
-    return true;
-}
-
-bool AlsaSink::setDelay(uint16_t ms)
-{
-    snd_pcm_sw_params_t* params;
-    snd_pcm_sw_params_alloca(&params);
-
-    // get current sw params
-    int err = snd_pcm_sw_params_current(m_pcm, params);
-    if (err < 0) {
-        LOG_F(ERROR, "snd_pcm_sw_params_current() failed.\n");
-        return false;
-    }
-
-    // set start threshold
-    err = snd_pcm_sw_params_set_start_threshold(m_pcm, params, 44100 * ms / 1000);
-    if (err < 0) {
-        LOG_F(ERROR, "snd_pcm_sw_params_set_start_threshold() failed.\n");
-        return false;
-    }
-
-    // commit the params to ALSA */
-    err = snd_pcm_sw_params(m_pcm, params);
-    if (err < 0) {
-        LOG_F(ERROR, "snd_pcm_sw_params() failed.\n");
+        LOG_F(WARNING, "snd_pcm_set_params2() failed.");
         return false;
     }
 
@@ -375,7 +304,7 @@ bool AlsaSink::recover(int err)
         LOG_F(WARNING, "AlsaSink underrun");
         err = snd_pcm_prepare(m_pcm);
         if (err < 0) {
-             LOG_F(ERROR, "AlsaSink cannot be recovered from underrun");
+            LOG_F(ERROR, "AlsaSink cannot be recovered from underrun");
             // Cannot recover from underrun
             return false;
         }
@@ -402,7 +331,7 @@ bool AlsaSink::recover(int err)
     return false;
 }
 
-void AlsaSink::doAc3Payload(AudioBuffer& buffer)
+void doAc3Payload(AudioBuffer& buffer)
 {
     if (buffer.size() > (spdif::ac3FrameSize - spdif::SpdifAc3Header::size())) {
         LOG_F(WARNING, "Frame too big, droppping it.");

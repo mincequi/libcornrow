@@ -36,58 +36,29 @@ public:
         streamDescriptor(ioContext) {
     }
 
-    void doWait() {
-        streamDescriptor.async_wait(posix::stream_descriptor::wait_read,
-                                    std::bind(&FdSourcePrivate::onWaited, this, _1));
+    void doRead() {
+        // Make room for our data.
+        buffer.acquire(blockSize, &p);
+        buffer.commit(blockSize);
+
+        streamDescriptor.async_read_some(boost::asio::buffer(buffer.data(), buffer.size()),
+                                         std::bind(&FdSourcePrivate::onRead, this, _1, _2));
     }
 
-    void onWaited(const boost::system::error_code& ec) {
+    void onRead(const boost::system::error_code& ec, size_t bytesRead) {
         if (ec) {
             LOG_F(WARNING, "%s", ec.message().c_str());
             p.stop();
             return;
         }
 
-        // We iteratively read bytes as long as there are bytes available.
-        boost::asio::posix::stream_descriptor::bytes_readable command(true);
-        size_t bytesReadable = 0;
-        size_t rounds = 0;
-        do {
-            // Increment internal buffer counter.
-            ++bufferCount;
+        // Push buffer into pipeline.
+        buffer.shrink(bytesRead);
+        p.pushBuffer(audio::AudioConf { audio::AudioCodec::Unknown,
+                                        audio::SampleRate::RateUnknown,
+                                        audio::ChannelFlags::Any }, buffer);
 
-            // Make room for our data.
-            buffer.acquire(blockSize, &p);
-            buffer.commit(blockSize);
-
-            // Read bytes into buffer.
-            size_t bytesRead = 0;
-            try {
-                bytesRead = streamDescriptor.read_some(boost::asio::buffer(buffer.data(), buffer.size()));
-            } catch (...) {
-                LOG_F(INFO, "Connection closed by peer.");
-                p.stop();
-                return;
-            }
-
-            // Push buffer into pipeline.
-            buffer.shrink(bytesRead);
-            p.pushBuffer(audio::AudioConf { audio::AudioCodec::Unknown,
-                                            audio::SampleRate::RateUnknown,
-                                            audio::ChannelFlags::Any }, buffer);
-
-            // Check if still bytes readable
-            streamDescriptor.io_control(command);
-            bytesReadable = command.get();
-            //LOG_F(2, "Bytes read: %zu, still readable: %zu", bytesRead, bytesReadable);
-            ++rounds;
-        } while(bytesReadable);
-
-        if (rounds > 1) {
-            LOG_F(INFO, "Sequential reads: %zu", rounds);
-        }
-
-        doWait();
+        doRead();
     }
 
     FdSource& p;
@@ -132,7 +103,7 @@ void FdSource::init(int fd, uint16_t blockSize)
     d->blockSize = blockSize;
 
     // Start reception
-    d->doWait();
+    d->doRead();
 
     // If our io_context ran out of work, we have to restart it.
     d->ioContext.restart();

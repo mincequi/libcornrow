@@ -34,6 +34,7 @@ public:
     FdSource();
     ~FdSource();
 
+    // note: fd has to be ::dup before providing it here.
     void init(int fd, uint16_t blockSize);
 
 private:
