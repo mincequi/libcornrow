@@ -289,7 +289,7 @@ void AlsaSink::writeSimple(const char* samples, uint32_t bytesCount)
         }
         // If less frames written
         if (ret > 0 && ret < frameCount) {
-            LOG_F(WARNING, "Frames written: %zd. expected: %zd.", ret, frameCount);
+            LOG_F(WARNING, "Frames written: %ld. expected: %ld.", ret, frameCount);
         }
 
         frameCount -= ret;
