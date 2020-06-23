@@ -59,7 +59,7 @@ bool Crossover::lfe()
     return l;
 }
 
-AudioConf Crossover::onProcess(const AudioConf& conf, AudioBuffer& buffer)
+AudioConf Crossover::onProcess(const AudioConf& conf, core::Buffer& buffer)
 {
     if (!m_filter.isValid()) {
         return conf;

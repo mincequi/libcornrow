@@ -52,7 +52,7 @@ public:
     void init(const std::string& fmtp);
 
 private:
-    audio::AudioConf onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer) override;
+    audio::AudioConf onProcess(const audio::AudioConf& conf, core::Buffer& buffer) override;
 
     alac_file* m_alac = nullptr;
 };

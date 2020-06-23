@@ -27,7 +27,7 @@
 namespace coro {
 namespace audio {
 
-static void doAc3Payload(AudioBuffer& buffer);
+static void doAc3Payload(core::Buffer& buffer);
 
 int snd_pcm_set_params2(snd_pcm_t *pcm,
                         snd_pcm_format_t format,
@@ -194,7 +194,7 @@ void AlsaSink::setDevice(const std::string& device)
     start(m_conf);
 }
 
-AudioConf AlsaSink::onProcess(const AudioConf& conf, AudioBuffer& buffer)
+AudioConf AlsaSink::onProcess(const AudioConf& conf, core::Buffer& buffer)
 {
     if (m_conf != conf) {
         onStop();
@@ -331,7 +331,7 @@ bool AlsaSink::recover(int err)
     return false;
 }
 
-void doAc3Payload(AudioBuffer& buffer)
+void doAc3Payload(core::Buffer& buffer)
 {
     if (buffer.size() > (spdif::ac3FrameSize - spdif::SpdifAc3Header::size())) {
         LOG_F(WARNING, "Frame too big, droppping it.");

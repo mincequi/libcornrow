@@ -25,7 +25,6 @@
 
 namespace coro {
 namespace audio {
-class AudioBuffer;
 class AudioConf;
 }
 namespace core {
@@ -42,18 +41,19 @@ public:
 
     bool isStarted() const;
     bool isReady() const;
-    void setReady(bool wts);
+    void setReady(bool ready);
 
     using ReadyCallback = std::function<void(bool, Source* const)>;
     virtual void setReadyCallback(ReadyCallback callback);
 
 protected:
-    void pushBuffer(const audio::AudioConf& conf, audio::AudioBuffer& buffer);
+    void pushBuffer(const audio::AudioConf& conf, core::Buffer& buffer);
 
 private:
     std::mutex  m_mutex;
     ReadyCallback m_isReadyCallback;
 
+    std::atomic_bool m_isControlled = false;
     std::atomic_bool m_isStarted = true;
     std::atomic_bool m_isReady = false;
 

@@ -32,7 +32,7 @@ void Loudness::setVolume(float volume)
     m_volume = volume;
 }
 
-audio::AudioConf Loudness::onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer)
+audio::AudioConf Loudness::onProcess(const audio::AudioConf& conf, core::Buffer& buffer)
 {
     // Loudness generates headroom, check which one is lower
     float volume = std::min(m_volume, m_headroom);

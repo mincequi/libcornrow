@@ -126,7 +126,7 @@ const char* AudioDecoderFfmpeg<codec>::name() const
 }
 
 template<audio::AudioCodec codec>
-AudioConf AudioDecoderFfmpeg<codec>::onProcess(const AudioConf& conf, AudioBuffer& _buffer)
+AudioConf AudioDecoderFfmpeg<codec>::onProcess(const AudioConf& conf, core::Buffer& _buffer)
 {
     if (m_conf != conf) {
         m_conf = conf;
@@ -180,7 +180,7 @@ AudioConf AudioDecoderFfmpeg<codec>::onProcess(const AudioConf& conf, AudioBuffe
 }
 
 template<audio::AudioCodec codec>
-AudioConf AudioDecoderFfmpeg<codec>::onProcessCodec(AudioBuffer &buffer)
+AudioConf AudioDecoderFfmpeg<codec>::onProcessCodec(core::Buffer& buffer)
 {
     return {};
 }
@@ -203,7 +203,7 @@ void AudioDecoderFfmpeg<codec>::updateConf()
 
 template<audio::AudioCodec codec>
 template<typename T>
-void AudioDecoderFfmpeg<codec>::interleave(const AVFrame* in, AudioBuffer& out)
+void AudioDecoderFfmpeg<codec>::interleave(const AVFrame* in, core::Buffer& out)
 {
     auto data = reinterpret_cast<T*>(out.acquire(in->linesize[0] * in->channels, this));
     for (int s = 0; s < in->nb_samples; ++s) {

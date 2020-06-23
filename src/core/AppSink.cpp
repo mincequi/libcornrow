@@ -47,7 +47,7 @@ void AppSink::setStopCallback(StopCallback callback)
     d->stopCallback = callback;
 }
 
-audio::AudioConf AppSink::onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer)
+audio::AudioConf AppSink::onProcess(const audio::AudioConf& conf, core::Buffer& buffer)
 {
     if (d->processCallback) {
         d->processCallback(conf, buffer);

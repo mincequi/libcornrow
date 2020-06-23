@@ -38,7 +38,7 @@ public:
     virtual ~ScreamSource();
 
 private:
-    AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf onProcess(const AudioConf& conf, core::Buffer& buffer) override;
 
     const char* name() const override;
 };

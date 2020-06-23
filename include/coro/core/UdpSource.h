@@ -22,7 +22,6 @@
 #include <boost/asio/ip/udp.hpp>
 #include <boost/system/error_code.hpp>
 
-#include <coro/audio/AudioBuffer.h>
 #include <coro/core/Source.h>
 
 namespace coro {
@@ -69,7 +68,7 @@ private:
     boost::asio::steady_timer  m_timeout;
     int                 m_bufferCount = 0;
     bool                m_isReceiving = false;
-    audio::AudioBuffer  m_buffer;
+    core::Buffer  m_buffer;
     float               m_previousBytesTransferred = 0.0f;
 };
 

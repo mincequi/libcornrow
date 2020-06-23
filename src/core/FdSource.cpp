@@ -66,8 +66,8 @@ public:
     posix::stream_descriptor streamDescriptor;
     uint16_t    blockSize = 0;
 
-    int                 bufferCount = 0;
-    audio::AudioBuffer  buffer;
+    int         bufferCount = 0;
+    core::Buffer  buffer;
 };
 
 FdSource::FdSource() :

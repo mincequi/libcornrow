@@ -20,18 +20,19 @@
 #include <coro/core/Buffer.h>
 
 namespace coro {
-namespace audio {
+namespace core {
 
-class AudioBuffer : public core::Buffer
+class BufferPool
 {
 public:
-    using core::Buffer::Buffer;
-    AudioBuffer(const AudioBuffer&) = delete;
-    AudioBuffer(AudioBuffer&&) = default;
+    static BufferPool& instance();
 
-    std::list<AudioBuffer> split(size_t size, size_t reservedSize = 0) const;
+    BufferPtr acquire(size_t size, const core::Node* caller = nullptr) const;
+
+private:
+    BufferPool();
+    ~BufferPool();
 };
 
-} // namespace audio
+} // namespace core
 } // namespace coro
-

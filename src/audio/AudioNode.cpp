@@ -15,7 +15,7 @@ AudioNode::~AudioNode()
 
 }
 
-audio::AudioConf AudioNode::onProcess(const audio::AudioConf& conf, audio::AudioBuffer&)
+audio::AudioConf AudioNode::onProcess(const audio::AudioConf& conf, core::Buffer&)
 {
     return conf;
 }

@@ -31,7 +31,7 @@ void PiHdmiAudioSink::stop()
     }
 }
 
-audio::AudioConf PiHdmiAudioSink::onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer)
+audio::AudioConf PiHdmiAudioSink::onProcess(const audio::AudioConf& conf, core::Buffer& buffer)
 {
     // If handle is open, but config changed, close device.
     if (m_handle && m_conf != conf) {

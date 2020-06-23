@@ -64,7 +64,7 @@ const char* AirplayDecrypter::name() const
     return "AirplayDecrypter";
 }
 
-audio::AudioConf AirplayDecrypter::onProcess(const audio::AudioConf&, audio::AudioBuffer& buffer)
+audio::AudioConf AirplayDecrypter::onProcess(const audio::AudioConf&, core::Buffer& buffer)
 {
     decrypt(buffer.data(), buffer.acquire(buffer.size(), this), buffer.size());
     buffer.commit(buffer.size());

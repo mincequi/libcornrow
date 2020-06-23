@@ -1,28 +1,67 @@
-#include <coro/audio/AudioBuffer.h>
+//#include <coro/core/Buffer.h>
 
+#include <algorithm>
 #include <assert.h>
-#include <cstring>
+#include <functional>
 #include <iostream>
+#include <memory>
+#include <string>
 
-using namespace coro::audio;
+//using namespace coro::core;
+
+class Buffer
+{
+public:
+    Buffer(std::string x) : txt(x) {}
+
+    Buffer(Buffer&& other) : txt(std::move(other.txt)) {}
+    Buffer& operator=(Buffer&& other) { return *this; }
+
+    // The copy operations are implicitly deleted, but you can
+    // spell that out explicitly if you want:
+    Buffer(const Buffer&) = delete;
+    Buffer& operator=(const Buffer&) = delete;
+
+    std::string txt;
+};
+
+void onProcess(std::unique_ptr<Buffer>& in)
+{
+    in->txt = "before1";
+    std::unique_ptr<Buffer> mine = std::move(in);
+    //in = std::make_unique<Buffer>(Buffer("before2"));
+}
+
+void process(std::unique_ptr<Buffer>& in)
+{
+    onProcess(in);
+
+    if (!in) {
+        in = std::make_unique<Buffer>(Buffer("after"));
+    }
+}
 
 int main()
 {
-    AudioBuffer buffer;
-    auto data = buffer.acquire(65536);
-    for (uint32_t i = 0; i < 32768; ++i) {
-        *(uint16_t*)(data+(2*i)) = i;
-    }
-    buffer.commit(32768);
-    assert(buffer.size() == 32768);
+    std::unique_ptr<Buffer> buffer(new Buffer("before"));
 
-    auto splitted = buffer.split(256);
-    assert(splitted.size() == 128);
+    std::cout << "buffer before: " << buffer->txt << std::endl;
+    process(buffer);
+    std::cout << "buffer after: " << buffer->txt << std::endl;
 
-    uint16_t i = 0;
-    for (AudioBuffer& b : splitted) {
-        assert(b.size() == 256);
-        assert(*(uint16_t*)b.data() == i*128);
-        ++i;
+    std::vector<int> ints;
+    for (int i = 0; i < 4096; ++i) {
+        ints.push_back(i);
+
+        static size_t cap = 0;
+        if (cap != ints.capacity()) {
+            std::cout << "capacity: " << ints.capacity() << std::endl;
+            cap = ints.capacity();
+        }
+
+        std::vector<int> ints2;
+        ints2.reserve(ints.capacity());
+
+        assert(ints.capacity() == ints2.capacity());
     }
 }

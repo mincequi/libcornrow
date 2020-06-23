@@ -20,19 +20,22 @@
 #include <cstring>
 #include <iostream>
 
-#include <audio/AudioBuffer.h>
 #include <core/Node.h>
+#include <core/BufferPool.h>
 #include <loguru/loguru.hpp>
-
-template std::list<coro::audio::AudioBuffer> coro::core::Buffer::split(size_t) const;
 
 namespace coro {
 namespace core {
 
+BufferPtr Buffer::create(size_t reservedSize, const Node* caller)
+{
+    return BufferPool::instance().acquire(reservedSize, caller);
+}
+
 Buffer::Buffer(size_t size)
 {
-    m_buffer.resize(size/4+1);
-    m_size = 0;
+    // Add 3 to round up to next multiple of 4.
+    m_buffer.resize((size + 3) / 4);
 }
 
 Buffer::Buffer(const char* data, size_t size, size_t reservedSize, size_t offset)
@@ -45,6 +48,12 @@ Buffer::Buffer(const char* data, size_t size, size_t reservedSize, size_t offset
 
 Buffer::~Buffer()
 {
+}
+
+bool Buffer::isValid() const
+{
+    // @TODO(mawe): also check conf here, as soon as we pass conf with buffer.
+    return size() > 0;
 }
 
 char* Buffer::data()
@@ -62,6 +71,11 @@ size_t Buffer::size() const
     return m_size;
 }
 
+size_t Buffer::capacity() const
+{
+    return m_buffer.capacity() * 4;
+}
+
 char* Buffer::acquire(size_t size, const core::Node* caller) const
 {
     // If we have space in front
@@ -71,21 +85,22 @@ char* Buffer::acquire(size_t size, const core::Node* caller) const
     }
 
     // If we have space at back
-    const auto sizeAtBack = m_buffer.size()*4-m_offset-m_size;
+    const auto sizeAtBack = m_buffer.size() * 4 - m_offset - m_size;
     if (sizeAtBack >= size) {
-        m_acquiredOffset = m_offset+m_size;
-        m_acquiredOffset += m_acquiredOffset%4;
-        return (char*)m_buffer.data()+m_acquiredOffset;
+        m_acquiredOffset = m_offset + m_size;
+        m_acquiredOffset += m_acquiredOffset % 4;
+        return (char*)m_buffer.data() + m_acquiredOffset;
     }
 
     // Create space
-    auto orgSize = m_buffer.size()*4;
-    m_buffer.resize(m_buffer.size()+(size-sizeAtBack) / 2 /*4*/ +1); // let's try 2 instead of 4 to reduce reallocs.
-    m_acquiredOffset = m_offset+m_size;
-    m_acquiredOffset += m_acquiredOffset%4;
-    if (caller) {
+    auto orgSize = m_buffer.size() * 4;
+    auto newSize = m_buffer.size() + (size - sizeAtBack) / 4 + 1;
+    m_buffer.resize(newSize);
+    m_acquiredOffset = m_offset + m_size;
+    m_acquiredOffset += m_acquiredOffset % 4;
+    if (caller && newSize > m_buffer.capacity()) {
         LOG_F(INFO, "%s reallocated buffer. %zu -> %zu bytes", caller->name(), orgSize, m_buffer.size()*4);
-    } else {
+    } else if (newSize > m_buffer.capacity()) {
         LOG_F(INFO, "buffer reallocated. %zu -> %zu bytes", orgSize, m_buffer.size()*4);
     }
     return (char*)m_buffer.data()+m_acquiredOffset;
@@ -125,16 +140,6 @@ void Buffer::clear()
 {
     m_offset = 0;
     m_size = 0;
-}
-
-template <class T>
-std::list<T> Buffer::split(size_t size) const
-{
-    std::list<T> buffers;
-    for (size_t i = 0; i < m_size; i += size) {
-        buffers.emplace_back((char*)m_buffer.data()+m_offset+i, size);
-    }
-    return buffers;
 }
 
 void Buffer::trimFront(size_t size)

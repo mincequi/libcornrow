@@ -69,6 +69,7 @@ void SourceSelector::addSource(Source& source)
 {
     // Stop any provided source.
     source.stop();
+    source.m_isControlled = true;
 
     // If another one is running, stop given one.
     //for (auto s : d->sources) {
@@ -86,6 +87,7 @@ void SourceSelector::removeSource(Source& source)
 {
     source.setReadyCallback(nullptr);
     d->sources.remove(&source);
+    source.m_isControlled = false;
 }
 
 } // namespace core

@@ -3,27 +3,26 @@
 #include <queue>
 #include <vector>
 
-#include <coro/audio/AudioBuffer.h>
+#include <coro/core/Buffer.h>
 
 using namespace std;
-using namespace coro::audio;
 
 class Encoder
 {
 public:
-    coro::audio::AudioBuffer process(coro::audio::AudioBuffer&& buffer)
+    coro::core::Buffer process(coro::core::Buffer&& buffer)
     {
         m_queue.push(std::move(buffer));
-        coro::audio::AudioBuffer newBuffer("1234", 4);
+        coro::core::Buffer newBuffer("1234", 4);
         return newBuffer;
     }
 
-    std::queue<coro::audio::AudioBuffer> m_queue;
+    std::queue<coro::core::Buffer> m_queue;
 };
 
 int main()
 {
-    coro::audio::AudioBuffer buffer("5678", 4);
+    coro::core::Buffer buffer("5678", 4);
     std::cout << "buffer before: " << buffer.data() << std::endl;
 
     Encoder encoder;

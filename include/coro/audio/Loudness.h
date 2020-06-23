@@ -51,7 +51,7 @@ public:
     void setVolume(float volume);
 
 private:
-    AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf onProcess(const AudioConf& conf, core::Buffer& buffer) override;
 
     float   m_headroom = 1.0;
     float   m_volume = 1.0;

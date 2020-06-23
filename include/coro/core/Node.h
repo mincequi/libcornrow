@@ -18,9 +18,11 @@
 #pragma once
 
 // @TODO(mawe): Temporary use audio types
-#include <coro/audio/AudioBuffer.h>
 #include <coro/audio/AudioConf.h>
+#include <coro/core/Buffer.h>
 #include <coro/core/Caps.h>
+
+#include <memory>
 
 namespace coro {
 namespace core {
@@ -53,7 +55,7 @@ public:
 
     Node* next() const;
 
-    audio::AudioConf process(const audio::AudioConf& conf, audio::AudioBuffer& buffer);
+    audio::AudioConf process(const audio::AudioConf& conf, core::Buffer& buffer);
 
     bool isBypassed() const;
     void setIsBypassed(bool);
@@ -61,9 +63,12 @@ public:
 protected:
     virtual void onStart();
     virtual void onStop();
-    virtual audio::AudioConf onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer);
+    virtual audio::AudioConf onProcess(const audio::AudioConf& conf, core::Buffer& buffer);
+    virtual void onProcess(core::BufferPtr& buffer);
 
 private:
+    void process(core::BufferPtr& buffer);
+
     Node* m_next = nullptr;
     bool m_isBypassed = false;
 

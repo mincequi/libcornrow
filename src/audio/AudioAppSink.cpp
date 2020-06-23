@@ -37,7 +37,7 @@ void AudioAppSink::setProcessCallback(ProcessCallback callback)
     m_callback = callback;
 }
 
-AudioConf AudioAppSink::onProcess(const AudioConf& conf, AudioBuffer& buffer)
+AudioConf AudioAppSink::onProcess(const AudioConf& conf, core::Buffer& buffer)
 {
     if (m_callback) {
         m_callback(conf, buffer);

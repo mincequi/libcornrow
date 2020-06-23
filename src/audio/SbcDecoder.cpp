@@ -1,6 +1,5 @@
 #include "audio/SbcDecoder.h"
 
-#include "audio/AudioBuffer.h"
 #include "loguru/loguru.hpp"
 #include "rtp/RtpTypes.h"
 
@@ -32,7 +31,7 @@ SbcDecoder::~SbcDecoder()
     sbc_finish(m_sbc);
 }
 
-AudioConf SbcDecoder::onProcess(const AudioConf& conf, AudioBuffer& buffer)
+AudioConf SbcDecoder::onProcess(const AudioConf& conf, core::Buffer& buffer)
 {
     auto payloadOffset = 0;
 

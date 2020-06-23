@@ -38,7 +38,7 @@ public:
 private:
     void onStart() override;
     void onStop() override;
-    AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf onProcess(const AudioConf& conf, core::Buffer& buffer) override;
 
     std::string m_fileName;
     std::ofstream m_file;

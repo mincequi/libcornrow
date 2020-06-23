@@ -48,11 +48,11 @@ void AudioEncoderFfmpeg::setBitrate(uint16_t kbps)
 
 void AudioEncoderFfmpeg::onStop()
 {
-    AudioBuffer buffer;
+    core::Buffer buffer;
     process(m_conf, buffer);
 }
 
-AudioConf AudioEncoderFfmpeg::onProcess(const AudioConf& conf, AudioBuffer& _buffer)
+AudioConf AudioEncoderFfmpeg::onProcess(const AudioConf& conf, core::Buffer& _buffer)
 {
     if (m_conf != conf) {
         m_conf = conf;
@@ -124,7 +124,7 @@ void AudioEncoderFfmpeg::updateConf()
 
 void AudioEncoderFfmpeg::freeBuffer(void* opaque, uint8_t*)
 {
-    AudioBuffer* buffer = static_cast<AudioBuffer*>(opaque);
+    core::Buffer* buffer = static_cast<core::Buffer*>(opaque);
     if (buffer) {
         delete buffer;
     }
@@ -141,7 +141,7 @@ AVFrame* AudioEncoderFfmpeg::createFrame() const
     frame->nb_samples = 0;
 
     const int bytesPerFrame = m_context->frame_size * m_context->channels * av_get_bytes_per_sample(m_context->sample_fmt);
-    auto buffer = new AudioBuffer(bytesPerFrame*2);
+    auto buffer = new core::Buffer(bytesPerFrame*2);
     frame->extended_data = frame->data;
     frame->extended_data[0] = (uint8_t*)buffer->acquire(bytesPerFrame);
     frame->linesize[0] = bytesPerFrame/m_context->channels;
@@ -153,7 +153,7 @@ AVFrame* AudioEncoderFfmpeg::createFrame() const
     return frame;
 }
 
-AVFrame* AudioEncoderFfmpeg::fillFrame(AVFrame* frame, AudioBuffer& buffer)
+AVFrame* AudioEncoderFfmpeg::fillFrame(AVFrame* frame, core::Buffer& buffer)
 {
     const int sampleSize = av_get_bytes_per_sample(m_context->sample_fmt);
     volatile const int samplesToFill = std::min(m_context->frame_size - frame->nb_samples, (int)buffer.size()/frame->channels/sampleSize);
@@ -207,7 +207,7 @@ void AudioEncoderFfmpeg::pushFrame(AVFrame* frame)
     LOG_IF_F(WARNING, ret == AVERROR_EOF, "Encoder flushed, no more output packets");
     LOG_IF_F(WARNING, ret == AVERROR(EINVAL), "Codec not opened");
     // @TODO(mawe): why is this buffer local? Why 16332 bytes? Can be done dynamically?
-    AudioBuffer buffer(16332);
+    core::Buffer buffer(16332);
     auto newData = buffer.acquire(m_packet->size);
     std::memcpy(newData, m_packet->data, m_packet->size);
     buffer.commit(m_packet->size);

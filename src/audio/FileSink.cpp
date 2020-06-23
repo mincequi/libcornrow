@@ -43,7 +43,7 @@ void FileSink::onStop()
     }
 }
 
-AudioConf FileSink::onProcess(const AudioConf& conf, AudioBuffer& buffer)
+AudioConf FileSink::onProcess(const AudioConf& conf, core::Buffer& buffer)
 {
     if (!m_file.is_open()) {
         onStart();

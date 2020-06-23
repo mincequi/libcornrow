@@ -43,7 +43,7 @@ Node* Node::next() const
     return m_next;
 }
 
-audio::AudioConf Node::process(const audio::AudioConf& _conf, audio::AudioBuffer& buffer)
+audio::AudioConf Node::process(const audio::AudioConf& _conf, core::Buffer& buffer)
 {
     if (_conf.codec == audio::AudioCodec::Invalid || !buffer.size()) {
         buffer.clear();
@@ -86,9 +86,34 @@ void Node::onStop()
     LOG_F(2, "%s stopped", name());
 }
 
-audio::AudioConf Node::onProcess(const audio::AudioConf& conf, audio::AudioBuffer&)
+audio::AudioConf Node::onProcess(const audio::AudioConf& conf, core::Buffer&)
 {
     return conf;
+}
+
+void Node::onProcess(core::BufferPtr&)
+{
+}
+
+void Node::process(core::BufferPtr& buffer)
+{
+    size_t sizeHint = buffer->capacity();
+
+    // Process buffer
+    if (!isBypassed()) {
+        onProcess(buffer);
+    }
+
+    // If buffer consumed (from e.g. some encoder), return a size hinted buffer
+    if (!buffer) {
+        buffer = Buffer::create(sizeHint, this);
+        return;
+    }
+
+    // If buffer not consumed and still valid, pass to next node
+    if (buffer->isValid() && next()) {
+        next()->process(buffer);
+    }
 }
 
 } // namespace core

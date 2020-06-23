@@ -22,7 +22,6 @@
 
 namespace coro {
 namespace audio {
-class AudioBuffer;
 class AudioConf;
 }
 namespace core {
@@ -39,7 +38,7 @@ public:
 
     const char* name() const override;
 
-    audio::AudioConf onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer) override;
+    audio::AudioConf onProcess(const audio::AudioConf& conf, core::Buffer& buffer) override;
 };
 
 } // namespace core

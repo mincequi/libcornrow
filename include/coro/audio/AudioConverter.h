@@ -31,7 +31,7 @@ public:
     }
 
 private:
-    AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf onProcess(const AudioConf& conf, core::Buffer& buffer) override;
 };
 
 } // namespace audio

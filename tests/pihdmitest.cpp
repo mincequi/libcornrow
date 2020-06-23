@@ -8,7 +8,7 @@ using namespace coro::audio;
 
 int main()
 {
-    coro::audio::AudioBuffer buffer;
+    coro::core::Buffer buffer;
     coro::pi::PiHdmiAudioSink piSink;
     coro::core::Sink& sink = piSink;
 

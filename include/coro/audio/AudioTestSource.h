@@ -44,7 +44,7 @@ private:
     AudioConf   m_conf;
     uint32_t    m_numFramesPerBuffer;
     uint32_t    m_numBuffers;
-    AudioBuffer m_buffer;
+    core::Buffer m_buffer;
 };
 
 } // namespace audio

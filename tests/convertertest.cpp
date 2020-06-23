@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <cstring>
 
+using namespace coro;
 using namespace coro::audio;
 
 int main()
@@ -14,7 +15,7 @@ int main()
     AudioConverter<float, int16_t> m_floatToInt;
 
     // Create buffer
-    AudioBuffer buffer;
+    core::Buffer buffer;
     uint16_t* data = (uint16_t*)buffer.acquire(5*sizeof(int16_t));
     int16_t intData[] = { 0, 16384, -16384, -32768, 8192, 4096, 2048, 1024, 512, 256 };
     float   floatData[] = { 0.0, 0.5, -0.5, -1.0, 0.25, 0.125 };

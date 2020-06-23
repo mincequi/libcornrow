@@ -70,14 +70,14 @@ void runTest(uint32_t numSamples = 2 * 44100, uint32_t numBuffers = 100)
     std::vector<float> outSamples;
     outSamples.reserve(inSamples.size() + 4096);
 
-    sink.setProcessCallback([&](const AudioConf&, const AudioBuffer& outBuffer) {
+    sink.setProcessCallback([&](const AudioConf&, const core::Buffer& outBuffer) {
         for (uint i = 0; i < outBuffer.size(); i += 4) {
             outSamples.push_back(*(float*)(outBuffer.data()+i));
         }
     });
 
     for (uint32_t i = 0; i < 1; ++i) {
-        AudioBuffer inBuffer((char*)inSamples.data(), inSamples.size()*4);
+        core::Buffer inBuffer((char*)inSamples.data(), inSamples.size()*4);
         encoder.process({ AudioCodec::RawFloat32, SampleRate::Rate48000, Channels::Stereo }, inBuffer);
     }
     encoder.onStop();

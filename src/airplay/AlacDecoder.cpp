@@ -57,7 +57,7 @@ void AlacDecoder::init(const std::string& fmtp)
     }
 }
 
-audio::AudioConf AlacDecoder::onProcess(const audio::AudioConf&, audio::AudioBuffer& buffer)
+audio::AudioConf AlacDecoder::onProcess(const audio::AudioConf&, core::Buffer& buffer)
 {
     int outputSize;
     alac_decode_frame(m_alac,

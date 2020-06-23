@@ -41,7 +41,7 @@ public:
     void setDevice(const std::string& device);
 
 private:
-    AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf onProcess(const AudioConf& conf, core::Buffer& buffer) override;
     void onStop() override;
 
     // alsa members

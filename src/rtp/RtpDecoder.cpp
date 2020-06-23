@@ -48,7 +48,7 @@ const char* RtpDecoder<codec>::name() const
 }
 
 template<audio::AudioCodec codec>
-audio::AudioConf RtpDecoder<codec>::onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer)
+audio::AudioConf RtpDecoder<codec>::onProcess(const audio::AudioConf& conf, core::Buffer& buffer)
 {
     if (buffer.size() < 12) { // RtpHeader 12 bytes
         buffer.clear();
@@ -84,7 +84,7 @@ void RtpDecoder<codec>::onStop()
 }
 
 template<>
-audio::AudioConf RtpDecoder<audio::AudioCodec::Ac3>::onProcessCodec(const rtp::RtpHeader& header, audio::AudioBuffer& buffer)
+audio::AudioConf RtpDecoder<audio::AudioCodec::Ac3>::onProcessCodec(const rtp::RtpHeader& header, core::Buffer& buffer)
 {
     if (buffer.size() < header.size() + 2) { // RtpHeader 12 bytes + Ac3Header 2 bytes
         buffer.clear();
@@ -110,7 +110,7 @@ audio::AudioConf RtpDecoder<audio::AudioCodec::Ac3>::onProcessCodec(const rtp::R
 }
 
 template<>
-audio::AudioConf RtpDecoder<audio::AudioCodec::Sbc>::onProcessCodec(const rtp::RtpHeader& header, audio::AudioBuffer& buffer)
+audio::AudioConf RtpDecoder<audio::AudioCodec::Sbc>::onProcessCodec(const rtp::RtpHeader& header, core::Buffer& buffer)
 {
     if (buffer.size() < header.size() + 1) { // RtpHeader 12 bytes + SbcHeader 1 byte
         LOG_F(WARNING, "SBC header invalid");
@@ -141,7 +141,7 @@ audio::AudioConf RtpDecoder<audio::AudioCodec::Sbc>::onProcessCodec(const rtp::R
 }
 
 template<audio::AudioCodec codec>
-audio::AudioConf RtpDecoder<codec>::onProcessCodec(const rtp::RtpHeader& header, audio::AudioBuffer& buffer)
+audio::AudioConf RtpDecoder<codec>::onProcessCodec(const rtp::RtpHeader& header, core::Buffer& buffer)
 {
     buffer.trimFront(header.size());
 

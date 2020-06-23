@@ -50,7 +50,7 @@ public:
 private:
     const char* name() const;
 
-    audio::AudioConf onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer) override;
+    audio::AudioConf onProcess(const audio::AudioConf& conf, core::Buffer& buffer) override;
 
     void initKey(const std::string& key);
     void initIv(const std::string& iv);

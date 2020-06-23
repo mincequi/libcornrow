@@ -34,11 +34,11 @@ public:
     AudioAppSink();
     virtual ~AudioAppSink();
 
-    using ProcessCallback = std::function<void(const AudioConf&, const AudioBuffer&)>;
+    using ProcessCallback = std::function<void(const AudioConf&, const core::Buffer&)>;
     void setProcessCallback(ProcessCallback callback);
 
 private:
-    AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf onProcess(const AudioConf& conf, core::Buffer& buffer) override;
 
     ProcessCallback m_callback;
 };

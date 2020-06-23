@@ -47,9 +47,9 @@ public:
 private:
     const char* name() const override;
 
-    audio::AudioConf onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer) override;
+    audio::AudioConf onProcess(const audio::AudioConf& conf, core::Buffer& buffer) override;
     void onStop() override;
-    audio::AudioConf onProcessCodec(const RtpHeader& header, audio::AudioBuffer& buffer);
+    audio::AudioConf onProcessCodec(const RtpHeader& header, core::Buffer& buffer);
 
     bool     m_isFlushed = true;
     uint16_t m_seq = 0;

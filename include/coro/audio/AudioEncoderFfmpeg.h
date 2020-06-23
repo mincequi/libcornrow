@@ -39,14 +39,14 @@ public:
 
 private:
     void onStop() override;
-    AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf onProcess(const AudioConf& conf, core::Buffer& buffer) override;
 
     void updateConf();
 
     static void freeBuffer(void *opaque, uint8_t *data);
 
     AVFrame* createFrame() const;
-    AVFrame* fillFrame(AVFrame* frame, AudioBuffer& buffer);
+    AVFrame* fillFrame(AVFrame* frame, core::Buffer& buffer);
     void     pushFrame(AVFrame* frame);
 
     AudioCodec m_codec = AudioCodec::Invalid;

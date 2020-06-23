@@ -35,7 +35,7 @@ int main1(int argc, char *argv[])
 
     bool isStarted = false;
 
-    AudioBuffer buffer(3+5+1152);
+    core::Buffer buffer(3+5+1152);
     AlsaSink sink;
 
     QUdpSocket socket;

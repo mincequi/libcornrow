@@ -36,7 +36,7 @@ Airplay2Source::~Airplay2Source()
 }
 
 /*
-AudioConf AirPlay2Source::doProcess(const AudioConf&, AudioBuffer& buffer)
+AudioConf AirPlay2Source::doProcess(const AudioConf&, core::Buffer& buffer)
 {
     return { audio::AudioCodec::RawInt16,
                 SampleRate::Rate44100,

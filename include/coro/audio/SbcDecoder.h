@@ -41,7 +41,7 @@ public:
     }
 
 protected:
-    AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf onProcess(const AudioConf& conf, core::Buffer& buffer) override;
 
 private:
     AudioConf m_conf;

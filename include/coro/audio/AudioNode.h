@@ -29,7 +29,7 @@ public:
     virtual ~AudioNode();
 
 protected:
-    audio::AudioConf onProcess(const audio::AudioConf& conf, audio::AudioBuffer& buffer) override;
+    audio::AudioConf onProcess(const audio::AudioConf& conf, core::Buffer& buffer) override;
 };
 
 } // namespace audio

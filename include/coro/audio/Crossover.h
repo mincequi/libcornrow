@@ -51,7 +51,7 @@ public:
     bool lfe();
 
 private:
-    AudioConf onProcess(const AudioConf& conf, AudioBuffer& buffer) override;
+    AudioConf onProcess(const AudioConf& conf, core::Buffer& buffer) override;
 
     //bool isFrequencyValid() const;
     void updateCrossover();

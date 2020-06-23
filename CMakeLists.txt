@@ -25,7 +25,6 @@ add_library(${PROJECT_NAME} STATIC
     src/airplay/alac.c
     src/audio/AlsaSink.cpp
     src/audio/AudioAppSink.cpp
-    src/audio/AudioBuffer.cpp
     src/audio/AudioCaps.cpp
     src/audio/AudioConf.cpp
     src/audio/AudioConverter.cpp
@@ -44,6 +43,7 @@ add_library(${PROJECT_NAME} STATIC
     src/core/AppSink.cpp
     src/core/AppSource.cpp
     src/core/Buffer.cpp
+    src/core/BufferPool.cpp
     src/core/FdSource.cpp
     src/core/Mainloop.cpp
     src/core/MainloopPrivate.cpp
