@@ -26,6 +26,7 @@ public:
     static Mainloop& instance();
 
     void poll();
+    void run();
 
 private:
     Mainloop();

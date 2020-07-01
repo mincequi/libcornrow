@@ -4,6 +4,7 @@
 
 #include <assert.h>
 #include <cstring>
+#include <vector>
 
 using namespace coro;
 using namespace coro::audio;

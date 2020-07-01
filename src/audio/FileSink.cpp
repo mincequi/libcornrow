@@ -29,6 +29,11 @@ void FileSink::setFileName(const std::string& fileName)
     }
 }
 
+const char* FileSink::name() const
+{
+    return "FileSink";
+}
+
 void FileSink::onStart()
 {
     // Close previously opened file

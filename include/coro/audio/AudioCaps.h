@@ -45,5 +45,26 @@ public:
     }
 };
 
+template <typename T>
+class AudioCapRaw
+{
+public:
+    static constexpr AudioCapRaw<T> intersect(const AudioCapRaw<T>& in, const AudioCapRaw<T>& out) {
+        // If in is RTP payloaded, but out does not accept it, we fail
+        if (in.flags != out.flags) {
+            return AudioCapRaw<T> { SampleRate::Invalid };
+        }
+        return AudioCapRaw<T> { (in.rates & out.rates), (in.channels & out.channels) };
+    }
+
+    SampleRates rates = SampleRates::Any;
+    ChannelFlags channels = ChannelFlags::Any;
+    core::CapFlags  flags = 0;
+
+    constexpr bool isValid() const {
+        return rates && channels;
+    }
+};
+
 } // namespace audio
 } // namespace coro

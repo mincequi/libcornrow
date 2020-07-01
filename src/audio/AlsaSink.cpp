@@ -194,6 +194,11 @@ void AlsaSink::setDevice(const std::string& device)
     start(m_conf);
 }
 
+const char* AlsaSink::name() const
+{
+    return "AlsaSink";
+}
+
 AudioConf AlsaSink::onProcess(const AudioConf& conf, core::Buffer& buffer)
 {
     if (m_conf != conf) {

@@ -36,6 +36,7 @@ public:
     void setFileName(const std::string& fileName);
 
 private:
+    const char* name() const override;
     void onStart() override;
     void onStop() override;
     AudioConf onProcess(const AudioConf& conf, core::Buffer& buffer) override;

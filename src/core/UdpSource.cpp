@@ -128,18 +128,6 @@ void UdpSource::onReceived(const boost::system::error_code& ec, std::size_t byte
     m_previousBytesTransferred = bytesTransferred;
     m_isReceiving = false;
 
-    /*
-    if (!Source::isStarted()) {
-        Source::setReady(true);
-        if (!Source::isStarted()) {
-            LOG_F(1, "%s not started. Will drop buffer.", name());
-            m_buffer.clear();
-            return;
-        }
-        LOG_F(INFO, "%s restarted", name());
-    }
-    */
-
     ++m_bufferCount;
     m_buffer.trimFront(m_config.prePadding);
     m_buffer.shrink(bytesTransferred);

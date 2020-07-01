@@ -25,10 +25,10 @@ namespace airplay {
 class Airplay2Source : public core::Source
 {
 public:
-    static constexpr std::array<audio::AudioCap,1> outCaps() {
-        return {{ { audio::AudioCodec::RawInt16,
-                    audio::SampleRate::Rate44100,
-                    audio::Channels::Stereo } }};
+    static constexpr std::array<std::pair<core::Cap, core::Cap>, 1> caps() {
+        return {{{ { core::NoCap {} },
+                   { audio::AudioCapRaw<int16_t> { audio::SampleRate::Rate44100, audio::Channels::Stereo } }
+                }}};
     }
 
     Airplay2Source();

@@ -28,9 +28,10 @@ namespace core {
 class AppSink : public Node
 {
 public:
-    //static constexpr std::array<core::Cap,1> inCaps() {
-    static constexpr std::array<audio::AudioCap,1> inCaps() {
-        return {{ { } }};
+    static constexpr std::array<std::pair<core::Cap, core::Cap>, 1> caps() {
+        return {{{ { AnyCap {} }, // in
+                   { NoCap {} } // out
+               }}};
     }
 
     AppSink();
@@ -43,6 +44,7 @@ public:
     void setStopCallback(StopCallback callback);
 
 private:
+    virtual const char* name() const override;
     virtual audio::AudioConf onProcess(const audio::AudioConf& conf, core::Buffer& buffer) override;
     virtual void onStop() override;
 

@@ -29,8 +29,10 @@ namespace audio {
 class AlsaSink : public core::Sink
 {
 public:
-    static constexpr std::array<AudioCap,1> inCaps() {
-        return {{ { AudioCodec::RawInt16 | AudioCodec::Ac3 } }};
+    static constexpr std::array<std::pair<core::Cap, core::Cap>, 1> caps() {
+        return {{{ { AudioCapRaw<int16_t> {} },
+                   { core::NoCap {} }
+               }}};
     }
 
     AlsaSink();
@@ -41,6 +43,7 @@ public:
     void setDevice(const std::string& device);
 
 private:
+    const char* name() const override;
     AudioConf onProcess(const AudioConf& conf, core::Buffer& buffer) override;
     void onStop() override;
 

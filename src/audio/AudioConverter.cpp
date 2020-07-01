@@ -20,6 +20,12 @@ AudioConverter<InT,OutT>::~AudioConverter()
 {
 }
 
+template<class InT, class OutT>
+const char* AudioConverter<InT,OutT>::name() const
+{
+    return "AudioConverter";
+}
+
 template<>
 AudioConf AudioConverter<int16_t,float>::onProcess(const AudioConf& conf, core::Buffer& buffer)
 {

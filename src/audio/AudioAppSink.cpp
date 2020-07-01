@@ -37,6 +37,11 @@ void AudioAppSink::setProcessCallback(ProcessCallback callback)
     m_callback = callback;
 }
 
+const char* AudioAppSink::name() const
+{
+    return "AudioAppSink";
+}
+
 AudioConf AudioAppSink::onProcess(const AudioConf& conf, core::Buffer& buffer)
 {
     if (m_callback) {

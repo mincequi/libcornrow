@@ -31,6 +31,11 @@ SbcDecoder::~SbcDecoder()
     sbc_finish(m_sbc);
 }
 
+const char* SbcDecoder::name() const
+{
+    return "SbcDecoder";
+}
+
 AudioConf SbcDecoder::onProcess(const AudioConf& conf, core::Buffer& buffer)
 {
     auto payloadOffset = 0;

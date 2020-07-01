@@ -30,17 +30,17 @@ public:
     SbcDecoder();
     ~SbcDecoder();
 
-    static constexpr std::array<audio::AudioCap,1> inCaps() {
-        return {{ { AudioCodec::Sbc | AudioCodec::RtpPayload, SampleRates::Any, ChannelFlags::Any } }};
-    }
-
-    static constexpr std::array<audio::AudioCap,1> outCaps() {
-        return {{ { AudioCodec::RawInt16,
-                    SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000,
-                    Channels::Mono | Channels::Stereo } }};
+    static constexpr std::array<std::pair<core::Cap, core::Cap>, 1> caps() {
+        return {{
+                { { AudioCap { AudioCodec::Sbc | AudioCodec::RtpPayload }}, // in
+                  { AudioCapRaw<int16_t> {  // out
+                               SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000,
+                               Channels::Mono | Channels::Stereo } }}
+               }};
     }
 
 protected:
+    const char* name() const override;
     AudioConf onProcess(const AudioConf& conf, core::Buffer& buffer) override;
 
 private:

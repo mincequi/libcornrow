@@ -32,16 +32,12 @@ public:
     RtpDecoder();
     ~RtpDecoder();
 
-    static constexpr std::array<audio::AudioCap,1> inCaps() {
-        return {{ { audio::AudioCodecs::Any,
-                    audio::SampleRates::Any,
-                    audio::ChannelFlags::Any } }};
-    }
-
-    static constexpr std::array<audio::AudioCap,1> outCaps() {
-        return {{ { codec,
-                    audio::SampleRate::Rate48000 | audio::SampleRate::Rate44100,
-                    audio::Channels::Stereo } }};
+    static constexpr std::array<std::pair<core::Cap, core::Cap>, 1> caps() {
+        return {{{ { core::AnyCap {} }, // in
+                   { audio::AudioCap { codec,
+                                    audio::SampleRate::Rate44100 | audio::SampleRate::Rate48000,
+                                    audio::Channels::Stereo } } // out
+               }}};
     }
 
 private:

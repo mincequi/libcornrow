@@ -21,6 +21,7 @@
 #include "loguru/loguru.hpp"
 
 #include <functional>
+#include <list>
 
 namespace coro {
 namespace core {

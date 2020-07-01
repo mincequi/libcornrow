@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include <cstdint>
-#include <list>
 #include <memory>
-#include <vector>
 
 namespace coro {
+namespace audio {
+class AudioConf;
+}
 namespace core {
 
 class Buffer;
@@ -102,12 +102,10 @@ public:
      */
     void trimBack(size_t size);
 
+    audio::AudioConf& audioConf();
+
 private:
-    // @TODO(mawe): move these members to Private class
-    mutable std::vector<int32_t> m_buffer; // use int32_t internally to align to 4 byte borders
-    size_t   m_size = 0;
-    size_t   m_offset = 0;
-    mutable size_t   m_acquiredOffset = 0;
+    class BufferPrivate* const d;
 
     friend class BufferPool;
 };

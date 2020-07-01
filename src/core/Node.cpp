@@ -22,22 +22,6 @@
 namespace coro {
 namespace core {
 
-/*
-Node::Node()
-{
-
-}
-
-Node::~Node()
-{
-}
-*/
-
-const char* Node::name() const
-{
-    return "NodeUnknown";
-}
-
 Node* Node::next() const
 {
     return m_next;
@@ -102,6 +86,8 @@ void Node::process(core::BufferPtr& buffer)
     // Process buffer
     if (!isBypassed()) {
         onProcess(buffer);
+        // @TOOD(mawe): this is for back compatibility
+        onProcess(buffer->audioConf(), *buffer.get());
     }
 
     // If buffer consumed (from e.g. some encoder), return a size hinted buffer

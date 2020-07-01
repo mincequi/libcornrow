@@ -47,6 +47,11 @@ void AppSink::setStopCallback(StopCallback callback)
     d->stopCallback = callback;
 }
 
+const char* AppSink::name() const
+{
+    return "AppSink";
+}
+
 audio::AudioConf AppSink::onProcess(const audio::AudioConf& conf, core::Buffer& buffer)
 {
     if (d->processCallback) {

@@ -12,25 +12,15 @@ public:
     AudioConverter();
     virtual ~AudioConverter();
 
-    static constexpr std::array<audio::AudioCap,1> inCaps() {
-        if (std::is_same<InT, int16_t>::value) {
-            return {{ { AudioCodec::RawInt16 } }};
-        } else if (std::is_same<InT, float>::value) {
-            return {{ { AudioCodec::RawFloat32 } }};
-        }
-        return {{ { } }};
-    }
-
-    static constexpr std::array<audio::AudioCap,1> outCaps() {
-        if (std::is_same<OutT, int16_t>::value) {
-            return {{ { AudioCodec::RawInt16 } }};
-        } else if (std::is_same<OutT, float>::value) {
-            return {{ { AudioCodec::RawFloat32 } }};
-        }
-        return {{ { } }};
+    static constexpr std::array<std::pair<core::Cap, core::Cap>, 1> caps() {
+        return {{
+                { { AudioCapRaw<InT> { } }, // in
+                  { AudioCapRaw<OutT> { } }}
+               }};
     }
 
 private:
+    const char* name() const override;
     AudioConf onProcess(const AudioConf& conf, core::Buffer& buffer) override;
 };
 

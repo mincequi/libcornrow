@@ -24,26 +24,19 @@
 #include <deque>
 #include <mutex>
 
-namespace coro
-{
-namespace audio
-{
+namespace coro {
+namespace audio {
 
 class Peq : public audio::AudioNode
 {
 public:
     Peq();
 
-    static constexpr std::array<audio::AudioCap,1> inCaps() {
-        return {{ { AudioCodec::RawFloat32,
-                    SampleRate::Rate44100 | audio::SampleRate::Rate48000,
-                    Channels::Stereo } }};
-    }
-
-    static constexpr std::array<audio::AudioCap,1> outCaps() {
-        return {{ { AudioCodec::RawFloat32,
-                    SampleRate::Rate44100 | audio::SampleRate::Rate48000,
-                    Channels::Stereo } }};
+    static constexpr std::array<std::pair<core::Cap, core::Cap>, 1> caps() {
+        return {{{
+                { AudioCapRaw<float> { SampleRate::Rate44100 | SampleRate::Rate48000 } }, // in
+                { AudioCapRaw<float> { SampleRate::Rate44100 | SampleRate::Rate48000 } }  // out
+               }}};
     }
 
     void setVolume(float volume);
@@ -52,6 +45,7 @@ public:
     std::vector<Filter> filters();
 
 private:
+    const char* name() const override;
     AudioConf onProcess(const AudioConf& conf, core::Buffer& buffer) override;
 
     float               m_volume = 1.0;

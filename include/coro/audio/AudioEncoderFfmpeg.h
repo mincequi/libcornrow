@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2020 Manuel Weichselbaumer <mincequi@web.de>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <coro/audio/AudioNode.h>
@@ -15,20 +32,14 @@ public:
     AudioEncoderFfmpeg(AudioCodec codec);
     ~AudioEncoderFfmpeg();
 
-    static constexpr std::array<audio::AudioCap,1> inCaps() {
-        return {{ { AudioCodec::RawFloat32,
-                    SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000,
-                    ChannelFlags::Any } }};
-    }
-
-    static constexpr std::array<audio::AudioCap,2> outCaps() {
-        return {{ { AudioCodec::Ac3 | AudioCodec::Eac3,
-                    SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000,
-                    Channels::Mono | Channels::Stereo },
-                  // We can be bypassed, so also accept inCaps as OutCaps
-                  { AudioCodec::RawFloat32,
-                    SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000,
-                    ChannelFlags::Any } }};
+    static constexpr std::array<std::pair<core::Cap, core::Cap>, 2> caps() {
+        return {{
+                {{ AudioCapRaw<float> { SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000 } },
+                   { AudioCap { AudioCodec::Ac3 | AudioCodec::Eac3 } }},
+                // We can be bypassed, so also accept inCaps as OutCaps
+                { { AudioCapRaw<float> { SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000 } },
+                   { AudioCapRaw<float> { SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000 } }}
+            }};
     }
 
     /**
@@ -38,6 +49,7 @@ public:
     void setBitrate(uint16_t kbps);
 
 private:
+    const char* name() const override;
     void onStop() override;
     AudioConf onProcess(const AudioConf& conf, core::Buffer& buffer) override;
 

@@ -20,6 +20,7 @@
 #include <coro/core/Source.h>
 #include <loguru/loguru.hpp>
 
+#include <list>
 #include <map>
 
 namespace coro {

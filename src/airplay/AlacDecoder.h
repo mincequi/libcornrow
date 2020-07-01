@@ -31,7 +31,6 @@ namespace airplay {
 class AlacDecoder : public audio::AudioNode
 {
 public:
-    //static constexpr std::array<core::Cap,1> inCaps() {
     static constexpr std::array<audio::AudioCap,1> inCaps() {
         return {{ audio::AudioCap { audio::AudioCodec::Alac,
                             audio::SampleRate::Rate44100,
@@ -39,7 +38,6 @@ public:
                             core::CapFlag::Encrypted } }};
     }
 
-    //static constexpr std::array<core::Cap,1> inCaps() {
     static constexpr std::array<audio::AudioCap,1> outCaps() {
         return {{ audio::AudioCap{ audio::AudioCodec::RawInt16,
                     audio::SampleRate::Rate44100,

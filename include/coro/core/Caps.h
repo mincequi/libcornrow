@@ -25,11 +25,16 @@
 namespace coro {
 namespace core {
 
-class AnyCap
-{
+class AnyCap {
 };
 
-class Cap : public std::variant<audio::AudioCap, core::AnyCap>
+class NoCap {
+};
+
+using AudioFloatCap = audio::AudioCapRaw<float>;
+
+// @TODO(mawe): not sure, if creating a variant is the right thing here.
+class Cap : public std::variant<core::AnyCap, core::NoCap, audio::AudioCap, audio::AudioCapRaw<float>, audio::AudioCapRaw<int16_t>>
 {
 public:
     template<class OutCaps, class InCaps>
@@ -37,12 +42,20 @@ public:
     {
         for (const auto& outCap : outCaps) {
             for (const auto& inCap : inCaps) {
-                if (std::holds_alternative<audio::AudioCap>(outCap) && std::holds_alternative<audio::AudioCap>(inCap)) {
-                    if (audio::AudioCap::intersect(std::get<audio::AudioCap>(outCap), std::get<audio::AudioCap>(inCap)).isValid()) {
+                if (std::holds_alternative<AnyCap>(outCap.second) || std::holds_alternative<AnyCap>(inCap.first)) {
+                    return true;
+                } else if (std::holds_alternative<audio::AudioCap>(outCap.second) && std::holds_alternative<audio::AudioCap>(inCap.first)) {
+                    if (audio::AudioCap::intersect(std::get<audio::AudioCap>(outCap.second), std::get<audio::AudioCap>(inCap.first)).isValid()) {
                         return true;
                     }
-                } else if (std::holds_alternative<AnyCap>(outCap) || std::holds_alternative<AnyCap>(inCap)) {
+                } else if (std::holds_alternative<audio::AudioCapRaw<float>>(outCap.second) && std::holds_alternative<audio::AudioCapRaw<float>>(inCap.first)) {
+                    if (audio::AudioCapRaw<float>::intersect(std::get<audio::AudioCapRaw<float>>(outCap.second), std::get<audio::AudioCapRaw<float>>(inCap.first)).isValid()) {
                         return true;
+                    }
+                } else if (std::holds_alternative<audio::AudioCapRaw<int16_t>>(outCap.second) && std::holds_alternative<audio::AudioCapRaw<int16_t>>(inCap.first)) {
+                    if (audio::AudioCapRaw<int16_t>::intersect(std::get<audio::AudioCapRaw<int16_t>>(outCap.second), std::get<audio::AudioCapRaw<int16_t>>(inCap.first)).isValid()) {
+                        return true;
+                    }
                 }
             }
         }

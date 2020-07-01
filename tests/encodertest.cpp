@@ -12,6 +12,7 @@
 
 #include <chrono>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <fstream>
 #include <random>
@@ -77,7 +78,10 @@ void runTest(uint32_t numSamples = 2 * 44100, uint32_t numBuffers = 100)
     });
 
     for (uint32_t i = 0; i < 1; ++i) {
-        core::Buffer inBuffer((char*)inSamples.data(), inSamples.size()*4);
+        core::Buffer inBuffer;
+        inBuffer.acquire(inSamples.size()*4);
+        std::memcpy(inBuffer.data(), inSamples.data(), inSamples.size()*4);
+        inBuffer.commit(inSamples.size()*4);
         encoder.process({ AudioCodec::RawFloat32, SampleRate::Rate48000, Channels::Stereo }, inBuffer);
     }
     encoder.onStop();

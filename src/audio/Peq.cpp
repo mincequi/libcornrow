@@ -37,6 +37,11 @@ std::vector<Filter> Peq::filters()
     return filters;
 }
 
+const char* Peq::name() const
+{
+    return "PEQ";
+}
+
 audio::AudioConf Peq::onProcess(const audio::AudioConf& conf, core::Buffer& buffer)
 {
     uint frameCount = buffer.size()/conf.frameSize();

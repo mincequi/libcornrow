@@ -25,10 +25,10 @@ namespace core {
 class FdSource : public core::Source
 {
 public:
-    static constexpr std::array<audio::AudioCap,1> outCaps() {
-        return {{ { audio::AudioCodecs::Any,
-                    audio::SampleRates::Any,
-                    audio::ChannelFlags::Any } }};
+    static constexpr std::array<std::pair<core::Cap, core::Cap>, 1> caps() {
+        return {{{ { NoCap {} }, // in
+                   { AnyCap {} } // out
+               }}};
     }
 
     FdSource();

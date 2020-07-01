@@ -1,4 +1,5 @@
-//#include <coro/core/Buffer.h>
+#include <coro/audio/AudioDecoderFfmpeg.h>
+#include <coro/core/UdpSource.h>
 
 #include <algorithm>
 #include <assert.h>
@@ -7,7 +8,7 @@
 #include <memory>
 #include <string>
 
-//using namespace coro::core;
+using namespace coro;
 
 class Buffer
 {
@@ -41,6 +42,7 @@ void process(std::unique_ptr<Buffer>& in)
     }
 }
 
+/*
 int main()
 {
     std::unique_ptr<Buffer> buffer(new Buffer("before"));
@@ -64,4 +66,13 @@ int main()
 
         assert(ints.capacity() == ints2.capacity());
     }
+}
+*/
+
+int main()
+{
+    core::UdpSource source;
+    audio::AudioDecoderFfmpeg<audio::AudioCodec::Ac3> decoder;
+
+    core::Node::link(source, decoder);
 }

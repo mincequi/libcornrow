@@ -46,5 +46,10 @@ void Mainloop::poll()
     d.ioContext.poll_one();
 }
 
+void Mainloop::run()
+{
+    d.ioContext.run();
+}
+
 } // namespace core
 } // namespace coro

@@ -35,19 +35,21 @@ public:
     AudioDecoderFfmpeg();
     ~AudioDecoderFfmpeg();
 
-    static constexpr std::array<audio::AudioCap, 1> inCaps() {
-        return {{ { AudioCodec::Ac3
-                            //| AudioCodec::Eac3
-                            | AudioCodec::Alac,
-                    SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000,
-                    ChannelFlags::Any } }};
+    static constexpr std::array<std::pair<core::Cap, core::Cap>, 3> caps() {
+        return {{
+                { { AudioCap { AudioCodec::Ac3 }}, // in
+                  { AudioCap { AudioCodec::RawFloat32, // out
+                               SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000 } }},
+                { { AudioCap { AudioCodec::Ac3 }}, // in
+                  { AudioCapRaw<float> {
+                               SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000 } }},
+                { { AudioCap { AudioCodec::Alac }}, // in
+                  { AudioCap { AudioCodec::RawInt16, // out
+                               SampleRate::Rate44100 } }}
+            }};
     }
 
-    static constexpr std::array<audio::AudioCap, 1> outCaps() {
-        return {{ { AudioCodec::RawInt16 |AudioCodec::RawFloat32,
-                    SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000,
-                    ChannelFlags::Any } }};
-    }
+    //AudioCapRaw<float> rawCap = AudioCapRaw<float>{ SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000 };
 
     // Provide codec-specific format description
     // <format> <format specific parameters>

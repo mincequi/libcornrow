@@ -32,6 +32,11 @@ void Loudness::setVolume(float volume)
     m_volume = volume;
 }
 
+const char* Loudness::name() const
+{
+    return "Loudness";
+}
+
 audio::AudioConf Loudness::onProcess(const audio::AudioConf& conf, core::Buffer& buffer)
 {
     // Loudness generates headroom, check which one is lower

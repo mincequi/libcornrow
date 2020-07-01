@@ -22,39 +22,25 @@
 #include <coro/core/Buffer.h>
 #include <coro/core/Caps.h>
 
-#include <memory>
-
 namespace coro {
 namespace core {
 
 class Node
 {
 public:
-    // Different CapsType for in and out (since different array sizes).
-    template<class InCaps, class OutCaps>
-    static constexpr bool canIntersect(const InCaps& in, const OutCaps& out);
-
     template<class Node1, class Node2>
-    static std::enable_if_t<canIntersect(Node1::outCaps(), Node2::inCaps())>
+    static std::enable_if_t<Cap::canIntersect(Node1::caps(), Node2::caps())>
     link(Node1& prev, Node2& next) {
         prev.m_next = &next;
     }
 
-    // Different CapsType for in and out (since different array sizes).
-    template<class InCaps, class OutCaps>
-    static constexpr bool canIntersect2(const InCaps& in, const OutCaps& out);
+    /// Return name of node
+    virtual const char* name() const = 0;
 
-    template<class Node1, class Node2>
-    static std::enable_if_t<Cap::canIntersect(Node1::outCaps(), Node2::inCaps())>
-    link2(Node1& prev, Node2& next) {
-        prev.m_next = &next;
-    }
-
-    // @TODO(mawe): make this pure virtual to enforce nodes to give a name.
-    virtual const char* name() const;
-
+    /// Return next node
     Node* next() const;
 
+    /// Obsolete process method
     audio::AudioConf process(const audio::AudioConf& conf, core::Buffer& buffer);
 
     bool isBypassed() const;
@@ -74,19 +60,6 @@ private:
 
     friend class Source;
 };
-
-template<class InCaps, class OutCaps>
-constexpr bool Node::canIntersect(const InCaps& in, const OutCaps& out)
-{
-    for (const auto& i : in) {
-        for (const auto& o : out) {
-            if (audio::AudioCap::intersect(i, o).isValid()) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
 
 } // namespace core
 } // namespace coro
