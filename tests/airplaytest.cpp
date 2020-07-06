@@ -34,8 +34,11 @@ int main()
     core::Node::link(source, sink);
 
     core::Mainloop& mainloop = core::Mainloop::instance();
+    mainloop.run();
+    /*
     while (true) {
         usleep(3000);
         mainloop.poll();
     }
+    */
 }

@@ -66,10 +66,10 @@ private:
     boost::asio::ip::udp::socket     m_socket;
     boost::asio::ip::udp::endpoint   m_localEndpoint;
     boost::asio::steady_timer  m_timeout;
-    int                 m_bufferCount = 0;
-    bool                m_isReceiving = false;
+    int           m_bufferCount = 0;
+    bool          m_isReceiving = false;
     core::Buffer  m_buffer;
-    float               m_previousBytesTransferred = 0.0f;
+    float         m_previousBytesTransferred = 0.0f;
 };
 
 } // namespace core

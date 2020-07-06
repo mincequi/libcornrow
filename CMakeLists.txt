@@ -15,10 +15,11 @@ add_library(${PROJECT_NAME} STATIC
     src/AlsaUtil.cpp
     src/Types.cpp
 
+    src/airplay/Airplay2Source.cpp
+    src/airplay/Airplay2SourcePrivate.cpp
     src/airplay/AirplayDecrypter.cpp
     src/airplay/AirplaySource.cpp
     src/airplay/AirplaySourcePrivate.cpp
-    src/airplay/Airplay2Source.cpp
     src/airplay/AirplayRtpSession.cpp
     src/airplay/AirplayRtspMessageHandler.cpp
     src/airplay/AlacDecoder.cpp

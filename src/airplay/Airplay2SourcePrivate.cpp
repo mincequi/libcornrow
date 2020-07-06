@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "airplay/AirplaySourcePrivate.h"
+#include "airplay/Airplay2SourcePrivate.h"
 
 #include "airplay/AirplayDecrypter.h"
 #include "airplay/AirplayRtspMessageHandler.h"
@@ -32,7 +32,7 @@
 namespace coro {
 namespace airplay {
 
-AirplaySourcePrivate::AirplaySourcePrivate(AirplaySource& _p, const AirplaySource::Config& config) :
+Airplay2SourcePrivate::Airplay2SourcePrivate(Airplay2Source& _p, const AirplaySource::Config& config) :
     p(_p),
     rtspMessageHandler(controlReceiver.port(),
                        audioReceiver,

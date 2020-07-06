@@ -25,7 +25,9 @@ using namespace coro;
 
 int main()
 {
-    airplay::Airplay2Source source;
+    airplay::AirplaySource::Config config { "myAirplay" };
+
+    airplay::Airplay2Source source(config);
     audio::AlsaSink         sink;
     core::Node::link(source, sink);
 

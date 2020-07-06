@@ -70,16 +70,14 @@ static char airportRsaPrivateKey[] = "-----BEGIN RSA PRIVATE KEY-----\n"
 "2gG0N5hvJpzwwhbhXqFKA4zaaSrw622wDniAK5MlIE0tIAKKP4yxNGjoD2QYjhBGuhvkWKY=\n"
 "-----END RSA PRIVATE KEY-----";
 
-AirplayRtspMessageHandler::AirplayRtspMessageHandler(uint16_t audioPort,
-                                                     uint16_t controlPort,
-                                                     AirplaySourcePrivate& airplaySourcePrivate,
-                                                     rtp::RtpDecoder<audio::AudioCodec::Alac>& rtpReceiver,
+AirplayRtspMessageHandler::AirplayRtspMessageHandler(uint16_t controlPort,
+                                                     core::UdpSource& rtpReceiver,
+                                                     rtp::RtpDecoder<audio::AudioCodec::Alac>& rtpDecoder,
                                                      AirplayDecrypter& decrypter,
                                                      audio::AudioDecoderFfmpeg<audio::AudioCodec::Alac>& decoder)
-    : m_audioPort(audioPort),
-      m_controlPort(controlPort),
-      m_airplaySourcePrivate(airplaySourcePrivate),
+    : m_controlPort(controlPort),
       m_rtpReceiver(rtpReceiver),
+      m_rtpDecoder(rtpDecoder),
       m_decrypter(decrypter),
       m_decoder(decoder)
 {
@@ -112,11 +110,11 @@ void AirplayRtspMessageHandler::onAnnounce(const RtspMessage& request, RtspMessa
 
 void AirplayRtspMessageHandler::onSetup(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
 {
-    m_airplaySourcePrivate.audioReceiver.start();
+    m_rtpReceiver.start();
 
     std::stringstream ss;
     ss << "RTP/AVP/UDP;unicast;mode=record";
-    ss << ";server_port=" << m_audioPort;       // server_port and
+    ss << ";server_port=" << m_rtpReceiver.port();       // server_port and
     ss << ";control_port=" << m_controlPort;    // control_port are mandatory.
     //ss << ";timing_port=" << m_timerPort;     // timing_port is optional.
     ss.flush();
@@ -132,7 +130,7 @@ void AirplayRtspMessageHandler::onRecord(const rtsp::RtspMessage& request, rtsp:
 
 void AirplayRtspMessageHandler::onTeardown(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const
 {
-    m_airplaySourcePrivate.audioReceiver.stop();
+    m_rtpReceiver.stop();
 }
 
 void AirplayRtspMessageHandler::onAppleChallenge(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const

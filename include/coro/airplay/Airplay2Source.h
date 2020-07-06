@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <coro/core/Source.h>
+#include "AirplaySource.h"
 
 namespace coro {
 namespace airplay {
@@ -31,7 +31,7 @@ public:
                 }}};
     }
 
-    Airplay2Source();
+    Airplay2Source(const AirplaySource::Config& config);
     virtual ~Airplay2Source();
 
 private:

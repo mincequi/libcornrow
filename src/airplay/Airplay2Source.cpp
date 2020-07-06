@@ -16,17 +16,13 @@
  */
 
 #include <coro/airplay/Airplay2Source.h>
+#include "airplay/Airplay2SourcePrivate.h"
 
 namespace coro {
 namespace airplay {
 
-class Airplay2SourcePrivate
-{
-
-};
-
-Airplay2Source::Airplay2Source()
-    : d(new Airplay2SourcePrivate())
+Airplay2Source::Airplay2Source(const AirplaySource::Config& config)
+    : d(new Airplay2SourcePrivate(*this, config))
 {
 }
 
