@@ -234,6 +234,10 @@ AudioConf AlsaSink::onProcess(const AudioConf& conf, core::Buffer& buffer)
     return conf;
 }
 
+void AlsaSink::onStart()
+{
+}
+
 void AlsaSink::onStop()
 {
     if (m_pcm) {

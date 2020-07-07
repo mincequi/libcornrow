@@ -98,7 +98,7 @@ char* Buffer::acquire(size_t size, const core::Node* caller) const
     }
 
     // If we have space at back
-    const auto sizeAtBack = d->buffer.size() * 4 - d->offset - d->size;
+    const auto sizeAtBack = d->buffer.size() * 4 - d->offset - d->size - 3;
     if (sizeAtBack >= size) {
         d->acquiredOffset = d->offset + d->size;
         d->acquiredOffset += d->acquiredOffset % 4;
@@ -117,7 +117,7 @@ char* Buffer::acquire(size_t size, const core::Node* caller) const
     } else if (isReallocated) {
         LOG_F(INFO, "buffer reallocated. %zu -> %zu bytes", orgSize, d->buffer.capacity()*4);
     }
-    return (char*)d->buffer.data()+d->acquiredOffset;
+    return (char*)d->buffer.data() + d->acquiredOffset;
 }
 
 void Buffer::commit(size_t size)

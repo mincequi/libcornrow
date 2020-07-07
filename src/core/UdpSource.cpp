@@ -107,10 +107,11 @@ void UdpSource::doReceive()
     }
     m_isReceiving = true;
 
-    m_buffer.acquire(m_config.prePadding + m_config.mtu, this);
-    m_buffer.commit(m_config.prePadding + m_config.mtu);
+    const auto size = m_config.prePadding + m_config.mtu;
+    auto data = m_buffer.acquire(size, this);
+    //m_buffer.commit(m_config.prePadding + m_config.mtu);
     m_socket.async_receive_from(
-                buffer(m_buffer.data()+m_config.prePadding, m_config.mtu),
+                buffer(data + m_config.prePadding, m_config.mtu),
                 d->remoteEndpoint,
                 std::bind(&UdpSource::onReceived, this, ph::_1, ph::_2));
 }
@@ -129,8 +130,9 @@ void UdpSource::onReceived(const boost::system::error_code& ec, std::size_t byte
     m_isReceiving = false;
 
     ++m_bufferCount;
+    m_buffer.commit(m_config.prePadding + bytesTransferred);
     m_buffer.trimFront(m_config.prePadding);
-    m_buffer.shrink(bytesTransferred);
+    //m_buffer.shrink(bytesTransferred);
 
     pushBuffer(audio::AudioConf { audio::AudioCodec::Unknown,
                                   audio::SampleRate::RateUnknown,

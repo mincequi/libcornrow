@@ -44,8 +44,9 @@ public:
 
 private:
     const char* name() const override;
-    AudioConf onProcess(const AudioConf& conf, core::Buffer& buffer) override;
+    void onStart() override;
     void onStop() override;
+    AudioConf onProcess(const AudioConf& conf, core::Buffer& buffer) override;
 
     // alsa members
     bool open(const AudioConf& conf);
