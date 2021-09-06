@@ -19,6 +19,7 @@
 #include "sdp/Sdp.h"
 
 #include <regex>
+#include <sstream>
 #include <loguru/loguru.hpp>
 
 namespace coro {

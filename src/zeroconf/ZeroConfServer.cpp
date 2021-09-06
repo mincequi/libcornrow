@@ -22,6 +22,10 @@
 #include <cstring>
 #include <iostream>
 
+#if defined(__APPLE__)
+#include <machine/endian.h>
+#endif
+
 namespace coro {
 namespace zeroconf {
 
@@ -59,7 +63,7 @@ bool ZeroconfServer::registerService(const ZeroConfService& service)
                 service.type.c_str(),
                 "",
                 NULL,
-                htobe16(service.port),
+                htons(service.port),
                 txtRecord.size(),
                 txtRecord.c_str(),
                 NULL,

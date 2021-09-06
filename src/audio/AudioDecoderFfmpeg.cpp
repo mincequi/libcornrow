@@ -11,6 +11,10 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
+#if defined(__APPLE__)
+#include <machine/endian.h>
+#endif
+
 namespace coro {
 namespace audio {
 
@@ -102,10 +106,10 @@ void AudioDecoderFfmpeg<audio::AudioCodec::Alac>::init(const std::string& data)
     std::regex rx("(\\d+) (\\d+) (\\d+) (\\d+) (\\d+) (\\d+) (\\d+) (\\d+) (\\d+) (\\d+) (\\d+) (\\d+)");
     std::smatch match;
     if (std::regex_search(data, match, rx) && match.size() == 13) {
-        atom.samplesPerFrame = htobe32(stoi(match[2].str()));
+        atom.samplesPerFrame = htonl(stoi(match[2].str()));
         atom.sampleSize = stoi(match[4].str());
         atom.channels = stoi(match[8].str());
-        atom.samplerate = htobe32(stoi(match[12].str()));
+        atom.samplerate = htonl(stoi(match[12].str()));
     }
 
     m_codecData.resize(36);

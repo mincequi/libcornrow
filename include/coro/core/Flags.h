@@ -49,7 +49,8 @@ public:
     constexpr inline Flags(Enum f) : i(Int(f)) {}
     constexpr inline Flags(Zero = 0) : i(0) {}
     constexpr inline Flags(Flag f) : i(f) {}
-    constexpr static Flags Any = Flags(std::numeric_limits<Int>::max());
+    constexpr inline Flags(Int f) : i(f) {}
+    constexpr static Int Any = Flags(std::numeric_limits<Int>::max());
 
     inline Flags &operator&=(int mask) { i &= mask; return *this; }
     inline Flags &operator&=(unsigned int mask) { i &= mask; return *this; }
@@ -59,7 +60,7 @@ public:
     inline Flags &operator^=(Flags f) { i ^= f.i; return *this; }
     inline Flags &operator^=(Enum f) { i ^= Int(f); return *this; }
 
-    constexpr  inline operator Int() const { return i; }
+    constexpr inline operator Int() const { return i; }
 
     constexpr inline Flags operator|(Flags f) const { return Flags(Flag(i | f.i)); }
     constexpr inline Flags operator|(Enum f) const { return Flags(Flag(i | Int(f))); }

@@ -11,7 +11,7 @@ AudioTestSource::AudioTestSource(const AudioConf& audioConf,
     : m_conf(audioConf),
       m_numFramesPerBuffer(numFramesPerBuffer),
       m_numBuffers(numBuffers),
-      m_buffer(numFramesPerBuffer * toInt(m_conf.channels) * size(m_conf.codec))
+      m_buffer(m_numFramesPerBuffer * toInt(m_conf.channels) * size(m_conf.codec))
 {
 }
 
