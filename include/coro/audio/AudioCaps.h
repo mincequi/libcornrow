@@ -38,7 +38,7 @@ public:
     AudioCodecs codecs = AudioCodecs::Any;
     SampleRates rates = SampleRates::Any;
     ChannelFlags channels = ChannelFlags::Any;
-    core::CapFlags  flags = 0;
+    core::CapFlags flags = core::CapFlag::Invalid;
 
     constexpr bool isValid() const {
         return codecs && rates && channels;
@@ -59,7 +59,7 @@ public:
 
     SampleRates rates = SampleRates::Any;
     ChannelFlags channels = ChannelFlags::Any;
-    core::CapFlags  flags = 0;
+    core::CapFlags flags = core::CapFlag::Invalid;
 
     constexpr bool isValid() const {
         return rates && channels;

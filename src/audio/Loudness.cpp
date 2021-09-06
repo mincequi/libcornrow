@@ -2,10 +2,8 @@
 
 #include <iostream>
 
-namespace coro
-{
-namespace audio
-{
+namespace coro {
+namespace audio {
 
 Loudness::Loudness()
     : m_tpk1(2, 1),

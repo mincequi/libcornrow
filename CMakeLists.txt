@@ -7,24 +7,15 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -Wall -Werror -Wno-old-style-cast -D
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(PkgConfig REQUIRED)
-find_package(ALSA REQUIRED)
+find_package(ALSA)
+#find_package(asio REQUIRED)
 find_package(Boost COMPONENTS system REQUIRED)
-find_package (OpenSSL REQUIRED)
+find_package(OpenSSL)
+pkg_check_modules(AVCODEC REQUIRED libavcodec)
 
-add_library(${PROJECT_NAME} STATIC
-    src/AlsaUtil.cpp
+list(APPEND SOURCES
     src/Types.cpp
 
-    src/airplay/Airplay2Source.cpp
-    src/airplay/Airplay2SourcePrivate.cpp
-    src/airplay/AirplayDecrypter.cpp
-    src/airplay/AirplaySource.cpp
-    src/airplay/AirplaySourcePrivate.cpp
-    src/airplay/AirplayRtpSession.cpp
-    src/airplay/AirplayRtspMessageHandler.cpp
-    src/airplay/AlacDecoder.cpp
-    src/airplay/alac.c
-    src/audio/AlsaSink.cpp
     src/audio/AudioAppSink.cpp
     src/audio/AudioCaps.cpp
     src/audio/AudioConf.cpp
@@ -39,7 +30,6 @@ add_library(${PROJECT_NAME} STATIC
     src/audio/Loudness.cpp
     src/audio/Peq.cpp
     src/audio/ScreamSource.cpp
-    src/audio/SbcDecoder.cpp
     src/audio/TBiquad.cpp
     src/core/AppSink.cpp
     src/core/AppSource.cpp
@@ -63,15 +53,48 @@ add_library(${PROJECT_NAME} STATIC
     src/rtsp/RtspMessageHandler.cpp
     src/sdp/Sdp.cpp
     src/zeroconf/ZeroConfServer.cpp
+)
 
-    thirdparty/Gist/src/Gist.cpp
-    thirdparty/Gist/src/core/CoreFrequencyDomainFeatures.cpp
-    thirdparty/Gist/src/core/CoreTimeDomainFeatures.cpp
-    thirdparty/Gist/src/fft/WindowFunctions.cpp
-    thirdparty/Gist/src/onset-detection-functions/OnsetDetectionFunction.cpp
-    thirdparty/Gist/src/mfcc/MFCC.cpp
-    thirdparty/Gist/src/pitch/Yin.cpp
-    thirdparty/Gist/libs/kiss_fft130/kiss_fft.c
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    list(APPEND SOURCES
+        src/audio/SbcDecoder.cpp
+    )
+    list(APPEND LIBRARIES
+        sbc
+    )
+endif()
+
+if(ALSA_FOUND)
+    list(APPEND SOURCES
+        src/AlsaUtil.cpp
+        src/audio/AlsaSink.cpp
+    )
+endif()
+
+if(OpenSSL_FOUND)
+    list(APPEND SOURCES
+        src/airplay/Airplay2Source.cpp
+        src/airplay/Airplay2SourcePrivate.cpp
+        src/airplay/AirplayDecrypter.cpp
+        src/airplay/AirplaySource.cpp
+        src/airplay/AirplaySourcePrivate.cpp
+        src/airplay/AirplayRtpSession.cpp
+        src/airplay/AirplayRtspMessageHandler.cpp
+        src/airplay/AlacDecoder.cpp
+        src/airplay/alac.c
+    )
+endif()
+
+add_library(${PROJECT_NAME} STATIC
+    ${SOURCES}
+    #thirdparty/Gist/src/Gist.cpp
+    #thirdparty/Gist/src/core/CoreFrequencyDomainFeatures.cpp
+    #thirdparty/Gist/src/core/CoreTimeDomainFeatures.cpp
+    #thirdparty/Gist/src/fft/WindowFunctions.cpp
+    #thirdparty/Gist/src/onset-detection-functions/OnsetDetectionFunction.cpp
+    #thirdparty/Gist/src/mfcc/MFCC.cpp
+    #thirdparty/Gist/src/pitch/Yin.cpp
+    #thirdparty/Gist/libs/kiss_fft130/kiss_fft.c
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -96,18 +119,20 @@ if(BCM_HOST_FOUND AND ENABLE_RPI)
     set(CORO_LIBRARIES "cornrow-pi")
 endif()
 
-target_link_libraries(${PROJECT_NAME}
-PUBLIC
+list(APPEND LIBRARIES
     ${ALSA_LIBRARIES}
+    ${AVCODEC_LINK_LIBRARIES}
     ${Boost_LIBRARIES}
-    ${OPENSSL_LIBRARIES}
+    #${OPENSSL_LIBRARIES}
     ${CORO_LIBRARIES}
     pthread
     dl
-    sbc
-    avutil
-    avcodec
-    dns_sd
+    #dns_sd
+)
+
+target_link_libraries(${PROJECT_NAME}
+PUBLIC
+    ${LIBRARIES}
 )
 
 add_subdirectory(tests)

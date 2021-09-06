@@ -1,9 +1,7 @@
 #include "audio/Crossover.h"
 
-namespace coro
-{
-namespace audio
-{
+namespace coro {
+namespace audio {
 
 Crossover::Crossover()
     : m_filter( { FilterType::Crossover, 3000.0f, 0.0f, 0.5f } ),
@@ -79,8 +77,8 @@ AudioConf Crossover::onProcess(const AudioConf& conf, core::Buffer& buffer)
     m_lp.process((float*)inData, (float*)outData, frameCount, 2, 4);
     float* out = (float*)outData;
     if (m_lowGain < 1.0f) {
-        for (uint i = 0; i < frameCount; ++i) {
-            for (uint c = 0; c < 2; ++c) {
+        for (uint32_t i = 0; i < frameCount; ++i) {
+            for (uint32_t c = 0; c < 2; ++c) {
                 *out *= m_lowGain;
                 ++out;
             }
@@ -91,8 +89,8 @@ AudioConf Crossover::onProcess(const AudioConf& conf, core::Buffer& buffer)
     m_hp.process((float*)inData, (float*)outData+2, frameCount, 2, 4);
     out = (float*)outData+2;
     if (m_highGain < 1.0f) {
-        for (uint i = 0; i < frameCount; ++i) {
-            for (uint c = 0; c < 2; ++c) {
+        for (uint32_t i = 0; i < frameCount; ++i) {
+            for (uint32_t c = 0; c < 2; ++c) {
                 *out *= m_highGain;
                 ++out;
             }

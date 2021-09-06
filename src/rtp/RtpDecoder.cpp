@@ -21,7 +21,7 @@
 
 #include <assert.h>
 #include <cstring>
-#include <boost/endian/arithmetic.hpp>
+#include <boost/endian/conversion.hpp>
 #include <loguru/loguru.hpp>
 
 namespace coro {
