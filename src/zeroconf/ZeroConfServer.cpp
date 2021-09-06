@@ -22,11 +22,7 @@
 #include <cstring>
 #include <iostream>
 
-#if defined(__APPLE__)
-#include <machine/endian.h>
-#else
-#include <endian.h>
-#endif
+#include <arpa/inet.h>
 
 namespace coro {
 namespace zeroconf {
