@@ -29,8 +29,7 @@ extern "C" {
 namespace coro {
 namespace audio {
 
-static AVCodecID toFfmpegCodecId(AudioCodec codec)
-{
+static AVCodecID toFfmpegCodecId(AudioCodec codec) {
     switch(codec) {
     case AudioCodec::Ac3: return AV_CODEC_ID_AC3;
     case AudioCodec::Eac3: return AV_CODEC_ID_EAC3;
@@ -39,13 +38,11 @@ static AVCodecID toFfmpegCodecId(AudioCodec codec)
 }
 
 AudioEncoderFfmpeg::AudioEncoderFfmpeg(AudioCodec codec)
-    : m_codec(codec)
-{
+    : m_codec(codec) {
     //avcodec_register_all();
 }
 
-AudioEncoderFfmpeg::~AudioEncoderFfmpeg()
-{
+AudioEncoderFfmpeg::~AudioEncoderFfmpeg() {
     if (m_context) {
         // This will also free the encoder.
         avcodec_free_context(&m_context);
@@ -58,24 +55,20 @@ AudioEncoderFfmpeg::~AudioEncoderFfmpeg()
     }
 }
 
-void AudioEncoderFfmpeg::setBitrate(uint16_t kbps)
-{
+void AudioEncoderFfmpeg::setBitrate(uint16_t kbps) {
     m_bitrateKbps = kbps;
 }
 
-const char* AudioEncoderFfmpeg::name() const
-{
+const char* AudioEncoderFfmpeg::name() const {
     return "AudioEncoderFfmpeg";
 }
 
-void AudioEncoderFfmpeg::onStop()
-{
+void AudioEncoderFfmpeg::onStop() {
     core::Buffer buffer;
     process(m_conf, buffer);
 }
 
-AudioConf AudioEncoderFfmpeg::onProcess(const AudioConf& conf, core::Buffer& _buffer)
-{
+AudioConf AudioEncoderFfmpeg::onProcess(const AudioConf& conf, core::Buffer& _buffer) {
     if (m_conf != conf) {
         m_conf = conf;
         updateConf();
@@ -114,8 +107,7 @@ AudioConf AudioEncoderFfmpeg::onProcess(const AudioConf& conf, core::Buffer& _bu
     return conf;
 }
 
-void AudioEncoderFfmpeg::updateConf()
-{
+void AudioEncoderFfmpeg::updateConf() {
     if (m_context) {
         // This will also free the encoder.
         avcodec_free_context(&m_context);
@@ -144,16 +136,14 @@ void AudioEncoderFfmpeg::updateConf()
     LOG_IF_F(ERROR, ret < 0, "Error opening codec: %d", ret);
 }
 
-void AudioEncoderFfmpeg::freeBuffer(void* opaque, uint8_t*)
-{
+void AudioEncoderFfmpeg::freeBuffer(void* opaque, uint8_t*) {
     core::Buffer* buffer = static_cast<core::Buffer*>(opaque);
     if (buffer) {
         delete buffer;
     }
 }
 
-AVFrame* AudioEncoderFfmpeg::createFrame() const
-{
+AVFrame* AudioEncoderFfmpeg::createFrame() const {
     // Prepare frame
     auto frame = av_frame_alloc();
     frame->format = m_context->sample_fmt;
@@ -175,8 +165,7 @@ AVFrame* AudioEncoderFfmpeg::createFrame() const
     return frame;
 }
 
-AVFrame* AudioEncoderFfmpeg::fillFrame(AVFrame* frame, core::Buffer& buffer)
-{
+AVFrame* AudioEncoderFfmpeg::fillFrame(AVFrame* frame, core::Buffer& buffer) {
     const int sampleSize = av_get_bytes_per_sample(m_context->sample_fmt);
     volatile const int samplesToFill = std::min(m_context->frame_size - frame->nb_samples, (int)buffer.size()/frame->channels/sampleSize);
 
@@ -215,8 +204,7 @@ AVFrame* AudioEncoderFfmpeg::fillFrame(AVFrame* frame, core::Buffer& buffer)
     return nullptr;
 }
 
-void AudioEncoderFfmpeg::pushFrame(AVFrame* frame)
-{
+void AudioEncoderFfmpeg::pushFrame(AVFrame* frame) {
     int ret = avcodec_send_frame(m_context, frame);
     LOG_IF_F(WARNING, ret == AVERROR(EAGAIN), "No input accepted in current state");
     LOG_IF_F(WARNING, ret == AVERROR_EOF, "Encoder flushed, no new frames can be sent to it");

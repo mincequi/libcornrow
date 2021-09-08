@@ -13,8 +13,9 @@ coro_tests(
     buffertest
     convertertest
     corotest
-    encodertest
+    #encodertest
     screamtest
+    TcpClientSinkTest
 )
 
 find_package(Qt5 COMPONENTS Multimedia Network)

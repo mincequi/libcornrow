@@ -25,8 +25,7 @@
 namespace coro {
 namespace core {
 
-class Node
-{
+class Node {
 public:
     template<class Node1, class Node2>
     static std::enable_if_t<Cap::canIntersect(Node1::caps(), Node2::caps())>
@@ -43,18 +42,36 @@ public:
     /// Obsolete process method
     audio::AudioConf process(const audio::AudioConf& conf, core::Buffer& buffer);
 
+    /**
+     * @brief isBypassed
+     * @return Whether node is bypassed
+     */
     bool isBypassed() const;
-    void setIsBypassed(bool);
+
+    /**
+     * @brief setIsBypassed
+     * @param isBypassed
+     */
+    void setIsBypassed(bool isBypassed);
+
+    /**
+     * @brief isStarted
+     *
+     * Check if this node is started (defaults to true).
+     *
+     * @return Whether node is started
+     */
+    virtual bool isStarted() const;
 
 protected:
+    void process(core::BufferPtr& buffer);
+
     virtual void onStart();
     virtual void onStop();
     virtual audio::AudioConf onProcess(const audio::AudioConf& conf, core::Buffer& buffer);
     virtual void onProcess(core::BufferPtr& buffer);
 
 private:
-    void process(core::BufferPtr& buffer);
-
     Node* m_next = nullptr;
     bool m_isBypassed = false;
 

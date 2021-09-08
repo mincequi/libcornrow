@@ -36,10 +36,18 @@ public:
     virtual ~Source();
 
     // @TODO(mawe): make these private and let SourceSelector call these.
+    /**
+     * @brief Start Source
+     *
+     * Starts the source and begins to feed buffers to then chain. This will
+     * cause the pipeline to operator in "push mode". In contrast you can also
+     * start a sink wihtin your pipeline, which will cause to operate in
+     * "pull mode".
+     */
     void start();
     void stop();
 
-    bool isStarted() const;
+    bool isStarted() const override;
     bool isReady() const;
     void setReady(bool ready);
 

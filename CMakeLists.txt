@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.7)
 project(cornrow)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -DG_DISABLE_ASSERT -DUSE_KISS_FFT")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -Wall -Werror -Wno-old-style-cast -DUSE_KISS_FFT")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -Wall -Werror -Wno-old-style-cast -DUSE_KISS_FFT -DLOGURU_WITH_STREAMS")
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(PkgConfig REQUIRED)
@@ -12,6 +12,7 @@ find_package(ALSA)
 find_package(Boost COMPONENTS system REQUIRED)
 find_package(OpenSSL)
 pkg_check_modules(AVCODEC REQUIRED libavcodec)
+pkg_check_modules(AVUTIL REQUIRED libavutil)
 
 list(APPEND SOURCES
     src/Types.cpp
@@ -23,7 +24,7 @@ list(APPEND SOURCES
     src/audio/AudioDecoderFfmpeg.cpp
     src/audio/AudioEncoderFfmpeg.cpp
     src/audio/AudioNode.cpp
-    src/audio/AudioTestSource.cpp
+    #src/audio/AudioTestSource.cpp
     src/audio/AudioTypes.cpp
     src/audio/Crossover.cpp
     src/audio/FileSink.cpp
@@ -42,6 +43,7 @@ list(APPEND SOURCES
     src/core/Sink.cpp
     src/core/Source.cpp
     src/core/SourceSelector.cpp
+    src/core/TcpClientSink.cpp
     src/core/UdpSource.cpp
     src/core/Util.cpp
     src/loguru/loguru.cpp
@@ -122,12 +124,13 @@ endif()
 list(APPEND LIBRARIES
     ${ALSA_LIBRARIES}
     ${AVCODEC_LINK_LIBRARIES}
+    ${AVUTIL_LINK_LIBRARIES}
     ${Boost_LIBRARIES}
-    #${OPENSSL_LIBRARIES}
+    ${OPENSSL_LIBRARIES}
     ${CORO_LIBRARIES}
     pthread
     dl
-    #dns_sd
+    dns_sd
 )
 
 target_link_libraries(${PROJECT_NAME}

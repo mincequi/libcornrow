@@ -22,8 +22,7 @@
 namespace coro {
 namespace core {
 
-class MainloopPrivate
-{
+class MainloopPrivate {
 public:
     static MainloopPrivate& instance();
 

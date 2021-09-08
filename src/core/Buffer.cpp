@@ -37,60 +37,50 @@ public:
     audio::AudioConf audioConf;
 };
 
-BufferPtr Buffer::create(size_t reservedSize, const Node* caller)
-{
+BufferPtr Buffer::create(size_t reservedSize, const Node* caller) {
     return BufferPool::instance().acquire(reservedSize, caller);
 }
 
 Buffer::Buffer(size_t size)
-    : d(new BufferPrivate)
-{
+    : d(new BufferPrivate) {
     // Add 3 to round up to next multiple of 4.
     d->buffer.resize((size + 3) / 4);
 }
 
 Buffer::Buffer(const char* data, size_t size, size_t reservedSize, size_t offset) :
-    d(new BufferPrivate)
-{
+    d(new BufferPrivate) {
     d->buffer.resize(std::max(size+offset, reservedSize)/4+1);
     d->size = size;
     d->offset = offset;
     std::memcpy(this->data(), data, size);
 }
 
-Buffer::~Buffer()
-{
+Buffer::~Buffer() {
     delete d;
 }
 
-bool Buffer::isValid() const
-{
+bool Buffer::isValid() const {
     // @TODO(mawe): also check conf here, as soon as we pass conf with buffer.
     return size() > 0;
 }
 
-char* Buffer::data()
-{
+char* Buffer::data() {
     return (char*)(d->buffer.data())+d->offset;
 }
 
-const char* Buffer::data() const
-{
+const char* Buffer::data() const {
     return (const char*)(d->buffer.data())+d->offset;
 }
 
-size_t Buffer::size() const
-{
+size_t Buffer::size() const {
     return d->size;
 }
 
-size_t Buffer::capacity() const
-{
+size_t Buffer::capacity() const {
     return d->buffer.capacity() * 4;
 }
 
-char* Buffer::acquire(size_t size, const core::Node* caller) const
-{
+char* Buffer::acquire(size_t size, const core::Node* caller) const {
     // If we have space in front
     if (d->offset >= size) {
         d->acquiredOffset = 0;
@@ -107,7 +97,7 @@ char* Buffer::acquire(size_t size, const core::Node* caller) const
 
     // Create space
     auto orgSize = d->buffer.capacity() * 4;    // size in bytes
-    auto newSize = d->buffer.size() + (size - sizeAtBack) / 4 + 1;
+    auto newSize = d->buffer.size() + (size - sizeAtBack) / 4; // + 1; //@TODO(mawe): let's see if +1 is actually needed
     auto isReallocated = d->buffer.capacity() < newSize;
     d->buffer.resize(newSize);
     d->acquiredOffset = d->offset + d->size;
@@ -115,19 +105,17 @@ char* Buffer::acquire(size_t size, const core::Node* caller) const
     if (caller && isReallocated) {
         LOG_F(INFO, "%s reallocated buffer. %zu -> %zu bytes", caller->name(), orgSize, d->buffer.capacity()*4);
     } else if (isReallocated) {
-        LOG_F(INFO, "buffer reallocated. %zu -> %zu bytes", orgSize, d->buffer.capacity()*4);
+        LOG_F(INFO, "Buffer reallocated. %zu -> %zu bytes", orgSize, d->buffer.capacity()*4);
     }
     return (char*)d->buffer.data() + d->acquiredOffset;
 }
 
-void Buffer::commit(size_t size)
-{
+void Buffer::commit(size_t size) {
     d->offset = d->acquiredOffset;
     d->size = size;
 }
 
-void Buffer::prepend(const char* data, uint32_t size)
-{
+void Buffer::prepend(const char* data, uint32_t size) {
     if (d->offset >= size) {
         d->offset -= size;
         d->size += size;
@@ -140,24 +128,22 @@ void Buffer::prepend(const char* data, uint32_t size)
     }
 }
 
-void Buffer::grow(size_t size)
-{
+void Buffer::grow(size_t size) {
     d->size = std::min(d->buffer.size()*4, size);
 }
 
-void Buffer::shrink(size_t size)
-{
+void Buffer::shrink(size_t size) {
     d->size = std::min(d->size, size);
 }
 
-void Buffer::clear()
-{
+void Buffer::clear() {
     d->offset = 0;
     d->size = 0;
+
+    LOG_F(INFO, "Buffer cleared");
 }
 
-void Buffer::trimFront(size_t size)
-{
+void Buffer::trimFront(size_t size) {
     if (size > d->size) {
         return;
     }
@@ -165,16 +151,14 @@ void Buffer::trimFront(size_t size)
     d->size -= size;
 }
 
-void Buffer::trimBack(size_t size)
-{
+void Buffer::trimBack(size_t size) {
     if (size > d->size) {
         return;
     }
     d->size -= size;
 }
 
-audio::AudioConf& Buffer::audioConf()
-{
+audio::AudioConf& Buffer::audioConf() {
     return d->audioConf;
 }
 

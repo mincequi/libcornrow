@@ -138,16 +138,13 @@ int snd_pcm_set_params2(snd_pcm_t *pcm,
     return 0;
 }
 
-AlsaSink::AlsaSink()
-{
+AlsaSink::AlsaSink() {
 }
 
-AlsaSink::~AlsaSink()
-{
+AlsaSink::~AlsaSink() {
 }
 
-void AlsaSink::start(const AudioConf& conf)
-{
+void AlsaSink::start(const AudioConf& conf) {
     //open(conf);
     openSimple(conf);
 
@@ -183,8 +180,7 @@ void AlsaSink::start(const AudioConf& conf)
     snd_pcm_prepare(m_pcm);
 }
 
-void AlsaSink::setDevice(const std::string& device)
-{
+void AlsaSink::setDevice(const std::string& device) {
     if (device == m_device) {
         return;
     }
@@ -194,13 +190,11 @@ void AlsaSink::setDevice(const std::string& device)
     start(m_conf);
 }
 
-const char* AlsaSink::name() const
-{
+const char* AlsaSink::name() const {
     return "AlsaSink";
 }
 
-AudioConf AlsaSink::onProcess(const AudioConf& conf, core::Buffer& buffer)
-{
+AudioConf AlsaSink::onProcess(const AudioConf& conf, core::Buffer& buffer) {
     if (m_conf != conf) {
         onStop();
         start(conf);
@@ -234,12 +228,10 @@ AudioConf AlsaSink::onProcess(const AudioConf& conf, core::Buffer& buffer)
     return conf;
 }
 
-void AlsaSink::onStart()
-{
+void AlsaSink::onStart() {
 }
 
-void AlsaSink::onStop()
-{
+void AlsaSink::onStop() {
     if (m_pcm) {
         snd_pcm_drain(m_pcm);
         snd_pcm_close(m_pcm);
@@ -248,8 +240,7 @@ void AlsaSink::onStop()
     LOG_F(INFO, "Device stopped");
 }
 
-bool AlsaSink::openSimple(const AudioConf& conf)
-{
+bool AlsaSink::openSimple(const AudioConf& conf) {
     if (m_pcm) {
         LOG_F(WARNING, "Device already opened");
         return false;
@@ -275,8 +266,7 @@ bool AlsaSink::openSimple(const AudioConf& conf)
     return true;
 }
 
-void AlsaSink::writeSimple(const char* samples, uint32_t bytesCount)
-{
+void AlsaSink::writeSimple(const char* samples, uint32_t bytesCount) {
     snd_pcm_sframes_t frameCount = bytesCount / 4;
     char* ptr = (char*)samples;
 
@@ -306,8 +296,7 @@ void AlsaSink::writeSimple(const char* samples, uint32_t bytesCount)
     }
 }
 
-bool AlsaSink::recover(int err)
-{
+bool AlsaSink::recover(int err) {
     // underrun
     if (err == -EPIPE) {
         LOG_F(WARNING, "AlsaSink underrun");
@@ -340,8 +329,7 @@ bool AlsaSink::recover(int err)
     return false;
 }
 
-void doAc3Payload(core::Buffer& buffer)
-{
+void doAc3Payload(core::Buffer& buffer) {
     if (buffer.size() > (spdif::ac3FrameSize - spdif::SpdifAc3Header::size())) {
         LOG_F(WARNING, "Frame too big, droppping it.");
         buffer.clear();

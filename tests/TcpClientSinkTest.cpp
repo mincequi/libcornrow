@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Manuel Weichselbaumer <mincequi@web.de>
+ * Copyright (C) 2021 Manuel Weichselbaumer <mincequi@web.de>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,30 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <coro/audio/AudioTestSource.h>
+#include <coro/audio/Peq.h>
+#include <coro/core/Mainloop.h>
+#include <coro/core/TcpClientSink.h>
 
-#include <dns_sd.h>
-#include <map>
-#include <string>
+using namespace coro::audio;
+using namespace coro::core;
 
-namespace coro {
-namespace zeroconf {
+int main(int argc, char *argv[]) {
 
-struct ZeroConfService;
+    AudioTestSource<AudioCodec::RawInt16, SampleRate::Rate44100, Channels::Stereo> source;
+    TcpClientSink::Config config;
+    config.host = argv[1];
+    config.port = std::stoi(argv[2]);
+    TcpClientSink sink(config);
 
-class ZeroconfServer {
-public:
-    ZeroconfServer();
-    ~ZeroconfServer();
+    Node::link(source, sink);
 
-    bool registerService(const ZeroConfService& service);
-    void unregisterService(const std::string& name);
-
-private:
-    void unregisterServices();
-
-    std::map<std::string, DNSServiceRef>  m_services;
-};
-
-} // namespace zeroconf
-} // namespace coro
+    source.start();
+}

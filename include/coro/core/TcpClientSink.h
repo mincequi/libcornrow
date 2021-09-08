@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Manuel Weichselbaumer <mincequi@web.de>
+ * Copyright (C) 2021 Manuel Weichselbaumer <mincequi@web.de>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,45 +17,40 @@
 
 #pragma once
 
-#include <coro/audio/AudioCaps.h>
-#include <coro/audio/AudioConf.h>
-#include <coro/core/Source.h>
+#include <string>
+#include <coro/core/Sink.h>
 
 namespace coro {
-namespace audio {
+namespace core {
 
-template <AudioCodec AC, SampleRate SR, Channels C>
-class AudioTestSource : public core::Source
-{
+class TcpClientSink : public Sink {
 public:
     static constexpr std::array<std::pair<core::Cap, core::Cap>, 1> caps() {
         return {{
-                { { core::NoCap {} }, // in
-                  { AudioCap { AC, SR, C } } } // out
-               }};
+                { { AnyCap {} },    // in
+                  { NoCap {} }      // out
+                }
+            }};
     }
 
     struct Config {
-        uint16_t numFramesPerBuffer = 352;
-        uint16_t numBuffers = 125;
+        std::string host;
+        uint16_t port;
     };
 
-    AudioTestSource(const Config& config = Config());
-    virtual ~AudioTestSource();
+    TcpClientSink(const Config& config);
+    virtual ~TcpClientSink();
 
-    const char* name() const override;
+    virtual bool isStarted() const override;
 
 private:
-    void onStart() override;
-    void onStop() override;
-    void onProcess(core::BufferPtr& buffer) override;
+    virtual const char* name() const override;
+    virtual void onStart() override;
+    virtual void onStop() override;
+    virtual void onProcess(core::BufferPtr& buffer) override;
 
-    Config m_config;
-    AudioConf m_audioConfig = { AC, SR, C };
-    core::BufferPtr m_buffer;
+    class TcpClientSinkPrivate* const d;
 };
 
-} // namespace audio
+} // namespace core
 } // namespace coro
-
-#include "AudioTestSource.cpp"

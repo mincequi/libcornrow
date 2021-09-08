@@ -26,8 +26,7 @@ typedef struct _snd_pcm snd_pcm_t;
 namespace coro {
 namespace audio {
 
-class AlsaSink : public core::Sink
-{
+class AlsaSink : public core::Sink {
 public:
     static constexpr std::array<std::pair<core::Cap, core::Cap>, 1> caps() {
         return {{{ { AudioCapRaw<int16_t> {} },

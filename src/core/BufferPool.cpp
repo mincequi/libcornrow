@@ -38,22 +38,18 @@ void BufferDeleter::operator()(Buffer* buffer) {
     s_buffers.push_back(buffer);
 }
 
-BufferPool::BufferPool()
-{
+BufferPool::BufferPool() {
 }
 
-BufferPool::~BufferPool()
-{
+BufferPool::~BufferPool() {
 }
 
-BufferPool& BufferPool::instance()
-{
+BufferPool& BufferPool::instance() {
     static BufferPool bufferPool;
     return bufferPool;
 }
 
-BufferPtr BufferPool::acquire(size_t size, const core::Node* caller) const
-{
+BufferPtr BufferPool::acquire(size_t size, const core::Node* caller) const {
     Buffer* buffer = nullptr;
     for (auto b : s_buffers) {
         // @TODO(mawe): for now simple strategy: use first element that can hold the desired size.

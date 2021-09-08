@@ -23,8 +23,7 @@
 
 using namespace coro;
 
-int main()
-{
+int main() {
     airplay::AirplaySource::Config config { "myAirplay" };
 
     airplay::Airplay2Source source(config);

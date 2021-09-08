@@ -23,32 +23,35 @@ namespace coro {
 namespace core {
 
 Mainloop::Mainloop() :
-    d(MainloopPrivate::instance())
-{
+    d(MainloopPrivate::instance()) {
 }
 
-Mainloop::~Mainloop()
-{
+Mainloop::~Mainloop() {
 }
 
-Mainloop& Mainloop::instance()
-{
+Mainloop& Mainloop::instance() {
     static Mainloop mainloop;
     return mainloop;
 }
 
-void Mainloop::poll()
-{
+void Mainloop::poll() {
     // This has to be called, if io_context ran out of work.
     //d.ioContext.restart();
     // Better poll one event here (instead of all).
     // Due to network buffering, this behaves better.
-    d.ioContext.poll_one();
+    instance().d.ioContext.poll_one();
 }
 
-void Mainloop::run()
-{
-    d.ioContext.run();
+void Mainloop::run() {
+    instance().d.ioContext.run();
+}
+
+void Mainloop::runOne() {
+    instance().d.ioContext.run_one();
+}
+
+void Mainloop::stop() {
+    instance().d.ioContext.stop();
 }
 
 } // namespace core

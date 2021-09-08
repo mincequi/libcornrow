@@ -22,11 +22,21 @@
 namespace coro {
 namespace core {
 
-class Sink : public Node
-{
+class Sink : public Node {
 public:
     Sink();
     virtual ~Sink();
+
+    /**
+     * @brief Start Sink
+     *
+     * Starts the sink and begins to pull buffers from the chain. This will
+     * cause the pipeline to operator in "pull mode". In contrast you can also
+     * start a source within your pipeline, which will cause to operate in
+     * "push mode".
+     */
+    void start();
+    void stop();
 };
 
 } // namespace core

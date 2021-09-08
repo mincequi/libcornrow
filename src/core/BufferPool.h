@@ -22,8 +22,7 @@
 namespace coro {
 namespace core {
 
-class BufferPool
-{
+class BufferPool {
 public:
     static BufferPool& instance();
 

@@ -25,8 +25,10 @@ class Mainloop
 public:
     static Mainloop& instance();
 
-    void poll();
-    void run();
+    static void poll();
+    static void run();
+    static void runOne();
+    static void stop();
 
 private:
     Mainloop();

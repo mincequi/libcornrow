@@ -21,12 +21,10 @@ namespace coro {
 namespace core {
 
 MainloopPrivate::MainloopPrivate()
-    : ioContext(1)
-{
+    : ioContext(1) {
 }
 
-MainloopPrivate& MainloopPrivate::instance()
-{
+MainloopPrivate& MainloopPrivate::instance() {
     static MainloopPrivate mainloop;
     return mainloop;
 }

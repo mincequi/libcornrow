@@ -22,13 +22,11 @@
 namespace coro {
 namespace core {
 
-Node* Node::next() const
-{
+Node* Node::next() const {
     return m_next;
 }
 
-audio::AudioConf Node::process(const audio::AudioConf& _conf, core::Buffer& buffer)
-{
+audio::AudioConf Node::process(const audio::AudioConf& _conf, core::Buffer& buffer) {
     if (_conf.codec == audio::AudioCodec::Invalid || !buffer.size()) {
         buffer.clear();
         return {};
@@ -51,48 +49,52 @@ audio::AudioConf Node::process(const audio::AudioConf& _conf, core::Buffer& buff
     return next()->process(conf, buffer);
 }
 
-bool Node::isBypassed() const
-{
+bool Node::isBypassed() const {
     return m_isBypassed;
 }
 
-void Node::setIsBypassed(bool bypass)
-{
+void Node::setIsBypassed(bool bypass) {
     m_isBypassed = bypass;
 }
 
-void Node::onStart()
-{
+bool Node::isStarted() const {
+    return true;
 }
 
-void Node::onStop()
-{
+void Node::onStart() {
+    LOG_F(2, "%s started", name());
+}
+
+void Node::onStop() {
     LOG_F(2, "%s stopped", name());
 }
 
-audio::AudioConf Node::onProcess(const audio::AudioConf& conf, core::Buffer&)
-{
+audio::AudioConf Node::onProcess(const audio::AudioConf& conf, core::Buffer&) {
     return conf;
 }
 
-void Node::onProcess(core::BufferPtr&)
-{
+void Node::onProcess(core::BufferPtr&) {
 }
 
-void Node::process(core::BufferPtr& buffer)
-{
+void Node::process(core::BufferPtr& buffer) {
     size_t sizeHint = buffer->capacity();
 
     // Process buffer
     if (!isBypassed()) {
-        onProcess(buffer);
         // @TOOD(mawe): this is for back compatibility
         onProcess(buffer->audioConf(), *buffer.get());
+        onProcess(buffer);
     }
 
     // If buffer consumed (from e.g. some encoder), return a size hinted buffer
     if (!buffer) {
         buffer = Buffer::create(sizeHint, this);
+        return;
+    }
+
+    // If end of chain, clear buffer
+    if (!next()) {
+        buffer->clear();
         return;
     }
 

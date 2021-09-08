@@ -20,12 +20,18 @@
 namespace coro {
 namespace core {
 
-Sink::Sink()
-{
+Sink::Sink() {
 }
 
-Sink::~Sink()
-{
+Sink::~Sink() {
+}
+
+void Sink::start() {
+    onStart();
+}
+
+void Sink::stop() {
+    onStop();
 }
 
 } // namespace core

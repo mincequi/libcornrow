@@ -20,22 +20,18 @@
 namespace coro {
 namespace core {
 
-Source::Source()
-{
+Source::Source() {
 }
 
-Source::~Source()
-{
+Source::~Source() {
 }
 
-void Source::start()
-{
+void Source::start() {
     m_isStarted = true;
     onStart();
 }
 
-void Source::stop()
-{
+void Source::stop() {
     m_isStarted = false;
 
     Node* _next = this;
@@ -49,18 +45,15 @@ void Source::stop()
     setReady(false);
 }
 
-bool Source::isStarted() const
-{
+bool Source::isStarted() const {
     return m_isStarted;
 }
 
-bool Source::isReady() const
-{
+bool Source::isReady() const {
     return m_isReady;
 }
 
-void Source::setReady(bool ready)
-{
+void Source::setReady(bool ready) {
     m_isReady = ready;
     m_mutex.lock();
     if (m_isReadyCallback) {
@@ -69,15 +62,13 @@ void Source::setReady(bool ready)
     m_mutex.unlock();
 }
 
-void Source::setReadyCallback(ReadyCallback callback)
-{
+void Source::setReadyCallback(ReadyCallback callback) {
     m_mutex.lock();
     m_isReadyCallback = callback;
     m_mutex.unlock();
 }
 
-void Source::pushBuffer(const audio::AudioConf& _conf, core::Buffer& buffer)
-{
+void Source::pushBuffer(const audio::AudioConf& conf, core::Buffer& buffer) {
     // If source wants to push buffers, we consider it ready.
     //if (!isReady()) {
         setReady(true);
@@ -85,7 +76,7 @@ void Source::pushBuffer(const audio::AudioConf& _conf, core::Buffer& buffer)
 
     // @TODO(mawe): currently, sources are started per default. This will change.
     if (isStarted() || !m_isControlled) {
-        process(_conf, buffer);
+        process(conf, buffer);
     }
 }
 

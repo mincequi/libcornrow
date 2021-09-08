@@ -71,12 +71,10 @@ public:
 };
 
 FdSource::FdSource() :
-    d(new FdSourcePrivate(*this))
-{
+    d(new FdSourcePrivate(*this)) {
 }
 
-FdSource::~FdSource()
-{
+FdSource::~FdSource() {
     // When we close, we have to poll for pending events in queue.
     // Otherwise signal handler on deleted object will be called.
     d->streamDescriptor.close();
@@ -85,8 +83,7 @@ FdSource::~FdSource()
     delete d;
 }
 
-void FdSource::init(int fd, uint16_t blockSize)
-{
+void FdSource::init(int fd, uint16_t blockSize) {
     // Close previously opened FD.
     if (d->streamDescriptor.is_open()) {
         d->streamDescriptor.close();
@@ -109,8 +106,7 @@ void FdSource::init(int fd, uint16_t blockSize)
     d->ioContext.restart();
 }
 
-const char* FdSource::name() const
-{
+const char* FdSource::name() const {
     return "FdSource";
 }
 
