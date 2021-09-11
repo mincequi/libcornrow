@@ -35,9 +35,6 @@ static SampleRate toCoro(int sampleRate)
     }
 }
 
-template class AudioDecoderFfmpeg<audio::AudioCodec::Ac3>;
-template class AudioDecoderFfmpeg<audio::AudioCodec::Alac>;
-
 template<audio::AudioCodec codec>
 AudioDecoderFfmpeg<codec>::AudioDecoderFfmpeg()
 {
@@ -216,6 +213,9 @@ void AudioDecoderFfmpeg<codec>::interleave(const AVFrame* in, core::Buffer& out)
     }
     out.commit(in->linesize[0] * in->channels);
 }
+
+template class AudioDecoderFfmpeg<audio::AudioCodec::Ac3>;
+template class AudioDecoderFfmpeg<audio::AudioCodec::Alac>;
 
 } // namespace audio
 } // namespace coro

@@ -17,13 +17,28 @@
 
 #include "Types.h"
 
-namespace coro
-{
+#include <iostream>
+
+namespace coro {
+
+std::ostream& operator<<(std::ostream& out, AudioDeviceType t) {
+    switch (t) {
+    case AudioDeviceType::Default:
+        return out << "Default";
+    case AudioDeviceType::Hdmi:
+        return out << "HDMI";
+    case AudioDeviceType::Spdif:
+        return out << "SPDIF";
+    case AudioDeviceType::Invalid:
+        return out << "INVALID";
+    }
+
+    return out;
+}
 
 AudioDeviceInfo::AudioDeviceInfo(const std::string& _name, const std::string& _desc)
     : name(_name),
-      desc(_desc)
-{
+      desc(_desc) {
     if (name.substr(0, 4) == "hdmi") {
         type = AudioDeviceType::Hdmi;
     } else if (name.substr(0, 6) == "iec958" || name.substr(0, 5) == "spdif") {
@@ -35,4 +50,8 @@ AudioDeviceInfo::AudioDeviceInfo(const std::string& _name, const std::string& _d
     }
 }
 
-} // namespace GstDsp
+std::ostream& operator<<(std::ostream& out, const AudioDeviceInfo& info) {
+    return out << "type: " << info.type << ", name: " << info.name << ", desc: " << info.desc;
+}
+
+} // namespace coro

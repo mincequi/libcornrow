@@ -27,10 +27,6 @@
 namespace coro {
 namespace rtp {
 
-template class RtpDecoder<audio::AudioCodec::Ac3>;
-template class RtpDecoder<audio::AudioCodec::Alac>;
-template class RtpDecoder<audio::AudioCodec::Sbc>;
-
 template<audio::AudioCodec codec>
 RtpDecoder<codec>::RtpDecoder()
 {
@@ -147,6 +143,10 @@ audio::AudioConf RtpDecoder<codec>::onProcessCodec(const rtp::RtpHeader& header,
 
     return { codec };
 }
+
+template class RtpDecoder<audio::AudioCodec::Ac3>;
+template class RtpDecoder<audio::AudioCodec::Alac>;
+template class RtpDecoder<audio::AudioCodec::Sbc>;
 
 } // namespace rtp
 } // namespace coro

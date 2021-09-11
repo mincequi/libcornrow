@@ -140,7 +140,7 @@ void Buffer::clear() {
     d->offset = 0;
     d->size = 0;
 
-    LOG_F(INFO, "Buffer cleared");
+    //LOG_F(INFO, "Buffer cleared");
 }
 
 void Buffer::trimFront(size_t size) {

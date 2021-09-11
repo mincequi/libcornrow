@@ -33,6 +33,7 @@ static AVCodecID toFfmpegCodecId(AudioCodec codec) {
     switch(codec) {
     case AudioCodec::Ac3: return AV_CODEC_ID_AC3;
     case AudioCodec::Eac3: return AV_CODEC_ID_EAC3;
+//    case AudioCodec::Wav: return AV_CODEC_ID_MS;
     default: return AV_CODEC_ID_NONE;
     }
 }

@@ -32,10 +32,12 @@ public:
     AudioEncoderFfmpeg(AudioCodec codec);
     ~AudioEncoderFfmpeg();
 
-    static constexpr std::array<std::pair<core::Cap, core::Cap>, 2> caps() {
+    static constexpr std::array<std::pair<core::Cap, core::Cap>, 3> caps() {
         return {{
                 {{ AudioCapRaw<float> { SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000 } },
                    { AudioCap { AudioCodec::Ac3 | AudioCodec::Eac3 } }},
+                {{ AudioCap { AudioCodec::RawInt16 | AudioCodec::RawFloat32 } },
+                   { AudioCap { AudioCodec::Wav } }},
                 // We can be bypassed, so also accept inCaps as OutCaps
                 { { AudioCapRaw<float> { SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000 } },
                    { AudioCapRaw<float> { SampleRate::Rate32000 | SampleRate::Rate44100 | SampleRate::Rate48000 } }}

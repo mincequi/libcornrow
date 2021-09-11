@@ -37,6 +37,7 @@ enum class AudioCodec : uint16_t
     Eac3 = 0x0040,
     Aptx = 0x0080,
     Alac = 0x0100,
+    Wav = 0x0200,
 
     RtpPayload = 0x8000,    // @TODO(mawe): remove RTP payload flag here
 

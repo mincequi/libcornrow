@@ -81,6 +81,7 @@ AirplayRtspMessageHandler::AirplayRtspMessageHandler(uint16_t controlPort,
       m_decrypter(decrypter),
       m_decoder(decoder)
 {
+    (void)m_rtpDecoder;
 }
 
 void AirplayRtspMessageHandler::onOptions(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const

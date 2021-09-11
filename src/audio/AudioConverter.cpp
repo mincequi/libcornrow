@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2021 Manuel Weichselbaumer <mincequi@web.de>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "audio/AudioConverter.h"
 
 #include "loguru/loguru.hpp"
@@ -7,28 +24,21 @@
 namespace coro {
 namespace audio {
 
-template class AudioConverter<int16_t, float>;
-template class AudioConverter<float, int16_t>;
-
 template<class InT, class OutT>
-AudioConverter<InT,OutT>::AudioConverter()
-{
+AudioConverter<InT,OutT>::AudioConverter() {
 }
 
 template<class InT, class OutT>
-AudioConverter<InT,OutT>::~AudioConverter()
-{
+AudioConverter<InT,OutT>::~AudioConverter() {
 }
 
 template<class InT, class OutT>
-const char* AudioConverter<InT,OutT>::name() const
-{
+const char* AudioConverter<InT,OutT>::name() const {
     return "AudioConverter";
 }
 
 template<>
-AudioConf AudioConverter<int16_t,float>::onProcess(const AudioConf& conf, core::Buffer& buffer)
-{
+AudioConf AudioConverter<int16_t,float>::onProcess(const AudioConf& conf, core::Buffer& buffer) {
     char* to = buffer.acquire(buffer.size()*2);
     char* from = buffer.data();
 
@@ -48,8 +58,7 @@ AudioConf AudioConverter<int16_t,float>::onProcess(const AudioConf& conf, core::
 }
 
 template<>
-AudioConf AudioConverter<float,int16_t>::onProcess(const AudioConf& conf, core::Buffer& buffer)
-{
+AudioConf AudioConverter<float,int16_t>::onProcess(const AudioConf& conf, core::Buffer& buffer) {
     char* to = buffer.acquire(buffer.size()/2);
     char* from = buffer.data();
 
@@ -78,8 +87,7 @@ AudioConf AudioConverter<float,int16_t>::onProcess(const AudioConf& conf, core::
 }
 
 template <typename T, typename U>
-AudioConf AudioConverter<T,U>::onProcess(const AudioConf& conf, core::Buffer& buffer)
-{
+AudioConf AudioConverter<T,U>::onProcess(const AudioConf& conf, core::Buffer& buffer) {
     U* to = (U*)buffer.acquire(buffer.size()*sizeof(U)/sizeof(T));
     T* from = (T*)buffer.data();
 
@@ -97,3 +105,5 @@ AudioConf AudioConverter<T,U>::onProcess(const AudioConf& conf, core::Buffer& bu
 } // namespace audio
 } // namespace coro
 
+template class coro::audio::AudioConverter<float, int16_t>;
+template class coro::audio::AudioConverter<int16_t, float>;

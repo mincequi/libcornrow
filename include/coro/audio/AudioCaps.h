@@ -45,6 +45,7 @@ public:
     }
 };
 
+// @TODO(mawe): remove AudioCapRaw class and replace it with AudioCap<Codec::Rawint16/Rawfloat.
 template <typename T>
 class AudioCapRaw
 {

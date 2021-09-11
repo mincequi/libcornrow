@@ -84,8 +84,9 @@ enum class AudioDeviceType : uint8_t
     Invalid,
     Default,
     Spdif,
-    Hdmi,
+    Hdmi
 };
+std::ostream& operator<<(std::ostream& out, AudioDeviceType t);
 
 struct AudioDeviceInfo
 {
@@ -95,6 +96,7 @@ struct AudioDeviceInfo
     std::string desc;
     AudioDeviceType type;
 };
+std::ostream& operator<<(std::ostream& out, const AudioDeviceInfo& info);
 using AudioDeviceInfoList = std::list<AudioDeviceInfo>;
 
 } // namespace coro

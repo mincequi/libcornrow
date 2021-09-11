@@ -249,3 +249,12 @@ AccT TBiquad<InT,AccT>::convert(InT& in)
 }
 
 } // namespace coro
+
+template class coro::TBiquad<float, float>;
+template class coro::TBiquad<float, double>;
+template class coro::TBiquad<double, double>;
+template class coro::TBiquad<int16_t, int32_t>;
+template class coro::TBiquad<int16_t, int64_t>;
+template class coro::TBiquad<int16_t, float>;
+template class coro::TBiquad<int16_t, double>;
+template class coro::TBiquad<int32_t, int64_t>;

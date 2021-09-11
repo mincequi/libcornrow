@@ -26,8 +26,7 @@ namespace rtp {
 class RtpHeader;
 
 template<audio::AudioCodec codec>
-class RtpDecoder : public core::Node
-{
+class RtpDecoder : public core::Node {
 public:
     RtpDecoder();
     ~RtpDecoder();

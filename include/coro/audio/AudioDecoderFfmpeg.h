@@ -29,8 +29,7 @@ namespace coro {
 namespace audio {
 
 template<audio::AudioCodec>
-class AudioDecoderFfmpeg : public AudioNode
-{
+class AudioDecoderFfmpeg : public AudioNode {
 public:
     AudioDecoderFfmpeg();
     ~AudioDecoderFfmpeg();
