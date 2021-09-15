@@ -37,11 +37,14 @@ public:
     }
 
     void doRead() {
+        if (!buffer) {
+            buffer = Buffer::create(blockSize, &p);
+        }
         // Make room for our data.
-        buffer.acquire(blockSize, &p);
-        buffer.commit(blockSize);
+        buffer->acquire(blockSize, &p);
+        buffer->commit(blockSize);
 
-        streamDescriptor.async_read_some(boost::asio::buffer(buffer.data(), buffer.size()),
+        streamDescriptor.async_read_some(boost::asio::buffer(buffer->data(), buffer->size()),
                                          std::bind(&FdSourcePrivate::onRead, this, _1, _2));
     }
 
@@ -53,10 +56,11 @@ public:
         }
 
         // Push buffer into pipeline.
-        buffer.shrink(bytesRead);
-        p.pushBuffer(audio::AudioConf { audio::AudioCodec::Unknown,
-                                        audio::SampleRate::RateUnknown,
-                                        audio::ChannelFlags::Any }, buffer);
+        buffer->shrink(bytesRead);
+        buffer->audioConf() = { audio::AudioCodec::Unknown,
+                audio::SampleRate::RateUnknown,
+                audio::ChannelFlags::Any };
+        p.pushBuffer(buffer);
 
         doRead();
     }
@@ -67,7 +71,7 @@ public:
     uint16_t    blockSize = 0;
 
     int         bufferCount = 0;
-    core::Buffer  buffer;
+    core::BufferPtr  buffer;
 };
 
 FdSource::FdSource() :

@@ -55,7 +55,7 @@ public:
         timer.expires_at(boost::posix_time::pos_infin);
 
         // Start the persistent actor that checks for deadline expiry.
-        checkTimer();
+        //checkTimer();
     }
 
     bool isConnected() {
@@ -63,9 +63,10 @@ public:
     }
 
     bool connectAsync(boost::posix_time::time_duration timeout = boost::posix_time::milliseconds(8)) {
-        boost::system::error_code ec;
+        LOG_S(1) << "Connecting host: " << config.host;
 
         // Resolve the host name and service to a list of endpoints.
+        boost::system::error_code ec;
         tcp::resolver::results_type endpoints = tcp::resolver(MainloopPrivate::instance().ioContext).resolve(config.host, std::to_string(config.port), ec);
         if (ec) {
             LOG_S(WARNING) << ec.message() << " when connecting host: " << config.host;
@@ -173,7 +174,7 @@ public:
         timer.async_wait(bind(&TcpClientSinkPrivate::checkTimer, this));
     }
 
-    const TcpClientSink::Config& config;
+    TcpClientSink::Config config;
     Mainloop& mainloop;
     tcp::socket socket;
     deadline_timer timer;
@@ -214,11 +215,12 @@ void TcpClientSink::onProcess(core::BufferPtr& buffer) {
     }
 
     boost::system::error_code ec;
-    boost::asio::write(d->socket, boost::asio::buffer(buffer->data(), buffer->size()), ec);
+    auto written = boost::asio::write(d->socket, boost::asio::buffer(buffer->data(), buffer->size()), ec);
     if (ec) {
         LOG_S(WARNING) << ec.message();
         d->socket.close();
     }
+    LOG_IF_S(INFO, written != buffer->size()) << written << " bytes of " << buffer->size() << " written";
 }
 
 } // namespace core

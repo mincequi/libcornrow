@@ -37,7 +37,7 @@ public:
     AppSink();
     ~AppSink();
 
-    using ProcessCallback = std::function<void(const audio::AudioConf&, core::Buffer& buffer)>;
+    using ProcessCallback = std::function<void(core::BufferPtr& buffer)>;
     void setProcessCallback(ProcessCallback callback);
 
     using StopCallback = std::function<void()>;
@@ -45,7 +45,7 @@ public:
 
 private:
     virtual const char* name() const override;
-    virtual audio::AudioConf onProcess(const audio::AudioConf& conf, core::Buffer& buffer) override;
+    virtual void onProcess(core::BufferPtr& buffer) override;
     virtual void onStop() override;
 
     class AppSinkPrivate* const d;

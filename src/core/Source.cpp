@@ -68,7 +68,7 @@ void Source::setReadyCallback(ReadyCallback callback) {
     m_mutex.unlock();
 }
 
-void Source::pushBuffer(const audio::AudioConf& conf, core::Buffer& buffer) {
+void Source::pushBuffer(core::BufferPtr& buffer) {
     // If source wants to push buffers, we consider it ready.
     //if (!isReady()) {
         setReady(true);
@@ -76,7 +76,7 @@ void Source::pushBuffer(const audio::AudioConf& conf, core::Buffer& buffer) {
 
     // @TODO(mawe): currently, sources are started per default. This will change.
     if (isStarted() || !m_isControlled) {
-        process(conf, buffer);
+        process(buffer);
     }
 }
 

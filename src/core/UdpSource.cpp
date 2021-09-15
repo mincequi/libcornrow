@@ -53,8 +53,7 @@ UdpSource::UdpSource(const Config& config) :
     d(new UdpSourcePrivate),
     m_socket(d->ioContext),
     m_localEndpoint(ip::udp::v4(), config.port),
-    m_timeout(d->ioContext, std::chrono::seconds(1)),
-    m_buffer(config.prePadding + m_config.mtu)
+    m_timeout(d->ioContext, std::chrono::seconds(1))
 {
     m_socket.open(m_localEndpoint.protocol());
     m_socket.set_option(ip::udp::socket::reuse_address(true));
@@ -108,7 +107,10 @@ void UdpSource::doReceive()
     m_isReceiving = true;
 
     const auto size = m_config.prePadding + m_config.mtu;
-    auto data = m_buffer.acquire(size, this);
+    if (!m_buffer) {
+        m_buffer = Buffer::create(size);
+    }
+    auto data = m_buffer->acquire(size, this);
     //m_buffer.commit(m_config.prePadding + m_config.mtu);
     m_socket.async_receive_from(
                 buffer(data + m_config.prePadding, m_config.mtu),
@@ -130,13 +132,14 @@ void UdpSource::onReceived(const boost::system::error_code& ec, std::size_t byte
     m_isReceiving = false;
 
     ++m_bufferCount;
-    m_buffer.commit(m_config.prePadding + bytesTransferred);
-    m_buffer.trimFront(m_config.prePadding);
+    m_buffer->commit(m_config.prePadding + bytesTransferred);
+    m_buffer->trimFront(m_config.prePadding);
     //m_buffer.shrink(bytesTransferred);
 
-    pushBuffer(audio::AudioConf { audio::AudioCodec::Unknown,
-                                  audio::SampleRate::RateUnknown,
-                                  audio::ChannelFlags::Any }, m_buffer);
+    m_buffer->audioConf() = { audio::AudioCodec::Unknown,
+            audio::SampleRate::RateUnknown,
+            audio::ChannelFlags::Any };
+    pushBuffer(m_buffer);
 
     doReceive();
 }

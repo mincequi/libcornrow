@@ -82,7 +82,7 @@ void Node::process(core::BufferPtr& buffer) {
     // Process buffer
     if (!isBypassed()) {
         // @TOOD(mawe): this is for back compatibility
-        onProcess(buffer->audioConf(), *buffer.get());
+        buffer->audioConf() = onProcess(buffer->audioConf(), *buffer.get());
         onProcess(buffer);
     }
 

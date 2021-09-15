@@ -24,24 +24,20 @@ namespace airplay {
 using namespace std::placeholders;
 
 AirplaySource::AirplaySource(const AirplaySource::Config& config)
-    : d(new AirplaySourcePrivate(*this, config))
-{
-    d->appSink.setProcessCallback(std::bind(&AirplaySource::pushBuffer, this, _1, _2));
+    : d(new AirplaySourcePrivate(*this, config)) {
+    d->appSink.setProcessCallback(std::bind(&AirplaySource::pushBuffer, this, _1));
     d->appSink.setStopCallback(std::bind(&AirplaySource::stop, this));
 }
 
-AirplaySource::~AirplaySource()
-{
+AirplaySource::~AirplaySource() {
     delete d;
 }
 
-const char* AirplaySource::name() const
-{
+const char* AirplaySource::name() const {
     return "AirplaySource";
 }
 
-void AirplaySource::setReadyCallback(ReadyCallback callback)
-{
+void AirplaySource::setReadyCallback(ReadyCallback callback) {
     d->audioReceiver.setReadyCallback(callback);
 }
 

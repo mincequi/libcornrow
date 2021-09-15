@@ -57,8 +57,7 @@ public:
 private:
     const char* name() const override;
 
-    AudioConf onProcess(const AudioConf& conf, core::Buffer& buffer) override;
-    AudioConf onProcessCodec(core::Buffer& buffer);
+    void onProcess(core::BufferPtr& buffer) override;
 
     void updateConf();
 

@@ -55,7 +55,7 @@ public:
     virtual void setReadyCallback(ReadyCallback callback);
 
 protected:
-    void pushBuffer(const audio::AudioConf& conf, core::Buffer& buffer);
+    void pushBuffer(core::BufferPtr& buffer);
 
 private:
     std::mutex  m_mutex;

@@ -29,6 +29,7 @@ public:
     virtual ~AudioNode();
 
 protected:
+    void onProcess(core::BufferPtr& buffer) override;
     audio::AudioConf onProcess(const audio::AudioConf& conf, core::Buffer& buffer) override;
 };
 

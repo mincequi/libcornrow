@@ -125,17 +125,16 @@ const char* AudioDecoderFfmpeg<codec>::name() const
 }
 
 template<audio::AudioCodec codec>
-AudioConf AudioDecoderFfmpeg<codec>::onProcess(const AudioConf& conf, core::Buffer& _buffer)
-{
-    if (m_conf != conf) {
-        m_conf = conf;
+void AudioDecoderFfmpeg<codec>::onProcess(core::BufferPtr& _buffer) {
+    if (m_conf != _buffer->audioConf()) {
+        m_conf = _buffer->audioConf();
         updateConf();
     }
 
     //_buffer.grow(AV_INPUT_BUFFER_PADDING_SIZE);
     auto packet = av_packet_alloc();
-    packet->data = reinterpret_cast<uint8_t*>(_buffer.data());
-    packet->size = _buffer.size();
+    packet->data = reinterpret_cast<uint8_t*>(_buffer->data());
+    packet->size = _buffer->size();
 
     auto ret = avcodec_send_packet(m_context, packet);
     LOG_IF_F(WARNING, ret == AVERROR(EAGAIN), "No input accepted in current state");
@@ -156,15 +155,15 @@ AudioConf AudioDecoderFfmpeg<codec>::onProcess(const AudioConf& conf, core::Buff
         _conf.rate = toCoro(frame->sample_rate);
 
         if (frame->format == AV_SAMPLE_FMT_FLTP) {
-            interleave<float>(frame, _buffer);
+            interleave<float>(frame, *_buffer);
             _conf.codec = AudioCodec::RawFloat32;
         } else if (frame->format == AV_SAMPLE_FMT_S16P) {
-            interleave<int16_t>(frame, _buffer);
+            interleave<int16_t>(frame, *_buffer);
             _conf.codec = AudioCodec::RawInt16;
         } else {
             LOG_F(ERROR, "format not supported: %d", frame->format);
             _conf = {};
-            _buffer.clear();
+            _buffer->clear();
         }
 
         //next()->process( { AudioCodec::RawFloat32, toCoro(frame->sample_rate), Channels::Stereo }, _buffer);
@@ -173,15 +172,7 @@ AudioConf AudioDecoderFfmpeg<codec>::onProcess(const AudioConf& conf, core::Buff
     av_packet_free(&packet);
     av_frame_free(&frame);
 
-    //LOG_F(1, "onProcessCodec> %zu bytes", _buffer.size());
-
-    return _conf;
-}
-
-template<audio::AudioCodec codec>
-AudioConf AudioDecoderFfmpeg<codec>::onProcessCodec(core::Buffer& buffer)
-{
-    return {};
+    _buffer->audioConf() = _conf;
 }
 
 template<audio::AudioCodec codec>

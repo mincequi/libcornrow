@@ -20,49 +20,39 @@
 namespace coro {
 namespace core {
 
-class AppSinkPrivate
-{
+class AppSinkPrivate {
 public:
     AppSink::ProcessCallback processCallback = nullptr;
     AppSink::StopCallback stopCallback = nullptr;
 };
 
 AppSink::AppSink()
-    : d(new AppSinkPrivate)
-{
+    : d(new AppSinkPrivate) {
 }
 
-AppSink::~AppSink()
-{
+AppSink::~AppSink() {
     delete d;
 }
 
-void AppSink::setProcessCallback(ProcessCallback callback)
-{
+void AppSink::setProcessCallback(ProcessCallback callback) {
     d->processCallback = callback;
 }
 
-void AppSink::setStopCallback(StopCallback callback)
-{
+void AppSink::setStopCallback(StopCallback callback) {
     d->stopCallback = callback;
 }
 
-const char* AppSink::name() const
-{
+const char* AppSink::name() const {
     return "AppSink";
 }
 
-audio::AudioConf AppSink::onProcess(const audio::AudioConf& conf, core::Buffer& buffer)
-{
+void AppSink::onProcess(core::BufferPtr& buffer) {
     if (d->processCallback) {
-        d->processCallback(conf, buffer);
+        d->processCallback(buffer);
     }
-
-    return {};
 }
 
-void AppSink::onStop()
-{
+void AppSink::onStop() {
     if (d->stopCallback) {
         d->stopCallback();
     }
