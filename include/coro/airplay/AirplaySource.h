@@ -22,8 +22,7 @@
 namespace coro {
 namespace airplay {
 
-class AirplaySource : public core::Source
-{
+class AirplaySource : public core::Source {
 public:
     static constexpr std::array<std::pair<core::Cap, core::Cap>, 1> caps() {
         return {{
@@ -35,7 +34,7 @@ public:
     }
 
     struct Config {
-        std::string name;
+        std::string name = "myAirplay";
         uint16_t port = 0;
         uint16_t bufferTimeMs = 2000;
     };

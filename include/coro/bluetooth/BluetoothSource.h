@@ -24,16 +24,21 @@
 namespace coro {
 namespace bluetooth {
 
-class BluetoothSource : public core::Source
-{
+class BluetoothSource : public core::Source {
 public:
-    static constexpr std::array<audio::AudioCaps,1> outCaps() {
-        return {{ { audio::AudioCodec::RawInt16,
-                    audio::SampleRate::Rate44100 | audio::SampleRate::Rate48000,
-                    audio::Channels::Stereo } }};
+    static constexpr std::array<std::pair<core::Cap, core::Cap>, 1> caps() {
+        return {{
+                { { core::NoCap {} }, // in
+                  { audio::AudioCap { audio::AudioCodec::RawInt16, audio::SampleRate::Rate44100 | audio::SampleRate::Rate48000, audio::Channels::Stereo } } } // out
+               }};
     }
 
-    BluetoothSource();
+    struct Config {
+        audio::AudioCodecs codecs = audio::AudioCodec::Sbc;
+        audio::SampleRates sampleRates = audio::SampleRate::Rate44100 | audio::SampleRate::Rate48000;
+    };
+
+    BluetoothSource(const Config& config);
     virtual ~BluetoothSource();
 
     const char* name() const override;

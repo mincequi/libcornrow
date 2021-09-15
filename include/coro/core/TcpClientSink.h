@@ -34,8 +34,8 @@ public:
     }
 
     struct Config {
-        std::string host;
-        uint16_t port;
+        std::string host = "127.0.0.1";
+        uint16_t port = 4953;
     };
 
     TcpClientSink(const Config& config);
