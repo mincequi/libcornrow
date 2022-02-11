@@ -33,8 +33,7 @@ struct BufferDeleter {
 };
 using BufferPtr = std::unique_ptr<Buffer, BufferDeleter>;
 
-class Buffer
-{
+class Buffer {
 public:
     static BufferPtr create(size_t reservedSize = 0, const Node* caller = nullptr);
 
@@ -65,6 +64,10 @@ public:
     const char* data() const;
     size_t size() const;
 
+	/**
+	 * @brief capacity
+	 * @return
+	 */
     size_t capacity() const;
 
     char* acquire(size_t size, const core::Node* caller = nullptr) const;

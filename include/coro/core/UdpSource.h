@@ -27,8 +27,7 @@
 namespace coro {
 namespace core {
 
-class UdpSource : public core::Source
-{
+class UdpSource : public core::Source {
 public:
     static constexpr std::array<std::pair<core::Cap, core::Cap>, 1> caps() {
         return {{{ { NoCap {} }, // in
@@ -36,7 +35,6 @@ public:
                }}};
     }
 
-    // @TODO(mawe): think about struct vs multiple parameters...
     struct Config {
         uint16_t port = 0;
         uint8_t prePadding = 0;

@@ -34,21 +34,18 @@ RtspServerPrivate::RtspServerPrivate(RtspMessageHandler& _handler, uint16_t port
     handler(_handler),
     ioContext(core::MainloopPrivate::instance().ioContext),
     acceptor(ioContext, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
-    socket(ioContext)
-{
+	socket(ioContext) {
     doAccept();
 }
 
-void RtspServerPrivate::doAccept()
-{
+void RtspServerPrivate::doAccept() {
     socket.close();
     acceptor.async_accept(socket, std::bind(&RtspServerPrivate::onAccepted, this, _1));
 }
 
-void RtspServerPrivate::onAccepted(const boost::system::error_code& error)
-{
+void RtspServerPrivate::onAccepted(const boost::system::error_code& error) {
     if (error) {
-        LOG_F(ERROR, "error: %s", error.message().c_str());
+		LOG_F(ERROR, "%s", error.message().c_str());
         doAccept();
         return;
     }
@@ -56,13 +53,11 @@ void RtspServerPrivate::onAccepted(const boost::system::error_code& error)
     doReceive();
 }
 
-void RtspServerPrivate::doReceive()
-{
+void RtspServerPrivate::doReceive() {
     socket.async_receive(boost::asio::buffer(receiveBuffer), std::bind(&RtspServerPrivate::onReceived, this, _1, _2));
 }
 
-void RtspServerPrivate::onReceived(const boost::system::error_code& error, size_t bytes)
-{
+void RtspServerPrivate::onReceived(const boost::system::error_code& error, size_t bytes) {
     if (error) {
         LOG_F(INFO, "%s", error.message().c_str());
         doAccept();
@@ -81,16 +76,14 @@ void RtspServerPrivate::onReceived(const boost::system::error_code& error, size_
     doSend(response);
 }
 
-void RtspServerPrivate::doSend(const RtspMessage& response)
-{
+void RtspServerPrivate::doSend(const RtspMessage& response) {
     sendBuffer = response.serialize();
     socket.async_send(boost::asio::buffer(sendBuffer), std::bind(&RtspServerPrivate::onSent, this, _1, _2));
 
     LOG_F(2, "send buffer: %s", sendBuffer.c_str());
 }
 
-void RtspServerPrivate::onSent(const boost::system::error_code& error, size_t bytes)
-{
+void RtspServerPrivate::onSent(const boost::system::error_code& error, size_t bytes) {
     if (error) {
         LOG_F(WARNING, "error: %s", error.message().c_str());
         return;

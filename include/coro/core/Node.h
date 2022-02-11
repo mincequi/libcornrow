@@ -68,8 +68,11 @@ protected:
 
     virtual void onStart();
     virtual void onStop();
-    virtual audio::AudioConf onProcess(const audio::AudioConf& conf, core::Buffer& buffer);
-    virtual void onProcess(core::BufferPtr& buffer);
+	virtual void onConfig(const audio::AudioConf& config);
+	virtual void onProcess(core::BufferPtr& buffer);
+
+	// TODO: obsolete
+	virtual audio::AudioConf onProcess(const audio::AudioConf& conf, core::Buffer& buffer);
 
 private:
     Node* m_next = nullptr;

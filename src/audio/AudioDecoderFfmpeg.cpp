@@ -52,7 +52,7 @@ AudioDecoderFfmpeg<codec>::~AudioDecoderFfmpeg()
 template<>
 void AudioDecoderFfmpeg<audio::AudioCodec::Alac>::init(const std::string& data)
 {
-    LOG_F(INFO, "ALAC fmtp: %s", data.c_str());
+	LOG_F(INFO, "ALAC> fmtp: %s", data.c_str());
 
     /**
      * @file

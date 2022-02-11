@@ -19,9 +19,9 @@
 #include <cstring>
 #include <iostream>
 
-#include <coro/audio/AlsaSink.h>
 #include <coro/audio/AudioConverter.h>
 #include <coro/audio/AudioDecoderFfmpeg.h>
+#include <coro/audio/PortAudioSink.h>
 #include <coro/core/Mainloop.h>
 #include <coro/core/UdpSource.h>
 #include <coro/rtp/RtpDecoder.h>
@@ -30,8 +30,7 @@ using namespace coro;
 using namespace coro::audio;
 using namespace coro::core;
 
-int main()
-{
+int main() {
     core::UdpSource::Config config;
     config.port = 4010;
     config.mtu = 3000;
@@ -42,7 +41,7 @@ int main()
     });
     rtp::RtpDecoder<AudioCodec::Ac3> rtpDecoder;
     AudioDecoderFfmpeg<AudioCodec::Ac3> ac3Decoder;
-    AlsaSink     sink;
+	PortAudioSink sink;
     audio::AudioConverter<float, int16_t> converter;
     audio::AudioNode::link(source, rtpDecoder);
     audio::AudioNode::link(rtpDecoder, ac3Decoder);

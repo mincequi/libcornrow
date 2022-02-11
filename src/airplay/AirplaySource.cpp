@@ -25,6 +25,10 @@ using namespace std::placeholders;
 
 AirplaySource::AirplaySource(const AirplaySource::Config& config)
     : d(new AirplaySourcePrivate(*this, config)) {
+	d->appSink.setStartCallback([this]() {
+		pushConfig( { audio::AudioCodec::RawInt16, audio::SampleRate::Rate44100, audio::Channels::Stereo } );
+		start();
+	});
     d->appSink.setProcessCallback(std::bind(&AirplaySource::pushBuffer, this, _1));
     d->appSink.setStopCallback(std::bind(&AirplaySource::stop, this));
 }

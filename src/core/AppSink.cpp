@@ -22,8 +22,9 @@ namespace core {
 
 class AppSinkPrivate {
 public:
-    AppSink::ProcessCallback processCallback = nullptr;
-    AppSink::StopCallback stopCallback = nullptr;
+	AppSink::StartCallback startCallback = nullptr;
+	AppSink::StopCallback stopCallback = nullptr;
+	AppSink::ProcessCallback processCallback = nullptr;
 };
 
 AppSink::AppSink()
@@ -34,12 +35,16 @@ AppSink::~AppSink() {
     delete d;
 }
 
-void AppSink::setProcessCallback(ProcessCallback callback) {
-    d->processCallback = callback;
+void AppSink::setStartCallback(StartCallback callback) {
+	d->startCallback = callback;
 }
 
 void AppSink::setStopCallback(StopCallback callback) {
-    d->stopCallback = callback;
+	d->stopCallback = callback;
+}
+
+void AppSink::setProcessCallback(ProcessCallback callback) {
+    d->processCallback = callback;
 }
 
 const char* AppSink::name() const {
@@ -50,6 +55,12 @@ void AppSink::onProcess(core::BufferPtr& buffer) {
     if (d->processCallback) {
         d->processCallback(buffer);
     }
+}
+
+void AppSink::onStart() {
+	if (d->startCallback) {
+		d->startCallback();
+	}
 }
 
 void AppSink::onStop() {

@@ -17,13 +17,6 @@ using namespace coro::audio;
 #include <coro/audio/ScreamSource.h>
 
 #include <thread>
-#include <asio/io_service.hpp>
-#include <asio/placeholders.hpp>
-#include <asio/steady_timer.hpp>
-#include <asio/strand.hpp>
-#include <asio/ip/address.hpp>
-#include <asio/ip/multicast.hpp>
-#include <asio/ip/udp.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
 #include <boost/system/error_code.hpp>

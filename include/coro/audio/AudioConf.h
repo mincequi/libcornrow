@@ -22,8 +22,7 @@
 namespace coro {
 namespace audio {
 
-class AudioConf
-{
+class AudioConf {
 public:
     AudioCodec  codec = AudioCodec::Invalid;
     SampleRate  rate = SampleRate::Invalid;

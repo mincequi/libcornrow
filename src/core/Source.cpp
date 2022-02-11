@@ -28,7 +28,14 @@ Source::~Source() {
 
 void Source::start() {
     m_isStarted = true;
-    onStart();
+
+	Node* _next = this;
+	while (_next) {
+		if (!_next->isBypassed()) {
+			_next->onStart();
+		}
+		_next = _next->next();
+	}
 }
 
 void Source::stop() {
@@ -68,6 +75,14 @@ void Source::setReadyCallback(ReadyCallback callback) {
     m_mutex.unlock();
 }
 
+void Source::pushConfig(const audio::AudioConf& config) {
+	auto _next = next();
+	while (_next) {
+		_next->onConfig(config);
+		_next = _next->next();
+	}
+}
+
 void Source::pushBuffer(core::BufferPtr& buffer) {
     // If source wants to push buffers, we consider it ready.
     //if (!isReady()) {
@@ -76,6 +91,10 @@ void Source::pushBuffer(core::BufferPtr& buffer) {
 
     // @TODO(mawe): currently, sources are started per default. This will change.
     if (isStarted() || !m_isControlled) {
+		if (m_config != buffer->audioConf()) {
+			m_config = buffer->audioConf();
+			pushConfig(m_config);
+		}
         process(buffer);
     }
 }

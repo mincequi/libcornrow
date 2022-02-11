@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Manuel Weichselbaumer <mincequi@web.de>
+ * Copyright (C) 2022 Manuel Weichselbaumer <mincequi@web.de>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,20 +17,31 @@
 
 #pragma once
 
-#include "Types.h"
+#include <cstdint>
+#include <list>
+#include <string>
 
-namespace coro
-{
+namespace coro {
+namespace audio {
 
-class AlsaUtil
-{
-public:
-    AlsaUtil();
-
-    std::list<AudioDeviceInfo> outputDevices();
-
-private:
-    std::list<AudioDeviceInfo> m_outputDevices;
+enum class AudioDeviceType : uint8_t {
+	Invalid,
+	Default,
+	Spdif,
+	Hdmi
 };
+std::ostream& operator<<(std::ostream& out, AudioDeviceType t);
 
-} // namespace coro
+struct AudioDeviceInfo {
+	explicit AudioDeviceInfo(const std::string& name, const std::string& desc = std::string());
+
+	std::string name;
+	uint16_t	maxChannels = 0;
+	std::string desc;
+	AudioDeviceType type;
+};
+std::ostream& operator<<(std::ostream& out, const AudioDeviceInfo& info);
+using AudioDeviceInfoList = std::list<AudioDeviceInfo>;
+
+}
+}

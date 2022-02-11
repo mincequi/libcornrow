@@ -23,10 +23,9 @@
 #include <functional>
 #include <mutex>
 
+#include <coro/audio/AudioConf.h>
+
 namespace coro {
-namespace audio {
-class AudioConf;
-}
 namespace core {
 
 class Source : public core::Node
@@ -55,6 +54,7 @@ public:
     virtual void setReadyCallback(ReadyCallback callback);
 
 protected:
+	void pushConfig(const audio::AudioConf& config);
     void pushBuffer(core::BufferPtr& buffer);
 
 private:
@@ -64,6 +64,8 @@ private:
     std::atomic_bool m_isControlled = false;
     std::atomic_bool m_isStarted = true;
     std::atomic_bool m_isReady = false;
+
+	audio::AudioConf m_config;
 
     friend class SourceSelector;
 };

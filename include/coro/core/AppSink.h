@@ -37,16 +37,20 @@ public:
     AppSink();
     ~AppSink();
 
-    using ProcessCallback = std::function<void(core::BufferPtr& buffer)>;
-    void setProcessCallback(ProcessCallback callback);
+	using StartCallback = std::function<void()>;
+	void setStartCallback(StartCallback callback);
 
     using StopCallback = std::function<void()>;
     void setStopCallback(StopCallback callback);
 
+	using ProcessCallback = std::function<void(core::BufferPtr& buffer)>;
+	void setProcessCallback(ProcessCallback callback);
+
 private:
     virtual const char* name() const override;
-    virtual void onProcess(core::BufferPtr& buffer) override;
-    virtual void onStop() override;
+	virtual void onStart() override;
+	virtual void onStop() override;
+	virtual void onProcess(core::BufferPtr& buffer) override;
 
     class AppSinkPrivate* const d;
 };

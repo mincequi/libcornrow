@@ -63,7 +63,7 @@ AirplaySourcePrivate::AirplaySourcePrivate(AirplaySource& _p, const AirplaySourc
     core::Node::link(decrypter, decoder);
     core::Node::link(decoder, appSink);
 
-    LOG_F(INFO, "Reception started. name: %s, rtsp port: %d, rtp port: %d", config.name.c_str(), rtspServer.port(), audioReceiver.port());
+	LOG_F(INFO, "reception started. name: %s, rtsp port: %d, rtp port: %d", config.name.c_str(), rtspServer.port(), audioReceiver.port());
 }
 
 } // namespace airplay

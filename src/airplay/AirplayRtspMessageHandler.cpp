@@ -33,6 +33,7 @@
 
 #include <boost/asio/ip/host_name.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/endian/conversion.hpp>
 
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
@@ -84,8 +85,7 @@ AirplayRtspMessageHandler::AirplayRtspMessageHandler(uint16_t controlPort,
     (void)m_rtpDecoder;
 }
 
-void AirplayRtspMessageHandler::onOptions(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
-{
+void AirplayRtspMessageHandler::onOptions(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const {
     RtspMessageHandler::onOptions(request, response, ipAddress);
 
     //response->header("Audio-Jack-Status") = "connected; type=analog"; // not needed
@@ -94,8 +94,9 @@ void AirplayRtspMessageHandler::onOptions(const RtspMessage& request, RtspMessag
     }
 }
 
-void AirplayRtspMessageHandler::onAnnounce(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
-{
+void AirplayRtspMessageHandler::onAnnounce(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const {
+	LOG_S(INFO) << "onAnnounce>";
+
     if (!request.sdp().media.size()) {
         return;
     }
@@ -109,8 +110,9 @@ void AirplayRtspMessageHandler::onAnnounce(const RtspMessage& request, RtspMessa
     m_decoder.init(fmtp);
 }
 
-void AirplayRtspMessageHandler::onSetup(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
-{
+void AirplayRtspMessageHandler::onSetup(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const {
+	LOG_S(INFO) << "onSetup>";
+
     m_rtpReceiver.start();
 
     std::stringstream ss;
@@ -124,22 +126,24 @@ void AirplayRtspMessageHandler::onSetup(const RtspMessage& request, RtspMessage*
     response->header("Transport") = ss.str();
 }
 
-void AirplayRtspMessageHandler::onRecord(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const
-{
+void AirplayRtspMessageHandler::onRecord(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const {
+	LOG_S(INFO) << "onRecord>";
     //m_rtpReceiver.flush();
 }
 
-void AirplayRtspMessageHandler::onTeardown(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const
-{
+void AirplayRtspMessageHandler::onTeardown(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const {
+	LOG_S(INFO) << "onTeardown>";
+
     m_rtpReceiver.stop();
 }
 
-void AirplayRtspMessageHandler::onAppleChallenge(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const
-{
+void AirplayRtspMessageHandler::onAppleChallenge(const rtsp::RtspMessage& request, rtsp::RtspMessage* response, uint32_t ipAddress) const {
+	LOG_S(INFO) << "onAppleChallenge>";
+
     // base64 decode appleChallenge
     auto appleChallenge = core::util::base64Decode(request.header("Apple-Challenge"));
     // append ipv4 address in network byte order
-    auto ipAddressBe = htobe32(ipAddress);
+    auto ipAddressBe = boost::endian::native_to_big(ipAddress);
     appleChallenge.insert(appleChallenge.size(), reinterpret_cast<const char*>(&ipAddressBe), sizeof(ipAddressBe));
     // append mac address in network byte order
     uint8_t hwAddress[] = { 1, 2, 3, 4, 5, 6 };

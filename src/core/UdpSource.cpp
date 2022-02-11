@@ -31,12 +31,10 @@ using namespace boost::asio;
 using namespace boost::asio::ip;
 namespace ph = std::placeholders;
 
-class UdpSourcePrivate
-{
+class UdpSourcePrivate {
 public:
     UdpSourcePrivate()
-        : ioContext(MainloopPrivate::instance().ioContext)
-    {
+		: ioContext(MainloopPrivate::instance().ioContext) {
     }
 
     boost::asio::io_context& ioContext;
@@ -44,8 +42,7 @@ public:
 };
 
 UdpSource::UdpSource() :
-    UdpSource(Config())
-{
+	UdpSource(Config()) {
 }
 
 UdpSource::UdpSource(const Config& config) :
@@ -53,8 +50,7 @@ UdpSource::UdpSource(const Config& config) :
     d(new UdpSourcePrivate),
     m_socket(d->ioContext),
     m_localEndpoint(ip::udp::v4(), config.port),
-    m_timeout(d->ioContext, std::chrono::seconds(1))
-{
+	m_timeout(d->ioContext, std::chrono::seconds(1)) {
     m_socket.open(m_localEndpoint.protocol());
     m_socket.set_option(ip::udp::socket::reuse_address(true));
     m_socket.bind(m_localEndpoint);
@@ -63,7 +59,7 @@ UdpSource::UdpSource(const Config& config) :
         boost::system::error_code ec;
         m_socket.set_option(ip::multicast::join_group(ip::address_v4(config.multicastGroup)), ec);
         if (ec) {
-            LOG_F(ERROR, "Unable to join multicast group");
+			LOG_F(ERROR, "unable to join multicast group");
             return;
         }
     }
@@ -72,8 +68,7 @@ UdpSource::UdpSource(const Config& config) :
     //startTimer();
 }
 
-UdpSource::~UdpSource()
-{
+UdpSource::~UdpSource() {
     // When we close, we have to poll for pending events in queue.
     // Otherwise signal handler on deleted object will be called.
     m_socket.close();
@@ -83,24 +78,20 @@ UdpSource::~UdpSource()
     //Source::stop();
 }
 
-const char* UdpSource::name() const
-{
+const char* UdpSource::name() const {
     return "UdpSource";
 }
 
-uint16_t UdpSource::port() const
-{
+uint16_t UdpSource::port() const {
     return m_socket.local_endpoint().port();
 }
 
-void UdpSource::startTimer()
-{
+void UdpSource::startTimer() {
     m_timeout.expires_at(m_timeout.expiry() + chrono::seconds(1));
     m_timeout.async_wait(std::bind(&UdpSource::onTimeout, this));
 }
 
-void UdpSource::doReceive()
-{
+void UdpSource::doReceive() {
     if (m_isReceiving) {
         return;
     }
@@ -108,7 +99,7 @@ void UdpSource::doReceive()
 
     const auto size = m_config.prePadding + m_config.mtu;
     if (!m_buffer) {
-        m_buffer = Buffer::create(size);
+		m_buffer = Buffer::create(size, this);
     }
     auto data = m_buffer->acquire(size, this);
     //m_buffer.commit(m_config.prePadding + m_config.mtu);
@@ -118,15 +109,14 @@ void UdpSource::doReceive()
                 std::bind(&UdpSource::onReceived, this, ph::_1, ph::_2));
 }
 
-void UdpSource::onReceived(const boost::system::error_code& ec, std::size_t bytesTransferred)
-{
+void UdpSource::onReceived(const boost::system::error_code& ec, std::size_t bytesTransferred) {
     if (ec) {
         LOG_F(INFO, "%s", ec.message().c_str());
         return;
     }
 
     if (fabs((m_previousBytesTransferred - bytesTransferred) / bytesTransferred) > 0.125f) {
-        LOG_F(1, "Transfer size changed: %zu", bytesTransferred);
+		LOG_F(1, "transfer size changed: %zu", bytesTransferred);
     }
     m_previousBytesTransferred = bytesTransferred;
     m_isReceiving = false;
@@ -144,8 +134,7 @@ void UdpSource::onReceived(const boost::system::error_code& ec, std::size_t byte
     doReceive();
 }
 
-void UdpSource::onTimeout()
-{
+void UdpSource::onTimeout() {
     startTimer();
     doReceive();
 

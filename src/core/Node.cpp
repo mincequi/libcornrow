@@ -73,7 +73,10 @@ audio::AudioConf Node::onProcess(const audio::AudioConf& conf, core::Buffer&) {
     return conf;
 }
 
-void Node::onProcess(core::BufferPtr&) {
+void Node::onConfig(const audio::AudioConf& /*config*/) {
+}
+
+void Node::onProcess(core::BufferPtr& /*buffer*/) {
 }
 
 void Node::process(core::BufferPtr& buffer) {
@@ -83,6 +86,8 @@ void Node::process(core::BufferPtr& buffer) {
     if (!isBypassed()) {
         // @TOOD(mawe): this is for back compatibility
         buffer->audioConf() = onProcess(buffer->audioConf(), *buffer.get());
+
+		// This is the proper method
         onProcess(buffer);
     }
 

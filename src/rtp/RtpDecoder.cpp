@@ -48,7 +48,7 @@ audio::AudioConf RtpDecoder<codec>::onProcess(const audio::AudioConf& conf, core
 {
     if (buffer.size() < 12) { // RtpHeader 12 bytes
         buffer.clear();
-        LOG_F(WARNING, "Header invalid");
+		LOG_F(WARNING, "header invalid");
         return {};
     }
 
@@ -57,16 +57,16 @@ audio::AudioConf RtpDecoder<codec>::onProcess(const audio::AudioConf& conf, core
     rtpHeader->timestamp = boost::endian::big_to_native(rtpHeader->timestamp);
     if (rtpHeader->payloadType < 96) {
         buffer.clear();
-        LOG_F(WARNING, "Header invalid");
+		LOG_F(WARNING, "header invalid");
         return {};
     }
 
     if (m_isFlushed) {
         m_isFlushed = false;
         m_seq = rtpHeader->sequenceNumber;
-        LOG_F(INFO, "Sequence starts at: %d", m_seq);
+		LOG_F(INFO, "sequence starts at: %d", m_seq);
     } else if (++m_seq != rtpHeader->sequenceNumber) {
-        LOG_F(WARNING, "Sequence discontinuous. %d, %d", m_seq, rtpHeader->sequenceNumber);
+		LOG_F(WARNING, "sequence discontinuous. %d, %d", m_seq, rtpHeader->sequenceNumber);
         m_seq = rtpHeader->sequenceNumber;
     }
 
@@ -84,19 +84,19 @@ audio::AudioConf RtpDecoder<audio::AudioCodec::Ac3>::onProcessCodec(const rtp::R
 {
     if (buffer.size() < header.size() + 2) { // RtpHeader 12 bytes + Ac3Header 2 bytes
         buffer.clear();
-        LOG_F(WARNING, "AC3 header invalid");
+		LOG_F(WARNING, "AC3> header invalid");
         return {};
     }
 
     if (!header.marker || header.payloadType < 96) {
         buffer.clear();
-        LOG_F(WARNING, "AC3 header invalid");
+		LOG_F(WARNING, "AC3> header invalid");
         return {};
     }
 
     if ((buffer.data() + header.size())[0] != 0 || (buffer.data() + header.size())[1] != 1) {
         buffer.clear();
-        LOG_F(WARNING, "AC3 header invalid");
+		LOG_F(WARNING, "AC3> header invalid");
         return {};
     }
 
@@ -109,12 +109,12 @@ template<>
 audio::AudioConf RtpDecoder<audio::AudioCodec::Sbc>::onProcessCodec(const rtp::RtpHeader& header, core::Buffer& buffer)
 {
     if (buffer.size() < header.size() + 1) { // RtpHeader 12 bytes + SbcHeader 1 byte
-        LOG_F(WARNING, "SBC header invalid");
+		LOG_F(WARNING, "SBC> header invalid");
         return {};
     }
 
     if (!header.isValidSbc()) {
-        LOG_F(WARNING, "SBC header invalid");
+		LOG_F(WARNING, "SBC> header invalid");
         return {};
     }
 
@@ -125,7 +125,7 @@ audio::AudioConf RtpDecoder<audio::AudioCodec::Sbc>::onProcessCodec(const rtp::R
     }
 
     if (rtpSbcHeader->isFragmented) {
-        LOG_F(WARNING, "Fragmented packet(s) not supported");
+		LOG_F(WARNING, "fragmented packet(s) not supported");
         return {};
     }
 

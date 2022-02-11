@@ -27,19 +27,16 @@ using namespace std::placeholders;
 namespace coro {
 namespace rtsp {
 
-class RtspMessageHandlerPrivate
-{
+class RtspMessageHandlerPrivate {
 public:
-    RtspMessageHandlerPrivate()
-    {
+	RtspMessageHandlerPrivate() {
     }
 
     std::map<std::string, std::function<void(const RtspMessage&, RtspMessage*, uint32_t)>> methodMap;
 };
 
 RtspMessageHandler::RtspMessageHandler() :
-    d(new RtspMessageHandlerPrivate)
-{
+	d(new RtspMessageHandlerPrivate) {
     d->methodMap["OPTIONS"] = std::bind(&RtspMessageHandler::onOptions, this, _1, _2, _3);
     d->methodMap["DESCRIBE"] = std::bind(&RtspMessageHandler::onDescribe, this, _1, _2, _3);
     d->methodMap["SETUP"] = std::bind(&RtspMessageHandler::onSetup, this, _1, _2, _3);
@@ -53,86 +50,72 @@ RtspMessageHandler::RtspMessageHandler() :
     d->methodMap["FLUSH"] = std::bind(&RtspMessageHandler::onFlush, this, _1, _2, _3);
 }
 
-RtspMessageHandler::~RtspMessageHandler()
-{
+RtspMessageHandler::~RtspMessageHandler() {
     delete d;
 }
 
-void RtspMessageHandler::onMessage(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
-{
+void RtspMessageHandler::onMessage(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const {
     auto it = d->methodMap.find(request.method());
     if (it == d->methodMap.end()) {
         onUnknown(request, response, ipAddress);
         return;
     }
 
-    LOG_F(1, "Method handled: %s", request.method().c_str());
+	LOG_F(1, "method handled: %s", request.method().c_str());
     it->second(request, response, ipAddress);
 }
 
 // Standard RtspRequests
-void RtspMessageHandler::onOptions(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
-{
+void RtspMessageHandler::onOptions(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const {
     response->header("Public") = "OPTIONS, DESCRIBE, SETUP, PLAY, PAUSE, RECORD, "
                                  "ANNOUNCE, TEARDOWN, GET_PARAMETER, SET_PARAMETER, "
                                  "FLUSH";   // FLUSH is proprietary
 }
 
-void RtspMessageHandler::onDescribe(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
-{
+void RtspMessageHandler::onDescribe(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const {
     onUnknown(request, response, ipAddress);
 }
 
-void RtspMessageHandler::onSetup(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
-{
+void RtspMessageHandler::onSetup(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const {
     onUnknown(request, response, ipAddress);
 }
 
-void RtspMessageHandler::onPlay(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
-{
+void RtspMessageHandler::onPlay(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const {
     onUnknown(request, response, ipAddress);
 }
 
-void RtspMessageHandler::onPause(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
-{
+void RtspMessageHandler::onPause(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const {
     onUnknown(request, response, ipAddress);
 }
 
-void RtspMessageHandler::onRecord(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
-{
+void RtspMessageHandler::onRecord(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const {
     onUnknown(request, response, ipAddress);
 }
 
-void RtspMessageHandler::onAnnounce(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
-{
+void RtspMessageHandler::onAnnounce(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const {
     onUnknown(request, response, ipAddress);
 }
 
-void RtspMessageHandler::onTeardown(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
-{
+void RtspMessageHandler::onTeardown(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const {
     onUnknown(request, response, ipAddress);
 }
 
-void RtspMessageHandler::onGetParameter(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
-{
+void RtspMessageHandler::onGetParameter(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const {
     onUnknown(request, response, ipAddress);
 }
 
-void RtspMessageHandler::onSetParameter(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
-{
+void RtspMessageHandler::onSetParameter(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const {
     onUnknown(request, response, ipAddress);
 }
 
 // Proprietary RtspRequests
-void RtspMessageHandler::onFlush(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
-{
+void RtspMessageHandler::onFlush(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const {
     onUnknown(request, response, ipAddress);
 }
 
 // Other RtspRequests
-void RtspMessageHandler::onUnknown(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const
-{
-    LOG_F(WARNING, "Method unknown: %s", request.method().c_str());
+void RtspMessageHandler::onUnknown(const RtspMessage& request, RtspMessage* response, uint32_t ipAddress) const {
+	LOG_F(WARNING, "method unknown: %s", request.method().c_str());
 }
 
 } // namespace rtsp

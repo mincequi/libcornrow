@@ -18,6 +18,7 @@
 #include "core/BufferPool.h"
 
 #include "core/Buffer.h"
+#include <core/Node.h>
 #include "loguru/loguru.hpp"
 
 #include <functional>
@@ -61,7 +62,7 @@ BufferPtr BufferPool::acquire(size_t size, const core::Node* caller) const {
     }
     // If no valid buffer found, acquire new one.
     if (!buffer) {
-        LOG_F(INFO, "New buffer created. size: %zu", size);
+		LOG_S(INFO) << caller->name() << " created new buffer. size: " << size;
         buffer = new Buffer(size);
     }
 

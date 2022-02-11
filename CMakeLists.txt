@@ -13,6 +13,7 @@ find_package(Boost COMPONENTS system REQUIRED)
 find_package(OpenSSL)
 pkg_check_modules(AVCODEC REQUIRED libavcodec)
 pkg_check_modules(AVUTIL REQUIRED libavutil)
+pkg_check_modules(PORTAUDIO REQUIRED portaudiocpp)
 
 list(APPEND SOURCES
     src/Types.cpp
@@ -22,6 +23,7 @@ list(APPEND SOURCES
     src/audio/AudioConf.cpp
     src/audio/AudioConverter.cpp
     src/audio/AudioDecoderFfmpeg.cpp
+    src/audio/AudioDeviceInfo.cpp
     src/audio/AudioEncoderFfmpeg.cpp
     src/audio/AudioNode.cpp
     #src/audio/AudioTestSource.cpp
@@ -30,6 +32,7 @@ list(APPEND SOURCES
     src/audio/FileSink.cpp
     src/audio/Loudness.cpp
     src/audio/Peq.cpp
+    src/audio/PortAudioSink.cpp
     src/audio/ScreamSource.cpp
     src/audio/TBiquad.cpp
     src/core/AppSink.cpp
@@ -128,6 +131,7 @@ list(APPEND LIBRARIES
     ${Boost_LIBRARIES}
     ${OPENSSL_LIBRARIES}
     ${CORO_LIBRARIES}
+    ${PORTAUDIO_LINK_LIBRARIES}
     pthread
     dl
     dns_sd

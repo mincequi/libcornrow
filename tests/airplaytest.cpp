@@ -17,6 +17,7 @@
 
 #include <coro/airplay/AirplaySource.h>
 #include <coro/audio/AlsaSink.h>
+#include <coro/audio/PortAudioSink.h>
 #include <coro/core/Mainloop.h>
 
 #include <unistd.h>
@@ -30,7 +31,7 @@ int main()
     airplay::AirplaySource::Config config { "myAirplay" };
 
     airplay::AirplaySource source(config);
-    audio::AlsaSink sink;
+	audio::PortAudioSink sink;
     core::Node::link(source, sink);
 
     core::Mainloop& mainloop = core::Mainloop::instance();
