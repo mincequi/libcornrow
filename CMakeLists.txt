@@ -71,7 +71,6 @@ endif()
 
 if(ALSA_FOUND)
     list(APPEND SOURCES
-        src/AlsaUtil.cpp
         src/audio/AlsaSink.cpp
     )
 endif()
