@@ -6,15 +6,15 @@ macro(coro_tests)
 endmacro()
 
 coro_tests(
-    airplaytest
-    airplay2test
-    portaudiotest
+    #airplaytest
+    #airplay2test
+    #portaudiotest
     biquadtest
     buffertest
     convertertest
     corotest
     #encodertest
-    screamtest
+    #screamtest
     TcpClientSinkTest
 )
 

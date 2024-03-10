@@ -13,7 +13,7 @@ find_package(Boost COMPONENTS system REQUIRED)
 find_package(OpenSSL)
 pkg_check_modules(AVCODEC REQUIRED libavcodec)
 pkg_check_modules(AVUTIL REQUIRED libavutil)
-pkg_check_modules(PORTAUDIO REQUIRED portaudiocpp)
+#pkg_check_modules(PORTAUDIO REQUIRED portaudiocpp)
 
 list(APPEND SOURCES
     src/Types.cpp
@@ -32,7 +32,7 @@ list(APPEND SOURCES
     src/audio/FileSink.cpp
     src/audio/Loudness.cpp
     src/audio/Peq.cpp
-    src/audio/PortAudioSink.cpp
+    #src/audio/PortAudioSink.cpp
     src/audio/ScreamSource.cpp
     src/audio/TBiquad.cpp
     src/core/AppSink.cpp
