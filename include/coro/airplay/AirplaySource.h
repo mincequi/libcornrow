@@ -18,6 +18,7 @@
 #pragma once
 
 #include <coro/core/Source.h>
+#include <string>
 
 namespace coro {
 namespace airplay {
