@@ -125,11 +125,11 @@ void AudioEncoderFfmpeg::updateConf() {
     auto encoder = avcodec_find_encoder(ffCodecId);
     m_packet = av_packet_alloc();
     m_context = avcodec_alloc_context3(encoder);
-    m_context->channel_layout |= (m_conf.channels & Channels::Stereo) ? (AV_CH_FRONT_LEFT | AV_CH_FRONT_RIGHT) : 0;
-    m_context->channel_layout |= (m_conf.channels & Channels::RearStereo) ? (AV_CH_BACK_LEFT | AV_CH_BACK_RIGHT) : 0;
-    m_context->channel_layout |= (m_conf.channels & Channels::Center) ? (AV_CH_FRONT_CENTER) : 0;
-    m_context->channel_layout |= (m_conf.channels & Channels::Lfe) ? (AV_CH_LOW_FREQUENCY) : 0;
-    m_context->channels = av_get_channel_layout_nb_channels(m_context->channel_layout);
+    auto channel_layout = (m_conf.channels & Channels::Stereo) ? (AV_CH_FRONT_LEFT | AV_CH_FRONT_RIGHT) : 0;
+    channel_layout |= (m_conf.channels & Channels::RearStereo) ? (AV_CH_BACK_LEFT | AV_CH_BACK_RIGHT) : 0;
+    channel_layout |= (m_conf.channels & Channels::Center) ? (AV_CH_FRONT_CENTER) : 0;
+    channel_layout |= (m_conf.channels & Channels::Lfe) ? (AV_CH_LOW_FREQUENCY) : 0;
+    av_channel_layout_from_mask(&m_context->ch_layout, channel_layout);
     m_context->sample_fmt = AV_SAMPLE_FMT_FLTP; // Most codecs only support planar formats
     m_context->sample_rate = toInt(m_conf.rate);
     m_context->bit_rate = m_bitrateKbps*1000;
@@ -149,17 +149,17 @@ AVFrame* AudioEncoderFfmpeg::createFrame() const {
     // Prepare frame
     auto frame = av_frame_alloc();
     frame->format = m_context->sample_fmt;
-    frame->channel_layout = m_context->channel_layout;
-    frame->channels = m_context->channels;
+    frame->ch_layout = m_context->ch_layout;
+    // frame->channels = m_context->channels;
     frame->sample_rate = m_context->sample_rate;
     frame->nb_samples = 0;
 
-    const int bytesPerFrame = m_context->frame_size * m_context->channels * av_get_bytes_per_sample(m_context->sample_fmt);
+    const int bytesPerFrame = m_context->frame_size * m_context->ch_layout.nb_channels * av_get_bytes_per_sample(m_context->sample_fmt);
     auto buffer = new core::Buffer(bytesPerFrame*2);
     frame->extended_data = frame->data;
     frame->extended_data[0] = (uint8_t*)buffer->acquire(bytesPerFrame);
-    frame->linesize[0] = bytesPerFrame/m_context->channels;
-    for (int i = 1; i < frame->channels; i++) {
+    frame->linesize[0] = bytesPerFrame/m_context->ch_layout.nb_channels;
+    for (int i = 1; i < frame->ch_layout.nb_channels; i++) {
         frame->extended_data[i] = frame->extended_data[i-1] + frame->linesize[0];
     }
     frame->buf[0] = av_buffer_create(NULL, 0, AudioEncoderFfmpeg::freeBuffer, buffer, 0);
@@ -169,26 +169,26 @@ AVFrame* AudioEncoderFfmpeg::createFrame() const {
 
 AVFrame* AudioEncoderFfmpeg::fillFrame(AVFrame* frame, core::Buffer& buffer) {
     const int sampleSize = av_get_bytes_per_sample(m_context->sample_fmt);
-    volatile const int samplesToFill = std::min(m_context->frame_size - frame->nb_samples, (int)buffer.size()/frame->channels/sampleSize);
+    volatile const int samplesToFill = std::min(m_context->frame_size - frame->nb_samples, (int)buffer.size()/frame->ch_layout.nb_channels/sampleSize);
 
     switch (sampleSize) {
     case 2: {
         const uint16_t* idata = (const uint16_t*)buffer.data();
         for (int i = frame->nb_samples; i < samplesToFill+frame->nb_samples; i++) {
-            for (int j = 0; j < frame->channels; j++) {
+            for (int j = 0; j < frame->ch_layout.nb_channels; j++) {
                 ((uint16_t*)frame->extended_data[j])[i] = idata[j];
             }
-            idata += frame->channels;
+            idata += frame->ch_layout.nb_channels;
         }
         break;
     }
     case 4: {
         const uint32_t* idata = (const uint32_t*)buffer.data();
         for (int i = frame->nb_samples; i < samplesToFill+frame->nb_samples; i++) {
-            for (int j = 0; j < frame->channels; j++) {
+            for (int j = 0; j < frame->ch_layout.nb_channels; j++) {
                 ((uint32_t*)frame->extended_data[j])[i] = idata[j];
             }
-            idata += frame->channels;
+            idata += frame->ch_layout.nb_channels;
         }
         break;
     }
@@ -197,7 +197,7 @@ AVFrame* AudioEncoderFfmpeg::fillFrame(AVFrame* frame, core::Buffer& buffer) {
     }
 
     frame->nb_samples += samplesToFill;
-    buffer.trimFront(samplesToFill*sampleSize*frame->channels);
+    buffer.trimFront(samplesToFill*sampleSize*frame->ch_layout.nb_channels);
 
     if (frame->nb_samples == m_context->frame_size) {
         return frame;

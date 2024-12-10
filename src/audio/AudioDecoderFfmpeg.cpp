@@ -195,14 +195,15 @@ template<audio::AudioCodec codec>
 template<typename T>
 void AudioDecoderFfmpeg<codec>::interleave(const AVFrame* in, core::Buffer& out)
 {
-    auto data = reinterpret_cast<T*>(out.acquire(in->linesize[0] * in->channels, this));
+    auto nb_ch = in->ch_layout.nb_channels;
+    auto data = reinterpret_cast<T*>(out.acquire(in->linesize[0] * nb_ch, this));
     for (int s = 0; s < in->nb_samples; ++s) {
-        for (int c = 0; c < in->channels; ++c) {
+        for (int c = 0; c < nb_ch; ++c) {
             *data = *(T*)(in->data[c] + (s * sizeof(T)));
             ++data;
         }
     }
-    out.commit(in->linesize[0] * in->channels);
+    out.commit(in->linesize[0] * nb_ch);
 }
 
 template class AudioDecoderFfmpeg<audio::AudioCodec::Ac3>;
