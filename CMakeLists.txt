@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.7)
 project(cornrow)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -DG_DISABLE_ASSERT -DUSE_KISS_FFT")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -Wall -Werror -Wno-old-style-cast -DUSE_KISS_FFT -DLOGURU_WITH_STREAMS")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -Wall -Wno-old-style-cast -DUSE_KISS_FFT -DLOGURU_WITH_STREAMS")
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(PkgConfig REQUIRED)
